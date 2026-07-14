@@ -1,0 +1,24 @@
+multi-reviewer pairs: 69
+pooled valid pixels: 7,837,946
+
+mean per-pair overall agreement: 0.7718
+mean per-pair kappa:             0.5947
+
+pooled overall agreement: 0.7717
+pooled macro F1:          0.4748
+pooled mean IoU:          0.3642
+pooled kappa:             0.6633
+
+class                   f1     iou   support(px)
+Urban                0.604   0.433       377,082
+Agriculture          0.776   0.634     2,726,861
+Grass/Shrub          0.296   0.173     1,233,209
+Forest               0.898   0.815     8,100,180
+Water                0.919   0.850     1,308,352
+Wetland              0.467   0.305     1,653,591
+Unknown              0.451   0.291        38,595
+Other                0.000   0.000         4,874
+Harvest              0.696   0.533       149,427
+Development          0.283   0.165        11,192
+Insect/Disease       0.230   0.130        63,358
+Beaver               0.077   0.040         9,171
