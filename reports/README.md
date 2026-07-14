@@ -32,3 +32,22 @@ Source: `scripts/compare_interpreted_vs_model.py`.
 Headline: agreement is strongest for v2 (OA 0.65, kappa 0.52) and lowest for the
 v6 dot-product map (OA 0.19). Stable classes agree well (Water F1 0.93, Forest 0.79,
 Agriculture 0.78); small disturbance classes get absorbed into stable classes.
+
+### Model-map spatial speckle (`scripts/model_speckle.py`)
+
+`neighbor_change` = fraction of horizontally-adjacent, both-valid pixel pairs whose
+class differs, computed over the **full rasters** (~2.43 billion pairs each; low =
+smooth patches, high = per-pixel speckle). See `model_speckle.csv` and plots
+`model_speckle_bar.png`, `model_speckle_vs_accuracy.png`, `model_speckle_crops.png`.
+
+| version | neighbor_change | character |
+|---------|:---:|-----------|
+| v2 | 0.075 | smooth |
+| v3 | 0.077 | smooth |
+| v5 | 0.091 | smooth |
+| v4 | 0.135 | mostly smooth |
+| v6 | 0.781 | speckly (dot-product) |
+
+Speckle is inversely related to agreement with the interpretations: the smooth maps
+(v2/v3/v5) score highest, the speckly v6 lowest — so v6's low OA partly reflects its
+per-pixel format, not only its accuracy.
