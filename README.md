@@ -69,8 +69,39 @@ python src/classify.py   --input data/processed --model models/rf.joblib
 
 ## Data
 
-Describe the imagery sources, dates, resolution, and classification scheme here
-(e.g. Sentinel-2, Landsat, NAIP; and the land cover legend used).
+The Random Forest classified rasters (`rf_class_*.tif`, one per grid sample) live in
+a shared Google Drive folder and are pulled into `data/raw/rf_class_maps/`. These
+files are git-ignored, so each user fetches their own local copy.
+
+### Fetching the classified rasters (recommended: authenticated rclone)
+
+The public share link is subject to Google's per-link download quota and will fail
+partway through ("too many accesses"). The reliable path is authenticated rclone:
+
+```bash
+# one-time setup
+brew install rclone                                   # or https://rclone.org/downloads/
+rclone config create gdrive drive scope drive.readonly
+# ^ opens a browser: sign in with the account that has the folder, click Allow.
+#   if interrupted, finish with:  rclone config reconnect gdrive:
+
+# fetch (safe to re-run; skips files already present)
+python scripts/fetch_rf_class_maps_rclone.py
+```
+
+This copies every `rf_class*.tif` and then recovers any files that Drive stored under
+duplicate-named folders (which a normal copy walk skips) by fetching them via file ID.
+Expected result: **224 / 224** rasters (~5 MB).
+
+### Alternative: public link via gdown (no login, quota-limited)
+
+```bash
+pip install gdown
+python scripts/fetch_rf_class_maps.py --pause 1.5     # re-run to resume after rate limits
+```
+
+> Imagery source: Sentinel-2. Document the classification scheme / land cover legend,
+> target years, and grid definitions here as they are finalized.
 
 ## License
 
