@@ -100,8 +100,46 @@ pip install gdown
 python scripts/fetch_rf_class_maps.py --pause 1.5     # re-run to resume after rate limits
 ```
 
-> Imagery source: Sentinel-2. Document the classification scheme / land cover legend,
-> target years, and grid definitions here as they are finalized.
+> Imagery source: Sentinel-2 (one Landsat grid). Rasters are single-band `int32`
+> class maps, 30 m resolution, CRS EPSG:5070. Target years span 2004–2022.
+
+### Classification scheme
+
+Pixel values are land cover / disturbance class codes, decoded via
+`data/reference/label_lookup.csv`:
+
+| Code | Class | Type | Code | Class | Type |
+|-----:|-------|------|-----:|-------|------|
+| 0 | Urban | stable | 10 | Unknown | disturbance |
+| 1 | Agriculture | stable | 20 | Harvest | disturbance |
+| 2 | Grass/Shrub | stable | 30 | Development | disturbance |
+| 3 | Forest | stable | 40 | Fire | disturbance |
+| 4 | Water | stable | 50 | Insect/Disease | disturbance |
+| 5 | Wetland | stable | 62 | Beaver | disturbance |
+| 13 | Other | stable | | | |
+
+## Analysis & visualization
+
+`scripts/inspect_and_plot.py` inspects and visualizes the classified rasters
+(requires `rasterio numpy matplotlib pandas`):
+
+```bash
+# metadata + class histogram for one raster
+python scripts/inspect_and_plot.py --stats data/raw/rf_class_maps/<grid>/<file>.tif
+
+# class distribution across all rasters (writes outputs/class_distribution.csv)
+python scripts/inspect_and_plot.py --stats-all
+
+# labelled map of one raster  ->  outputs/<name>.png
+python scripts/inspect_and_plot.py --plot data/raw/rf_class_maps/<grid>/<file>.tif
+
+# montage of the first N maps  ->  outputs/montage_N.png
+python scripts/inspect_and_plot.py --montage 9
+```
+
+Figures are written to `outputs/` (git-ignored). Across the 224 rasters, Forest
+(~52%), Agriculture (~16%), and Wetland (~11%) dominate; disturbance classes are a
+small fraction of pixels.
 
 ## License
 

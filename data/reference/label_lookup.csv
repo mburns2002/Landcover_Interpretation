@@ -1,0 +1,14 @@
+code,name,display_name,color,type
+0,urban_no_change,Urban,#808080,stable
+1,ag_no_change,Agriculture,#A0522D,stable
+2,grass_shrub_no_change,Grass/Shrub,#7CFC00,stable
+3,forest_no_change,Forest,#006400,stable
+4,water_no_change,Water,#0000CD,stable
+5,wetland_no_change,Wetland,#00BFFF,stable
+13,other_no_change,Other,#6E6345,stable
+10,unknown,Unknown,#FF1493,disturbance
+20,harvest,Harvest,#F0E442,disturbance
+30,development,Development,#E69F00,disturbance
+40,fire,Fire,#CA411A,disturbance
+50,insectDisease,Insect/Disease,#769DD7,disturbance
+62,beaver,Beaver,#CC66CA,disturbance
