@@ -160,6 +160,33 @@ Figures are written to `outputs/` (git-ignored). Across the 224 rasters, Forest
 (~52%), Agriculture (~16%), and Wetland (~11%) dominate; disturbance classes are a
 small fraction of pixels.
 
+## Interpreted vs. model comparison
+
+`scripts/compare_interpreted_vs_model.py` compares each interpreted Sentinel-2 cell
+against the AlphaEarth model maps. Per cell it stitches the model tiles, clips to the
+cell frame (both 10 m / EPSG:5070, nearest-neighbour, no resampling), crosswalks both
+to the common 10-class scheme, and computes a confusion matrix with per-class
+precision/recall/F1/IoU plus overall accuracy, macro-F1, mean IoU, and Cohen's kappa.
+It also renders an Interpreted | Model | Agreement figure per cell.
+
+```bash
+python scripts/compare_interpreted_vs_model.py               # all cells, v2-v6
+python scripts/compare_interpreted_vs_model.py --versions v2 # one version
+python scripts/compare_interpreted_vs_model.py --limit 6     # quick preview
+python scripts/compare_interpreted_vs_model.py --no-figures  # metrics only
+```
+
+Outputs go to `outputs/comparison_<version>/` (per-cell PNGs, confusion matrix,
+`per_cell_metrics.csv`, `global_metrics.txt`) plus `outputs/comparison_summary_by_version.csv`.
+
+Model versions v2-v5 are spatially-smooth classifiers; v6 is the speckly dot-product
+classifier (reported via a per-version "neighbor-change" value: ~0.08 smooth, ~0.83
+per-pixel). Pooled over all 223 cells, agreement is strongest for v2 (OA 0.65,
+kappa 0.52) and lowest for the v6 dot-product map (OA 0.19). Stable classes agree
+well (Water F1 0.93, Forest 0.79, Agriculture 0.78); small disturbance classes
+(harvest, development, insect/disease, beaver) largely get absorbed into the
+dominant stable classes by the model.
+
 ## License
 
 No license specified yet. Add a `LICENSE` file to define usage terms.
