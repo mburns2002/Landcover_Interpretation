@@ -36,6 +36,7 @@ Requires: rasterio, numpy, pandas, matplotlib
 import argparse
 import glob
 import os
+import re
 import warnings
 
 import numpy as np
@@ -234,11 +235,16 @@ def plot_confusion(cm, names, out_path):
     plt.close(fig)
 
 
-def run_version(version, cells, rf2common, names, colors, limit, no_figures, min_valid):
+def target_year(path):
+    m = re.search(r"target_(\d{4})", os.path.basename(path))
+    return m.group(1) if m else None
+
+
+def run_version(version, cells, rf2common, names, colors, limit, no_figures, min_valid, suffix=""):
     """Compare every overlapping cell against one model version. Returns a summary dict."""
     tiles = model_tiles(version)
     tile_srcs = [rasterio.open(t) for t in tiles]
-    out_dir = os.path.join(OUT_ROOT, f"comparison_{version}")
+    out_dir = os.path.join(OUT_ROOT, f"comparison_{version}{suffix}")
     os.makedirs(out_dir, exist_ok=True)
 
     nl = noise_level(tile_srcs[0])
@@ -328,27 +334,37 @@ def main():
     ap.add_argument("--no-figures", action="store_true", help="compute metrics only, skip per-cell PNGs")
     ap.add_argument("--min-valid", type=float, default=0.01,
                     help="min fraction of cell with model data to count as overlap (default: 0.01)")
+    ap.add_argument("--targets", nargs="+", default=None,
+                    help="only compare interpreted cells with these target years "
+                         "(e.g. 2019 to match the model's 2018-2020 window)")
     args = ap.parse_args()
 
     rf2common, names, colors = load_mappings()
     cells = sorted(glob.glob(os.path.join(RF_DIR, "**", "rf_class*Sentinel-2*.tif"), recursive=True))
-    print(f"interpreted cells: {len(cells)}   versions: {' '.join(args.versions)}")
+
+    suffix = ""
+    if args.targets:
+        keep = set(args.targets)
+        cells = [c for c in cells if target_year(c) in keep]
+        suffix = "_target" + "-".join(args.targets)
+    print(f"interpreted cells: {len(cells)}   versions: {' '.join(args.versions)}   "
+          f"targets: {' '.join(args.targets) if args.targets else 'all'}")
 
     summary = []
     for v in args.versions:
         r = run_version(v, cells, rf2common, names, colors,
-                        args.limit, args.no_figures, args.min_valid)
+                        args.limit, args.no_figures, args.min_valid, suffix=suffix)
         if r:
             summary.append(r)
 
     if summary:
         os.makedirs(OUT_ROOT, exist_ok=True)
         sdf = pd.DataFrame(summary)
-        sdf.to_csv(os.path.join(OUT_ROOT, "comparison_summary_by_version.csv"), index=False)
+        sdf.to_csv(os.path.join(OUT_ROOT, f"comparison_summary_by_version{suffix}.csv"), index=False)
         print("\n" + "=" * 70)
         print("cross-version summary (interpreted vs model):")
         print(sdf.to_string(index=False))
-        print(f"\nwrote {OUT_ROOT}/comparison_summary_by_version.csv")
+        print(f"\nwrote {OUT_ROOT}/comparison_summary_by_version{suffix}.csv")
 
 
 if __name__ == "__main__":

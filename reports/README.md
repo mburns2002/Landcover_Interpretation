@@ -26,12 +26,32 @@ Water/Forest/Agriculture; four boundaries drive ~68% of disagreement
 Each interpreted Sentinel-2 cell vs. the model maps (v2–v6).
 Source: `scripts/compare_interpreted_vs_model.py`.
 
-- `comparison_summary_by_version.csv` — OA / macro-F1 / mean IoU / kappa per version
+- `comparison_summary_by_version.csv` — OA / macro-F1 / mean IoU / kappa per version (all target years)
 - `v2_global_confusion_matrix.png`, `v2_global_metrics.txt` — best-agreeing version
+- `comparison_summary_by_version_target2019.csv` — **date-aligned** run (see below)
+- `v2_target2019_confusion_matrix.png`, `v2_target2019_metrics.txt`
 
 Headline: agreement is strongest for v2 (OA 0.65, kappa 0.52) and lowest for the
 v6 dot-product map (OA 0.19). Stable classes agree well (Water F1 0.93, Forest 0.79,
 Agriculture 0.78); small disturbance classes get absorbed into stable classes.
+
+### Date alignment (target year 2019)
+
+The model maps are a 2018–2020 GEE composite (bracket year 2019). Only interpreted
+cells with **target year 2019** share that exact optical window (2018–2020); other
+target years use offset windows and are temporally misaligned. Restricting to the 41
+date-aligned cells (`--targets 2019`) raises agreement for every smooth version:
+
+| version | OA (all years) | OA (2019) | ΔOA |
+|---------|:---:|:---:|:---:|
+| v2 | 0.65 | 0.71 | +0.06 |
+| v3 | 0.60 | 0.68 | +0.08 |
+| v4 | 0.50 | 0.64 | +0.13 |
+| v5 | 0.56 | 0.63 | +0.07 |
+| v6 | 0.19 | 0.19 | +0.00 |
+
+Temporal mismatch was inflating disagreement (v4 gains the most, +0.13). v6 is
+unchanged because its per-pixel speckle dominates regardless of date.
 
 ### Model-map spatial speckle (`scripts/model_speckle.py`)
 
