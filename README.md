@@ -199,6 +199,18 @@ disagreement: Forest↔Wetland (22%), Agriculture↔Grass/Shrub (17%),
 Grass/Shrub↔Forest (14%), and Grass/Shrub↔Wetland (14%). 17 pairs fall below 0.70
 overall agreement (worst: grid 10333 bekka-vs-mina, 0.48).
 
+To browse every pair figure in VSCode, `scripts/pairs_contact_sheet.py` stacks them
+into paginated overview PNGs (sorted lowest-agreement first), or opens an arrow-key
+browser:
+
+```bash
+python scripts/pairs_contact_sheet.py                 # all pairs -> montage_page_*.png
+python scripts/pairs_contact_sheet.py --flagged-below 0.70   # -> montage_flagged_page_*.png
+python scripts/pairs_contact_sheet.py --interactive   # Left/Right arrows, q to quit
+```
+
+Open the resulting `montage_page_*.png` in VSCode's image viewer and scroll.
+
 ## Interpreted vs. model comparison
 
 `scripts/compare_interpreted_vs_model.py` compares each interpreted Sentinel-2 cell
