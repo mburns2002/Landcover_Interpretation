@@ -1,0 +1,12 @@
+code,name,display_name,color,type
+0,background,Background/NoData,#000000,nodata
+1,harvest,Harvest,yellow,disturbance
+2,development,Development,red,disturbance
+3,stable_forest,Forest,green,stable
+4,stable_urban,Urban,gray,stable
+5,stable_water,Water,blue,stable
+6,stable_agriculture,Agriculture,#A0522D,stable
+7,stable_grass_shrub,Grass/Shrub,lightgreen,stable
+8,stable_wetland,Wetland,skyblue,stable
+9,beaver,Beaver,orange,disturbance
+10,insect_disease_mortality,Insect/Disease,#70A2DB,disturbance

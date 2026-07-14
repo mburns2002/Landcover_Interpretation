@@ -1,0 +1,15 @@
+common_class,model_code,rf_code,type,notes
+Harvest,1,20,disturbance,
+Development,2,30,disturbance,
+Forest,3,3,stable,
+Urban,4,0,stable,
+Water,5,4,stable,
+Agriculture,6,1,stable,
+Grass/Shrub,7,2,stable,
+Wetland,8,5,stable,
+Beaver,9,62,disturbance,
+Insect/Disease,10,50,disturbance,
+Other,,13,stable,RF-only; no model-map equivalent
+Unknown,,10,disturbance,RF-only; no model-map equivalent
+Fire,,40,disturbance,RF-only; zero pixels in the RF data
+Background,0,,nodata,model-map padding / no-data
