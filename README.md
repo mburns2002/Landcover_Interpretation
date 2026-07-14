@@ -100,6 +100,23 @@ pip install gdown
 python scripts/fetch_rf_class_maps.py --pause 1.5     # re-run to resume after rate limits
 ```
 
+### Model maps (AlphaEarth Foundations, from GEE)
+
+The 10-class classified maps exported from Google Earth Engine act as the model
+maps to compare against the interpreted RF results. Each version is exported by GEE
+as multiple GeoTIFF tiles; they download into `data/raw/model_maps/<version>/`.
+
+```bash
+python scripts/fetch_model_maps.py            # all versions (v2-v6, ~1.9 GB)
+python scripts/fetch_model_maps.py --list     # show sizes, download nothing
+python scripts/fetch_model_maps.py --versions v6
+```
+
+These are 10 m resolution, `uint8`, EPSG:5070, class values 0–10 (0 = background /
+no-data padding). Note they differ from the interpreted RF maps in resolution
+(10 m vs 30 m) and class scheme, so a resampling step and a class crosswalk are
+needed before direct comparison.
+
 > Imagery source: Sentinel-2 (one Landsat grid). Rasters are single-band `int32`
 > class maps, 30 m resolution, CRS EPSG:5070. Target years span 2004–2022.
 
