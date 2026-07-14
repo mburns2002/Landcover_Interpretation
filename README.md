@@ -113,12 +113,14 @@ python scripts/fetch_model_maps.py --versions v6
 ```
 
 These are 10 m resolution, `uint8`, EPSG:5070, class values 0–10 (0 = background /
-no-data padding). Note they differ from the interpreted RF maps in resolution
-(10 m vs 30 m) and class scheme, so a resampling step and a class crosswalk are
-needed before direct comparison.
+no-data padding). They share resolution (10 m) and CRS (EPSG:5070) with the 223
+Sentinel-2 interpreted maps, so those need no resampling to compare — only a class
+crosswalk. The single Landsat interpreted grid (`Robert_grid_17800`) is 30 m and
+would need resampling.
 
-> Imagery source: Sentinel-2 (one Landsat grid). Rasters are single-band `int32`
-> class maps, 30 m resolution, CRS EPSG:5070. Target years span 2004–2022.
+> Imagery source: Sentinel-2 (223 grids @ 10 m, 337×337) plus one Landsat grid
+> (30 m, 113×113). Rasters are single-band `int32` class maps, CRS EPSG:5070.
+> Target years span 2004–2022.
 
 ### Classification scheme
 
