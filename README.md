@@ -160,6 +160,30 @@ Figures are written to `outputs/` (git-ignored). Across the 224 rasters, Forest
 (~52%), Agriculture (~16%), and Wetland (~11%) dominate; disturbance classes are a
 small fraction of pixels.
 
+## Inter-interpreter agreement
+
+Some grid cells were independently interpreted by two reviewers (matched on grid id +
+sample + target year). `scripts/compare_interpreters.py` compares each such pair
+pixel-for-pixel (identical footprint, no reprojection) and reports overall agreement,
+per-class F1/IoU, macro-F1, mean IoU, and Cohen's kappa, plus a
+Reviewer A | Reviewer B | Agreement figure per pair.
+
+```bash
+python scripts/compare_interpreters.py               # all pairs
+python scripts/compare_interpreters.py --limit 6     # quick preview
+python scripts/compare_interpreters.py --no-figures  # metrics only
+```
+
+Outputs go to `outputs/interpreter_agreement/` (per-pair PNGs, `per_pair_metrics.csv`,
+`by_reviewer_pair.csv`, pooled confusion matrix, `global_metrics.txt`).
+
+Across the 69 double-labeled cells, mean per-pair agreement is 0.77 (kappa 0.60).
+Reviewers agree strongly on unambiguous classes (Water 0.90, Forest 0.89,
+Agriculture 0.83 on the confusion diagonal) and diverge on transitional/disturbance
+classes (Grass/Shrub, Wetland, Development, Insect/Disease, Beaver) — e.g. one
+reviewer's Insect/Disease is called Forest by the other 71% of the time. Agreement
+also varies by reviewer pairing (mina-robert 0.87 highest; bekka-mina 0.72 lowest).
+
 ## Interpreted vs. model comparison
 
 `scripts/compare_interpreted_vs_model.py` compares each interpreted Sentinel-2 cell
