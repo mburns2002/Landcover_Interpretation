@@ -228,11 +228,19 @@ python scripts/compare_interpreted_vs_model.py --limit 6     # quick preview
 python scripts/compare_interpreted_vs_model.py --no-figures  # metrics only
 ```
 
+**De-duplication:** some locations were labeled by multiple reviewers. By default the
+comparison keeps one randomly-chosen interpretation per location (grid + sample +
+target), seeded for reproducibility (`--seed`), so a location is never double-counted.
+Use `--keep-duplicates` for the old every-raster behavior. De-duplication trims the
+all-years set from 223 rasters to 154 locations (and the 2019 subset from 41 to 30);
+pooled metrics barely change (v2 OA 0.651 -> 0.657), confirming the double-counting
+was not materially biasing results.
+
 **Date alignment:** the model maps are a 2018-2020 composite (bracket year 2019).
 Only interpreted cells with target year 2019 share that optical window, so
-`--targets 2019` restricts the comparison to the 41 temporally-matched cells and
-writes to `outputs/comparison_<version>_target2019/`. Doing so raises agreement for
-every smooth version (e.g. v2 OA 0.65 -> 0.71; v4 gains the most, +0.13).
+`--targets 2019` restricts the comparison to the temporally-matched cells (30 after
+de-dup) and writes to `outputs/comparison_<version>_target2019/`. Doing so raises
+agreement for every smooth version (e.g. v2 OA 0.66 -> 0.72; v4 gains the most).
 
 Outputs go to `outputs/comparison_<version>/` (per-cell PNGs, confusion matrix,
 `per_cell_metrics.csv`, `global_metrics.txt`) plus `outputs/comparison_summary_by_version.csv`.

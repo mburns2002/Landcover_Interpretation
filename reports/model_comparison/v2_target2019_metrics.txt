@@ -1,20 +1,20 @@
 model version: v2   neighbor-change: 0.084
-overlapping cells: 41   scored cells: 41
-pooled valid pixels: 4,650,419
+overlapping cells: 30   scored cells: 30
+pooled valid pixels: 3,402,506
 
-overall accuracy: 0.7126
-macro F1:         0.3937
-mean IoU:         0.3083
-Cohen's kappa:    0.5727
+overall accuracy: 0.7193
+macro F1:         0.3999
+mean IoU:         0.3166
+Cohen's kappa:    0.5887
 
 class              precision    recall        f1       iou     support
-Harvest                0.562     0.172     0.264     0.152      87,728
-Development            0.006     0.126     0.012     0.006       1,746
-Forest                 0.876     0.811     0.842     0.728   2,555,042
-Urban                  0.324     0.660     0.435     0.278     128,554
-Water                  0.946     0.904     0.925     0.860     287,023
-Agriculture            0.861     0.758     0.806     0.675     930,753
-Grass/Shrub            0.340     0.296     0.317     0.188     365,462
-Wetland                0.432     0.241     0.310     0.183     273,830
-Beaver                 0.005     0.203     0.011     0.005       2,976
-Insect/Disease         0.009     0.147     0.017     0.008      17,305
+Harvest                0.564     0.153     0.240     0.137      67,312
+Development            0.011     0.126     0.019     0.010       1,744
+Forest                 0.873     0.813     0.842     0.728   1,821,910
+Urban                  0.338     0.640     0.442     0.284      97,154
+Water                  0.942     0.948     0.945     0.896     225,321
+Agriculture            0.861     0.804     0.831     0.711     674,834
+Grass/Shrub            0.334     0.275     0.302     0.178     265,380
+Wetland                0.503     0.256     0.339     0.204     237,054
+Beaver                 0.007     0.208     0.013     0.006       2,902
+Insect/Disease         0.013     0.285     0.025     0.013       8,895

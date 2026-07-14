@@ -31,24 +31,36 @@ Source: `scripts/compare_interpreted_vs_model.py`.
 - `comparison_summary_by_version_target2019.csv` — **date-aligned** run (see below)
 - `v2_target2019_confusion_matrix.png`, `v2_target2019_metrics.txt`
 
-Headline: agreement is strongest for v2 (OA 0.65, kappa 0.52) and lowest for the
-v6 dot-product map (OA 0.19). Stable classes agree well (Water F1 0.93, Forest 0.79,
-Agriculture 0.78); small disturbance classes get absorbed into stable classes.
+Headline (de-duplicated, all years): agreement is strongest for v2 (OA 0.66,
+kappa 0.53) and lowest for the v6 dot-product map (OA 0.19). Stable classes agree
+well (Water, Forest, Agriculture); small disturbance classes get absorbed into
+stable classes.
+
+### De-duplication of repeated locations
+
+Some locations were interpreted by multiple reviewers. The comparison de-duplicates
+by default — keeping one randomly-chosen interpretation per location (grid + sample +
+target), seeded for reproducibility — so no location is double-counted. This trims the
+all-years set from 223 rasters to **154 locations** (and the 2019 subset from 41 to
+**30**). Pooled metrics barely change (v2 OA 0.651 → 0.657), so the earlier
+double-counting was not materially biasing the numbers. All figures below reflect the
+de-duplicated runs.
 
 ### Date alignment (target year 2019)
 
 The model maps are a 2018–2020 GEE composite (bracket year 2019). Only interpreted
 cells with **target year 2019** share that exact optical window (2018–2020); other
-target years use offset windows and are temporally misaligned. Restricting to the 41
-date-aligned cells (`--targets 2019`) raises agreement for every smooth version:
+target years use offset windows and are temporally misaligned. Restricting to the 30
+date-aligned, de-duplicated cells (`--targets 2019`) raises agreement for every smooth
+version:
 
 | version | OA (all years) | OA (2019) | ΔOA |
 |---------|:---:|:---:|:---:|
-| v2 | 0.65 | 0.71 | +0.06 |
-| v3 | 0.60 | 0.68 | +0.08 |
-| v4 | 0.50 | 0.64 | +0.13 |
-| v5 | 0.56 | 0.63 | +0.07 |
-| v6 | 0.19 | 0.19 | +0.00 |
+| v2 | 0.66 | 0.72 | +0.06 |
+| v3 | 0.61 | 0.69 | +0.09 |
+| v4 | 0.51 | 0.64 | +0.13 |
+| v5 | 0.56 | 0.64 | +0.07 |
+| v6 | 0.19 | 0.19 | +0.01 |
 
 Temporal mismatch was inflating disagreement (v4 gains the most, +0.13). v6 is
 unchanged because its per-pixel speckle dominates regardless of date.

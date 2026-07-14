@@ -36,8 +36,10 @@ Requires: rasterio, numpy, pandas, matplotlib
 import argparse
 import glob
 import os
+import random
 import re
 import warnings
+from collections import defaultdict
 
 import numpy as np
 import pandas as pd
@@ -240,6 +242,34 @@ def target_year(path):
     return m.group(1) if m else None
 
 
+def location_key(path):
+    """Identify a physical cell/observation: grid id + sample + target year.
+
+    Rasters sharing this key are the same location+time labeled by different
+    reviewers (repeats); the reviewer name is intentionally excluded.
+    """
+    m = re.search(r"grid_(\d+)_sample_(\d+)_sensor_Sentinel-2_target_(\d+)",
+                  os.path.basename(path))
+    return (m.group(1), m.group(2), m.group(3)) if m else (os.path.basename(path),)
+
+
+def dedupe_cells(cells, seed):
+    """Keep one randomly-chosen interpretation per location. Returns (kept, n_dup_locations)."""
+    groups = defaultdict(list)
+    for c in cells:
+        groups[location_key(c)].append(c)
+    rng = random.Random(seed)
+    kept, n_dup = [], 0
+    for k in sorted(groups):
+        v = sorted(groups[k])
+        if len(v) > 1:
+            n_dup += 1
+            kept.append(rng.choice(v))
+        else:
+            kept.append(v[0])
+    return sorted(kept), n_dup
+
+
 def run_version(version, cells, rf2common, names, colors, limit, no_figures, min_valid, suffix=""):
     """Compare every overlapping cell against one model version. Returns a summary dict."""
     tiles = model_tiles(version)
@@ -337,6 +367,11 @@ def main():
     ap.add_argument("--targets", nargs="+", default=None,
                     help="only compare interpreted cells with these target years "
                          "(e.g. 2019 to match the model's 2018-2020 window)")
+    ap.add_argument("--keep-duplicates", action="store_true",
+                    help="score every raster, incl. locations labeled by multiple reviewers "
+                         "(default: keep one random interpretation per location)")
+    ap.add_argument("--seed", type=int, default=0,
+                    help="random seed for picking one interpretation per location (default: 0)")
     args = ap.parse_args()
 
     rf2common, names, colors = load_mappings()
@@ -347,6 +382,12 @@ def main():
         keep = set(args.targets)
         cells = [c for c in cells if target_year(c) in keep]
         suffix = "_target" + "-".join(args.targets)
+
+    if not args.keep_duplicates:
+        cells, n_dup = dedupe_cells(cells, args.seed)
+        print(f"de-duplicated: {n_dup} location(s) had multiple interpretations; "
+              f"kept one each (seed={args.seed})")
+
     print(f"interpreted cells: {len(cells)}   versions: {' '.join(args.versions)}   "
           f"targets: {' '.join(args.targets) if args.targets else 'all'}")
 
