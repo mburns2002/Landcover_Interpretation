@@ -268,3 +268,32 @@ speckly v6 barely benefits (OA 0.19→0.24, saturating by W=5 — no dominant pa
 noise). This is a diagnostic of how within-window aggregation changes the assessment, not a
 better accuracy: the per-window design keeps inclusion probabilities exact but effective sample
 size falls as ~1/W² (windows per cell 113,576 → 1,369 from W=1 to W=9; edge discard ≤ 2.4%).
+
+## Case_C_window_sampling/ — Approach C window sampling
+
+Implements Approach C (independent per-field label per window) from Robert's window-sampling
+framework, adapted to our 10-class scheme. Source: `scripts/window_sampling_approachC.py`. Same
+setup as Case B (interpreted reference vs. model v2–v6, deduped seed 42 all years, exhaustive
+non-overlapping W×W tiling, W ∈ {1,3,5,7,9}). Approach C labels each field independently and
+compares. **Deviation from source:** Robert thresholds each field at >50% (a binary majority);
+with 10 classes a window often has no majority class, so we use PLURALITY — the most frequent
+class in the map field and in the reference field — recorded as (plurality_map, plurality_ref),
+one sample per window. Ties: lowest class code (consistent with B). **W=1 is identical to B at
+W=1 and to the per-pixel confusion (asserted C == B == per-pixel, PASS for all versions);** the
+internal B recomputation also matches Case_B exactly.
+
+- `window_sampling_metrics.csv` — version × W: OA, macro-F1, mean IoU, kappa, n_windows,
+  `frac_map_majority`, `frac_ref_majority` (share of windows whose plurality was a true >50%
+  majority), `n_bne`/`frac_bne` (windows where B ≠ C), windows_per_cell, edge-discard
+- `window_sampling_confusion.csv` — long-format confusion for C
+- `window_sampling_metrics.png` — metrics / majority share / B≠C vs W
+
+Key results. C climbs with W more slowly than B (v2 OA 0.66→0.69 vs B's 0.66→0.74) because C
+records a disagreement whenever the two fields' pluralities differ, even when the most common
+pair agrees. The **reference field almost always has a true majority** (0.93 even at W=9 — the
+interpretations are spatially smooth), so plurality is a faithful summary of the reference. The
+**map majority share depends on the version**: v2–v5 stay ~0.90–0.98, but **v6 collapses to 0.19
+(W=3) → 0.04 (W=9)** — its per-pixel speckle means a window rarely has any dominant class, so the
+v6 Approach-C label is a weak window summary and its v6 metrics must be read with that caveat.
+B≠C grows with W and isolates within-window heterogeneity: ~7% of windows at W=9 for the smooth
+versions, but **~15% for v6** (0.11 at W=3 → 0.15 at W=9), where B and C most often diverge.
