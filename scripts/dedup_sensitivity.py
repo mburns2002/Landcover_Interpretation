@@ -52,9 +52,11 @@ def main():
 
     rf2common, names, colors = C.load_mappings()
     cells = sorted(glob.glob(os.path.join(C.RF_DIR, "**", "rf_class*Sentinel-2*.tif"), recursive=True))
+    suffix = ""
     if args.targets:
         keep = set(args.targets)
         cells = [c for c in cells if C.target_year(c) in keep]
+        suffix = "_target" + "-".join(args.targets)
 
     # group rasters by location (grid + sample + target)
     locations = defaultdict(list)
@@ -95,7 +97,7 @@ def main():
                                 macro_f1=m["macro_f1"], mean_iou=m["mean_iou"], kappa=m["kappa"]))
     runs_df = pd.DataFrame(records)
     os.makedirs(OUT, exist_ok=True)
-    runs_df.round(4).to_csv(os.path.join(OUT, "dedup_sensitivity_runs.csv"), index=False)
+    runs_df.round(4).to_csv(os.path.join(OUT, f"dedup_sensitivity_runs{suffix}.csv"), index=False)
 
     # ---- summary per version ----
     rows = []
@@ -110,9 +112,9 @@ def main():
                              p97_5=round(float(np.percentile(x, 97.5)), 4),
                              range=round(float(x.max() - x.min()), 4)))
     summ = pd.DataFrame(rows)
-    summ.to_csv(os.path.join(OUT, "dedup_sensitivity_summary.csv"), index=False)
+    summ.to_csv(os.path.join(OUT, f"dedup_sensitivity_summary{suffix}.csv"), index=False)
 
-    make_plot(runs_df, args.versions, os.path.join(OUT, "dedup_sensitivity_box.png"), args.runs)
+    make_plot(runs_df, args.versions, os.path.join(OUT, f"dedup_sensitivity_box{suffix}.png"), args.runs)
 
     print("\n" + "=" * 68)
     print(f"selection sensitivity across {args.runs} runs (mean ± std [min, max]):")
@@ -121,7 +123,7 @@ def main():
         oa, kp = s.loc["overall_accuracy"], s.loc["kappa"]
         print(f"  {v}:  OA {oa['mean']:.3f} ± {oa['std']:.3f} [{oa['min']:.3f}, {oa['max']:.3f}]   "
               f"kappa {kp['mean']:.3f} ± {kp['std']:.3f} [{kp['min']:.3f}, {kp['max']:.3f}]")
-    print(f"\noutputs -> {OUT}/dedup_sensitivity_*.csv/png")
+    print(f"\noutputs -> {OUT}/dedup_sensitivity{suffix}_*.csv/png")
 
 
 def make_plot(runs_df, versions, path, n_runs):
