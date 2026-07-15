@@ -56,6 +56,26 @@ all-years set from 223 rasters to **154 locations** (and the 2019 subset from 41
 double-counting was not materially biasing the numbers. All figures below reflect the
 de-duplicated runs.
 
+### Selection sensitivity (`scripts/dedup_sensitivity.py`)
+
+Many locations were interpreted by two reviewers; the comparison keeps one. This test
+repeats the "pick one interpretation per location" draw 100 times with different random
+selections and reports the metric distribution per version (`dedup_sensitivity_runs.csv`,
+`dedup_sensitivity_summary.csv`, `dedup_sensitivity_box.png`). The result is a robustness
+check: the choice barely matters.
+
+| version | OA mean ± std | OA range (min–max) |
+|---------|:---:|:---:|
+| v2 | 0.657 ± 0.002 | 0.652–0.661 |
+| v3 | 0.606 ± 0.002 | 0.602–0.610 |
+| v4 | 0.507 ± 0.002 | 0.502–0.512 |
+| v5 | 0.564 ± 0.002 | 0.560–0.568 |
+| v6 | 0.186 ± 0.000 | 0.185–0.187 |
+
+Across 100 random selections the OA range per version is ≈0.01 and the version ranking
+(v2 > v3 > v5 > v4 > v6) never changes — so the arbitrary choice of which reviewer's
+interpretation is used at each double-labeled location does not affect the conclusions.
+
 ### Date alignment (target year 2019)
 
 The model maps are a 2018–2020 GEE composite (bracket year 2019). Only interpreted
