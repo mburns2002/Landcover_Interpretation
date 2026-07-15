@@ -18,6 +18,8 @@ Source: `scripts/compare_interpreters.py` + `scripts/disagreement_summary.py`.
 - `global_confusion_matrix.png`, `class_disagreement_top.png` — key figures
 - `per_class_agreement_ci.csv` + `per_class_agreement_table.md` / `.tex` +
   `per_class_agreement_forest.png` — **per-class F1 with bootstrap CIs** (manuscript table)
+- `pairs/` — all 69 per-pair side-by-side figures (`<grid>_<revA>_vs_<revB>.png`:
+  Reviewer A | Reviewer B | Agreement)
 
 Headline: mean per-pair agreement **0.77** (kappa 0.60). Reviewers agree on
 Water/Forest/Agriculture; four boundaries drive ~68% of disagreement
