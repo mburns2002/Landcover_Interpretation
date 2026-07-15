@@ -58,6 +58,20 @@ flagged and summaries reported with/without them (they barely move the distribut
 the per-patch pixel width is reported to make the resolution-limit share explicit. Shape
 index clusters ~1.13–1.20 (compact to slightly crenulated), consistent with boundary slivers.
 
+**Area-weighted / size-conditional** (`scripts/disagreement_geometry_bysize.py`): the pooled
+shape index ~1.13–1.20 is an artifact of single-pixel specks (a 1×1 patch has shape index
+1.128). Weighting by area and conditioning on size overturns the "thin ribbon" reading for
+the patches that hold the area. For **≥0.1 ha patches**, shape index rises to count-median
+~2.2 and **area-weighted median ~3.7–6.1**, extent (area / bbox area) is ~0.42 (elongated,
+not compact), and area-weighted width is ~2–3 px. For **Grass/Shrub↔Wetland**, the 10 largest
+disagreement patches are **30–120 ha**, 3–7 px wide, shape index **6–12**, extent ~0.3 — and
+the render (`gs_wetland_top10.png`) shows they are **large, irregular, mosaic-like zones**
+where one reviewer mapped Grass/Shrub and the other Wetland across whole landscape units, not
+thin margin ribbons and not compact interior blocks. So the disagreement has two regimes:
+pixel-edge speckle (most of the count) and systematic large-area class-definition differences
+(most of the area). Files: `size_conditional_summary.csv`, `gs_wetland_top10.csv`,
+`shape_index_area_weighted_ecdf.png`, `gs_wetland_top10.png`.
+
 ## model_comparison/ — interpreted vs. AlphaEarth model maps
 
 Each interpreted Sentinel-2 cell vs. the model maps (v2–v6).

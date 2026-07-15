@@ -1,0 +1,279 @@
+#!/usr/bin/env python3
+"""Area-weighted and size-conditional geometry of inter-interpreter disagreement.
+
+The pooled shape index (~1.13-1.20) is dominated by single-pixel specks (a 1x1 patch has
+shape index = 4/(2*sqrt(pi)) = 1.128). This re-does the geometry weighting by AREA rather
+than patch count, and conditions on patch size, to characterize the patches that actually
+hold the disagreement area (the >0.1 ha patches carry 55-83% of it).
+
+For each directed class pair it reports, for {all, <0.1 ha, >=0.1 ha}:
+  - count-median and AREA-WEIGHTED-median shape index and pixel width (2A/P)
+  - median extent = area / bounding-box area (compactness): ribbons have low extent + high
+    shape index + ~1-2 px width; blobs have high extent + low shape index + several px width
+
+Then, for Grass/Shrub<->Wetland (the worst case, ~83% of area in >0.1 ha patches), it pulls
+the 10 largest disagreement patches (undirected GS/Wetland zone) and renders each: the two
+interpretations side by side with the disagreement patch outlined, so a wide margin band is
+distinguishable from a solid interior block.
+
+No de-duplication. Sampling (if any) uses numpy default_rng(42). Classic-theme plots.
+
+Outputs (reports/interpreter_agreement/geometry/):
+  - size_conditional_summary.csv
+  - shape_index_area_weighted_ecdf.png
+  - gs_wetland_top10.csv
+  - gs_wetland_top10.png
+
+Requires: rasterio, numpy, pandas, matplotlib, scipy
+"""
+
+import os
+import sys
+
+import numpy as np
+import pandas as pd
+import rasterio
+from scipy import ndimage
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import compare_interpreters as CI
+import disagreement_geometry as DG   # per_pixel_perimeter, classic, ecdf, FOCUS_LABELS, STRUCT
+
+OUT = DG.OUT
+PIX_HA = 0.01
+THRESH_HA = 0.1
+GS, WET = 2, 5
+rng = np.random.default_rng(42)
+
+
+def wmedian(values, weights):
+    """Weighted median of `values` weighted by `weights`."""
+    v = np.asarray(values, float); w = np.asarray(weights, float)
+    order = np.argsort(v); v, w = v[order], w[order]
+    c = np.cumsum(w)
+    return float(v[np.searchsorted(c, 0.5 * c[-1])]) if c[-1] > 0 else np.nan
+
+
+def build_patches(pairs, names, codes):
+    """Recompute disagreement patches with extent (area / bbox area)."""
+    rows = []
+    for (gid, samp, tgt), revs in sorted(pairs.items()):
+        (ra, fA), (rb, fB) = revs[0], revs[1]
+        cid = f"{gid}_s{samp}_t{tgt}"
+        with rasterio.open(fA) as s:
+            a = s.read(1)
+        with rasterio.open(fB) as s:
+            b = s.read(1)
+        if a.shape != b.shape:
+            continue
+        valid = np.isin(a, codes) & np.isin(b, codes)
+        dis = valid & (a != b)
+        for (A, B) in {(int(x), int(y)) for x, y in zip(a[dis], b[dis])}:
+            mask = (a == A) & (b == B)
+            lab, n = ndimage.label(mask, structure=DG.STRUCT)
+            if n == 0:
+                continue
+            area = np.bincount(lab.ravel())[1:].astype(float)
+            perim = np.bincount(lab.ravel(),
+                                weights=DG.per_pixel_perimeter(mask).ravel())[1:]
+            objs = ndimage.find_objects(lab)
+            border = np.zeros(mask.shape, bool)
+            border[0, :] = border[-1, :] = border[:, 0] = border[:, -1] = True
+            edge_labels = set(np.unique(lab[border])) - {0}
+            for lid in range(1, n + 1):
+                Ap, P = area[lid - 1], perim[lid - 1]
+                sl = objs[lid - 1]
+                bbox = (sl[0].stop - sl[0].start) * (sl[1].stop - sl[1].start)
+                rows.append(dict(cell_id=cid, class_a=names[A], class_b=names[B],
+                                 area_px=int(Ap), area_ha=Ap * PIX_HA,
+                                 shape_index=P / (2 * np.sqrt(np.pi * Ap)),
+                                 width_px=2 * Ap / P if P else np.nan,
+                                 extent=Ap / bbox, touches_edge=bool(lid in edge_labels)))
+    return pd.DataFrame(rows)
+
+
+def size_summary(df):
+    """Per directed focus pair x size bin: count- and area-weighted geometry."""
+    focus = []
+    for _, ca, cb in DG.FOCUS_LABELS():
+        focus += [(ca, cb), (cb, ca)]
+    name_of = {c: n for c, n in zip(*[[], []])}  # placeholder
+    out = []
+    groups = {"ALL disagreement": df}
+    # focus directed pairs by display name
+    codes_names = df  # already display names in class_a/class_b
+    focus_names = []
+    leg = CI.load_legend()[1]
+    for ca, cb in focus:
+        focus_names.append((leg[ca], leg[cb]))
+    focus_names.append(("Beaver", "*any*"))
+
+    def rowset(sub, label, sizebin):
+        if len(sub) == 0:
+            return
+        w = sub.area_ha.to_numpy()
+        out.append(dict(
+            pair=label, size_bin=sizebin, n_patches=len(sub),
+            total_area_ha=round(float(w.sum()), 2),
+            med_shape=round(float(np.median(sub.shape_index)), 3),
+            aw_med_shape=round(wmedian(sub.shape_index, w), 3),
+            med_width=round(float(np.median(sub.width_px.dropna())), 3),
+            aw_med_width=round(wmedian(sub.width_px.fillna(0), w), 3),
+            med_extent=round(float(np.median(sub.extent)), 3),
+            aw_med_extent=round(wmedian(sub.extent, w), 3)))
+
+    for (na, nb) in focus_names:
+        if nb == "*any*":
+            sub_all = df[(df.class_a == na) | (df.class_b == na)]
+            label = f"{na} <-> any"
+        else:
+            sub_all = df[(df.class_a == na) & (df.class_b == nb)]
+            label = f"{na} -> {nb}"
+        for sizebin, sub in [("all", sub_all),
+                             ("lt_0.1ha", sub_all[sub_all.area_ha < THRESH_HA]),
+                             ("ge_0.1ha", sub_all[sub_all.area_ha >= THRESH_HA])]:
+            rowset(sub, label, sizebin)
+    # pooled ALL
+    for sizebin, sub in [("all", df),
+                         ("lt_0.1ha", df[df.area_ha < THRESH_HA]),
+                         ("ge_0.1ha", df[df.area_ha >= THRESH_HA])]:
+        rowset(sub, "ALL disagreement", sizebin)
+    return pd.DataFrame(out)
+
+
+def aw_ecdf_plot(df, path):
+    import matplotlib
+    matplotlib.use("Agg")
+    import matplotlib.pyplot as plt
+    leg = CI.load_legend()[1]
+    focus = [(leg[ca], leg[cb]) for _, ca, cb in DG.FOCUS_LABELS()] + [("Beaver", None)]
+    fig, axes = plt.subplots(2, 3, figsize=(14, 8)); axes = axes.ravel()
+    for ax, (na, nb) in zip(axes, focus):
+        if nb is None:
+            sub = df[(df.class_a == "Beaver") | (df.class_b == "Beaver")]
+            ttl = "Beaver <-> any"
+        else:
+            sub = df[((df.class_a == na) & (df.class_b == nb)) |
+                     ((df.class_a == nb) & (df.class_b == na))]
+            ttl = f"{na} <-> {nb}"
+        if len(sub) >= 3:
+            v = sub.shape_index.to_numpy(); w = sub.area_ha.to_numpy()
+            order = np.argsort(v); v, w = v[order], w[order]
+            ax.plot(v, np.cumsum(w) / w.sum(), "-", color="#1f77b4", lw=1.8,
+                    label="area-weighted")
+            xs, ys = DG.ecdf(sub.shape_index)
+            ax.plot(xs, ys, ":", color="0.4", lw=1.4, label="count-weighted")
+        ax.axvline(1.128, color="0.6", lw=0.8, ls="--")  # single-pixel value
+        ax.set_title(ttl, fontsize=10)
+        ax.set_xlabel("shape index"); ax.set_ylabel("cumulative fraction")
+        ax.set_xlim(1.0, 3.5); ax.legend(fontsize=7, frameon=False); DG.classic(ax)
+    fig.suptitle("Shape index: area-weighted vs. count-weighted "
+                 "(dashed = 1x1-pixel value 1.128)", fontsize=12)
+    fig.tight_layout(rect=[0, 0, 1, 0.96])
+    fig.savefig(path, dpi=140, bbox_inches="tight"); plt.close(fig)
+
+
+def render_top10(pairs, names, colors, csv_path, png_path):
+    import matplotlib
+    matplotlib.use("Agg")
+    import matplotlib.pyplot as plt
+    from matplotlib.colors import ListedColormap, BoundaryNorm
+    from matplotlib.patches import Patch
+
+    # find largest undirected GS/Wetland disagreement zones across all cells
+    cand = []
+    files = {}
+    for (gid, samp, tgt), revs in sorted(pairs.items()):
+        (ra, fA), (rb, fB) = revs[0], revs[1]
+        cid = f"{gid}_s{samp}_t{tgt}"; files[cid] = (ra, fA, rb, fB)
+        with rasterio.open(fA) as s:
+            a = s.read(1)
+        with rasterio.open(fB) as s:
+            b = s.read(1)
+        if a.shape != b.shape:
+            continue
+        mask = ((a == GS) & (b == WET)) | ((a == WET) & (b == GS))
+        lab, n = ndimage.label(mask, structure=DG.STRUCT)
+        if n == 0:
+            continue
+        area = np.bincount(lab.ravel())[1:]
+        perim = np.bincount(lab.ravel(), weights=DG.per_pixel_perimeter(mask).ravel())[1:]
+        objs = ndimage.find_objects(lab)
+        for lid in range(1, n + 1):
+            Ap, P = int(area[lid - 1]), perim[lid - 1]
+            sl = objs[lid - 1]
+            bbox = (sl[0].stop - sl[0].start) * (sl[1].stop - sl[1].start)
+            cand.append(dict(cell_id=cid, lid=lid, area_px=Ap, area_ha=round(Ap * PIX_HA, 3),
+                             shape_index=round(P / (2 * np.sqrt(np.pi * Ap)), 3),
+                             width_px=round(2 * Ap / P, 3), extent=round(Ap / bbox, 3)))
+    cdf = pd.DataFrame(cand).sort_values("area_px", ascending=False).head(10).reset_index(drop=True)
+    cdf.to_csv(csv_path, index=False)
+    print("\nGrass/Shrub<->Wetland — 10 largest disagreement patches:")
+    print(cdf[["cell_id", "area_ha", "width_px", "shape_index", "extent"]].to_string(index=False))
+
+    # colormap over RF classes
+    order = sorted(names)
+    lut = {c: i + 1 for i, c in enumerate(order)}
+    cmap = ListedColormap(["#ffffff"] + [colors[c] for c in order])
+    norm = BoundaryNorm(np.arange(-0.5, len(order) + 1.5), cmap.N)
+
+    def remap(arr):
+        o = np.zeros_like(arr, np.int16)
+        for c, i in lut.items():
+            o[arr == c] = i
+        return o
+
+    fig, axes = plt.subplots(10, 2, figsize=(7.2, 34))
+    for i, r in cdf.iterrows():
+        ra, fA, rb, fB = files[r.cell_id]
+        with rasterio.open(fA) as s:
+            a = s.read(1)
+        with rasterio.open(fB) as s:
+            b = s.read(1)
+        mask = ((a == GS) & (b == WET)) | ((a == WET) & (b == GS))
+        lab, _ = ndimage.label(mask, structure=DG.STRUCT)
+        patch = lab == r.lid
+        for j, (arr, rev) in enumerate([(a, ra), (b, rb)]):
+            ax = axes[i, j]
+            ax.imshow(remap(arr), cmap=cmap, norm=norm, interpolation="nearest")
+            ax.contour(patch, levels=[0.5], colors="red", linewidths=1.4)
+            ax.set_xticks([]); ax.set_yticks([])
+            if j == 0:
+                ax.set_ylabel(f"{r.area_ha} ha\nw={r.width_px}px sh={r.shape_index}\next={r.extent}",
+                              fontsize=7)
+            ax.set_title(f"{rev}" + (f"  [{r.cell_id}]" if j == 0 else ""), fontsize=8)
+    handles = [Patch(facecolor=colors[c], edgecolor="k", label=names[c])
+               for c in order if c in (GS, WET, 3, 1, 0, 4)]
+    handles.append(Patch(edgecolor="red", facecolor="none", label="disagreement patch"))
+    fig.legend(handles=handles, loc="lower center", ncol=4, fontsize=8)
+    fig.suptitle("Grass/Shrub <-> Wetland: 10 largest disagreement patches\n"
+                 "(two interpretations side by side, patch outlined in red)", fontsize=11)
+    fig.tight_layout(rect=[0, 0.03, 1, 0.985])
+    fig.savefig(png_path, dpi=130, bbox_inches="tight"); plt.close(fig)
+
+
+def main():
+    codes, names, colors = CI.load_legend()
+    pairs = CI.find_pairs()
+    print(f"double-interpreted cells: {len(pairs)} (no de-duplication)")
+
+    df = build_patches(pairs, names, codes)
+    print(f"disagreement patches: {len(df)}")
+
+    summ = size_summary(df)
+    summ.to_csv(os.path.join(OUT, "size_conditional_summary.csv"), index=False)
+    print("\nsize-conditional geometry (>=0.1 ha patches):")
+    show = summ[summ.size_bin == "ge_0.1ha"][
+        ["pair", "n_patches", "total_area_ha", "med_width", "med_shape", "med_extent",
+         "aw_med_width", "aw_med_shape"]]
+    print(show.to_string(index=False))
+
+    aw_ecdf_plot(df, os.path.join(OUT, "shape_index_area_weighted_ecdf.png"))
+    render_top10(pairs, names, colors,
+                 os.path.join(OUT, "gs_wetland_top10.csv"),
+                 os.path.join(OUT, "gs_wetland_top10.png"))
+    print(f"\noutputs -> {OUT}/")
+
+
+if __name__ == "__main__":
+    main()
