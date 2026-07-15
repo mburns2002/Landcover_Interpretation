@@ -36,6 +36,25 @@ pixels within a cell are autocorrelated. High: Water 0.92 (0.86–0.95), Forest 
 scored against a single interpretation of Grass/Shrub or Wetland is bounded by reference
 noise, not just model error, and should be reported with that caveat.
 
+**Directional asymmetry / reviewer bias** (`scripts/reviewer_directional_asymmetry.py`):
+tests whether the top-10 "mina=Wetland vs partner=Grass/Shrub" direction generalizes. Across
+all 69 pairs, the full directed confusion is pooled per reviewer in pixels (area, not patch
+count); the over-assignment index = log2((px R claims class C, partner doesn't + 1)/(px
+partner claims C, R doesn't + 1)), with cluster (pair) bootstrap CIs (seed 42). Files:
+`reviewer_class_overassignment.csv`, `reviewer_directed_classpairs.csv`,
+`reviewer_overassignment_heatmap.png`.
+
+Directional asymmetry **does generalize** — reviewers carry systematic class leanings (95% CI
+excludes 0): **mina over-assigns Agriculture (+1.97) and Water (+1.75); bekka over-assigns
+Insect/Disease (+6.46), Harvest (+1.76), Urban (+1.55); ash over-assigns Water (+2.75)**. On
+the Grass/Shrub↔Wetland boundary specifically there is a reviewer "wetness" axis: robert
+(+2.85) and bekka/mina (mild, +0.28/+0.19) lean Wetland, while ash (+0.63) and peter (+1.64)
+lean Grass/Shrub — so the top-10 pattern was mina (mildly wet) meeting ash (GS-leaning), not
+mina being the extreme. Caveat: the index is relative to comparison partners and the pairing
+graph is unbalanced (bekka↔mina share 22 pairs), so paired reviewers' indices are two views of
+the same contrast (mina +Agriculture mirrors bekka −Agriculture). Rare-class extremes
+(Beaver, Unknown) are unstable and mostly not significant.
+
 **Geometry of disagreement** (`scripts/disagreement_geometry.py`, in `geometry/`): per
 DIRECTED class pair (reviewer_a said A, reviewer_b said B — direction kept, not
 symmetrized), the per-cell disagreement mask is 8-connected-labeled and each patch is
