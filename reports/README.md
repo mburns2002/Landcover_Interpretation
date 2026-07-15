@@ -36,6 +36,27 @@ pixels within a cell are autocorrelated. High: Water 0.92 (0.86–0.95), Forest 
 scored against a single interpretation of Grass/Shrub or Wetland is bounded by reference
 noise, not just model error, and should be reported with that caveat.
 
+**Spatial-tolerance diagnostic** (`scripts/spatial_tolerance.py`): separates
+boundary-misregistration disagreement from conceptual disagreement. Per class, agreement is
+recomputed under relaxed matching (a pixel matches if its class appears anywhere in the k×k
+neighborhood of the other reviewer's map), directionally (dilate B for A→B, dilate A for
+B→A — asymmetric, reported separately, NOT a confusion matrix). The reported quantity is the
+per-class **delta = relaxed − strict, above a heterogeneity null** (B's dilated masks shifted
+3–5 px to estimate chance recovery from local class composition), with cluster (pair)
+bootstrap CIs, all randomness `default_rng(42)`. Both k=3 and k=5 are run. **No relaxed
+overall accuracy is produced — this is a diagnostic of where disagreement is edge-driven, not
+a corrected accuracy.** Files: `spatial_tolerance_delta.csv`, `spatial_tolerance_delta.png`.
+
+Findings (A→B): only **Development (+0.083) and Urban (+0.042)** recover significantly above
+the null — small built features whose disagreement is boundary misregistration. **Grass/Shrub
+(+0.013) and Wetland (+0.009) do not move above null** (CI includes 0) → conceptual
+disagreement, independently confirming the training-conflict result. Forest/Agriculture/Water
+go slightly negative (already ~0.9 strict; residual disagreement is scattered specks, and for
+these dominant classes the heterogeneity null exceeds the observed recovery). Nothing keeps
+climbing from 3×3 to 5×5 (every 5×5 delta ≤ its 3×3), so there is no gross (>1 px)
+misregistration — the edge effects that exist are sub-pixel/one-pixel. The two directions are
+asymmetric (e.g. Urban recovers A→B but not B→A), as expected.
+
 **Directional asymmetry / reviewer bias** (`scripts/reviewer_directional_asymmetry.py`):
 tests whether the top-10 "mina=Wetland vs partner=Grass/Shrub" direction generalizes. Across
 all 69 pairs, the full directed confusion is pooled per reviewer in pixels (area, not patch
