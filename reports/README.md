@@ -83,3 +83,33 @@ smooth patches, high = per-pixel speckle). See `model_speckle.csv` and plots
 Speckle is inversely related to agreement with the interpretations: the smooth maps
 (v2/v3/v5) score highest, the speckly v6 lowest — so v6's low OA partly reflects its
 per-pixel format, not only its accuracy.
+
+### Spatial structure — patch size & Moran's I (`scripts/spatial_structure.py`)
+
+`neighbor_change` separates v6 but not v2/v3/v5. Two richer diagnostics, computed on
+both the model maps and the interpreted cells (measured within the same cell
+footprints, so the interpretations set the reference scale):
+
+- **mean patch size per class** — 8-connected component labeling on each class mask.
+- **Moran's I** — spatial autocorrelation of the class raster (queen contiguity).
+  (Class codes are nominal, so read this as a smoothness diagnostic, not autocorrelation
+  of a meaningful variable.)
+
+Files: `spatial_structure_summary.csv`, `patch_size_by_class.csv`, and plots
+`patch_size_ecdf.png`, `patch_size_hist_smallmultiples.png`,
+`mean_patch_size_by_class.png`, `morans_i_by_source.png`.
+
+| source | mean patch (ha) | Moran's I |
+|--------|:---:|:---:|
+| **interpreted (ref)** | **0.79** | **0.75** |
+| v2 | 1.13 | 0.82 |
+| v3 | 1.18 | 0.82 |
+| v4 | 0.42 | 0.71 |
+| v5 | 0.97 | 0.81 |
+| v6 | 0.024 | 0.09 |
+
+Patch size (unlike neighbor_change) discriminates the smooth variants: ordered by
+grain, v6 (speckle) < v4 (fragmented) < **interpreted** < v5 < v2 < v3 (over-smoothed).
+v5 is closest to the interpreted scale; v2/v3 over-smooth the large classes most
+(Water patches 6–8 ha vs. the interpreted 2.2 ha; Agriculture ~5 ha vs. ~1 ha). Moran's I
+mainly isolates v6 (0.09) and mildly v4 (0.71); v2/v3/v5 cluster near 0.82.

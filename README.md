@@ -253,6 +253,28 @@ well (Water F1 0.93, Forest 0.79, Agriculture 0.78); small disturbance classes
 (harvest, development, insect/disease, beaver) largely get absorbed into the
 dominant stable classes by the model.
 
+## Spatial-structure diagnostics
+
+`scripts/model_speckle.py` reports `neighbor_change` (fraction of adjacent pixels
+that differ) over the full model rasters — it cleanly flags the speckly v6 (0.78 vs
+~0.08 for the smooth variants) but does not distinguish v2/v3/v5.
+
+`scripts/spatial_structure.py` adds two diagnostics that do, computed on both the
+model maps and the interpreted cells (measured within the same cell footprints, so
+the interpretations set the reference scale): **mean patch size per class**
+(8-connected component labeling) and **Moran's I** on the class raster.
+
+```bash
+python scripts/spatial_structure.py               # all versions, all cells
+python scripts/spatial_structure.py --targets 2019
+```
+
+Ordered by spatial grain: v6 (speckle, 0.02 ha) < v4 (fragmented, 0.42 ha) <
+interpreted (0.79 ha) < v5 (0.97) < v2 (1.13) < v3 (1.18 ha). v5 is closest to the
+interpreted scale; v2/v3 over-smooth the large classes (Water 6-8 ha vs. interpreted
+2.2 ha). Moran's I isolates v6 (0.09) and mildly v4 (0.71); v2/v3/v5 cluster near
+0.82. Outputs (CSVs + plots) go to `reports/spatial_structure/`.
+
 ## License
 
 No license specified yet. Add a `LICENSE` file to define usage terms.
