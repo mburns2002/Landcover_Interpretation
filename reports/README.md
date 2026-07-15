@@ -20,6 +20,8 @@ Source: `scripts/compare_interpreters.py` + `scripts/disagreement_summary.py`.
   `per_class_agreement_forest.png` — **per-class F1 with bootstrap CIs** (manuscript table)
 - `pairs/` — all 69 per-pair side-by-side figures (`<grid>_<revA>_vs_<revB>.png`:
   Reviewer A | Reviewer B | Agreement)
+- `flagged_pairs/` — the 17 pairs below 0.70 agreement, rank-prefixed (`01_…` =
+  lowest agreement) so they sort worst-first, matching `flagged_pairs_for_review.csv`
 
 Headline: mean per-pair agreement **0.77** (kappa 0.60). Reviewers agree on
 Water/Forest/Agriculture; four boundaries drive ~68% of disagreement
