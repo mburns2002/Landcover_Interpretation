@@ -22,6 +22,7 @@ Source: `scripts/compare_interpreters.py` + `scripts/disagreement_summary.py`.
   Reviewer A | Reviewer B | Agreement)
 - `flagged_pairs/` — the 17 pairs below 0.70 agreement, rank-prefixed (`01_…` =
   lowest agreement) so they sort worst-first, matching `flagged_pairs_for_review.csv`
+- `geometry/` — geometry of disagreement per **directed** class pair (see below)
 
 Headline: mean per-pair agreement **0.77** (kappa 0.60). Reviewers agree on
 Water/Forest/Agriculture; four boundaries drive ~68% of disagreement
@@ -34,6 +35,28 @@ pixels within a cell are autocorrelated. High: Water 0.92 (0.86–0.95), Forest 
 (0.37–0.55), Grass/Shrub 0.30 (0.23–0.36)**, plus the rare disturbance classes. Any model
 scored against a single interpretation of Grass/Shrub or Wetland is bounded by reference
 noise, not just model error, and should be reported with that caveat.
+
+**Geometry of disagreement** (`scripts/disagreement_geometry.py`, in `geometry/`): per
+DIRECTED class pair (reviewer_a said A, reviewer_b said B — direction kept, not
+symmetrized), the per-cell disagreement mask is 8-connected-labeled and each patch is
+measured for area, 4-connected perimeter (single pixel = 4), perimeter/area, and shape
+index P/(2√(πA)). Agreement areas get the same geometry as a reference (the size of the
+features being mapped). No de-duplication — the 69 replicate pairs are the point.
+Files: `patch_geometry.csv` (one row per patch: cell_id, reviewer_a/b, class_a/b, patch_id,
+area_px, area_ha, perimeter, pa_ratio, shape_index, width_px, touches_edge, kind),
+`patchpair_summary.csv` (per pair × {all, interior}: n, area median/IQR, shape median,
+fraction of disagreement area < / ≥ 0.1 ha), `width_distribution.csv`, and ECDF plots
+`area_ecdf_focus.png`, `shape_index_ecdf_focus.png`, `width_ecdf.png`.
+
+Findings: disagreement is overwhelmingly a thin-ribbon phenomenon at the resolution limit
+— **93% of disagreement patches are ≤ 1 px wide, 99% ≤ 2 px** (median width 0.5 px) — and
+disagreement patches are consistently smaller than the agreed features of the same classes
+(disagreement ECDF sits left of the agreement reference). By *area* it flips: only ~17–45%
+of disagreement area is in sub-0.1 ha patches for the major boundaries, so a minority of
+larger patches holds most of the disagreed area. Traps handled: border-touching patches are
+flagged and summaries reported with/without them (they barely move the distributions), and
+the per-patch pixel width is reported to make the resolution-limit share explicit. Shape
+index clusters ~1.13–1.20 (compact to slightly crenulated), consistent with boundary slivers.
 
 ## model_comparison/ — interpreted vs. AlphaEarth model maps
 
