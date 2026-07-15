@@ -72,6 +72,22 @@ pixel-edge speckle (most of the count) and systematic large-area class-definitio
 (most of the area). Files: `size_conditional_summary.csv`, `gs_wetland_top10.csv`,
 `shape_index_area_weighted_ecdf.png`, `gs_wetland_top10.png`.
 
+**Training-label check** (`scripts/training_polygon_overlay.py`): for the cells holding the
+10 largest GS↔Wetland patches, both reviewers' interpreter training data (the
+`samples_generated` point sidecars — dense pixels from the drawn training polygons, with a
+`class`/`labelId`) is overlaid on each patch to test whether the disagreement is a training
+conflict or model extrapolation. Result: **6 of 10 are direct training conflicts** — both
+reviewers placed training *inside* the zone (0 m) but labeled it differently (e.g. the 121 ha
+patch: bekka trained Grass/Shrub, mina trained Wetland); **3 are one-sided** (only one reviewer
+trained there, the other's nearest training 79–685 m away, so its RF extrapolated); **1 is pure
+extrapolation** (neither trained in the zone). So the biggest GS↔Wetland disagreements are
+genuine, encoded-in-the-labels class-definition conflicts over wet-meadow/wetland transitional
+ground, not model noise. Files: `gs_wetland_training_overlay.csv` (per patch: points-in-zone
+and nearest-training distance per reviewer, class breakdown, category),
+`gs_wetland_training_overlay.png` (training points over the side-by-side maps, patch outlined).
+Source `samples_generated` shapefiles are fetched via rclone into `data/raw/samples_generated/`
+(git-ignored).
+
 ## model_comparison/ — interpreted vs. AlphaEarth model maps
 
 Each interpreted Sentinel-2 cell vs. the model maps (v2–v6).

@@ -1,0 +1,11 @@
+rank,cell_id,area_ha,reviewer_a,a_pts_in_zone,a_dist_m,a_classes_in_zone,reviewer_b,b_pts_in_zone,b_dist_m,b_classes_in_zone,category
+1,06063_s208_t2020,121.64,bekka,178,0.0,grass_shrub_no_change:178,mina,1554,0.0,wetland_no_change:1554,conflict (bekka:grass_shrub_no_change vs mina:wetland_no_change)
+2,42180_s252_t2019,67.25,ash,1815,0.0,wetland_no_change:1776;forest_no_change:39,bekka,299,0.0,grass_shrub_no_change:299,conflict (ash:wetland_no_change vs bekka:grass_shrub_no_change)
+3,42291_s134_t2021,59.55,peter,144,0.0,grass_shrub_no_change:144,robert,1736,0.0,wetland_no_change:1736,conflict (peter:grass_shrub_no_change vs robert:wetland_no_change)
+4,08200_s268_t2020,57.19,ash,1826,0.0,grass_shrub_no_change:1777;wetland_no_change:48;forest_no_change:1,mina,0,79.1,-,one-sided (only ash trained in zone)
+5,06063_s208_t2020,35.42,bekka,0,140.9,-,mina,39,0.0,wetland_no_change:32;urban_no_change:7,one-sided (only mina trained in zone)
+6,06063_s208_t2020,33.17,bekka,224,0.0,grass_shrub_no_change:196;forest_no_change:16;harvest:6;water_no_change:6,mina,74,0.0,wetland_no_change:68;water_no_change:6,conflict (bekka:grass_shrub_no_change vs mina:wetland_no_change)
+7,08200_s268_t2020,30.41,ash,53,5.0,urban_no_change:27;wetland_no_change:25;water_no_change:1,mina,724,0.0,wetland_no_change:696;forest_no_change:28,conflict (ash:urban_no_change vs mina:wetland_no_change)
+8,00422_s11_t2018,30.18,ash,2824,0.0,grass_shrub_no_change:2824,mina,496,0.0,wetland_no_change:496,conflict (ash:grass_shrub_no_change vs mina:wetland_no_change)
+9,06143_s58_t2020,29.25,bekka,27,0.0,wetland_no_change:27,mina,0,685.5,-,one-sided (only bekka trained in zone)
+10,06143_s58_t2020,28.95,bekka,0,45.0,-,mina,0,77.8,-,extrapolation (neither trained in zone)
