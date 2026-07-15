@@ -297,3 +297,30 @@ interpretations are spatially smooth), so plurality is a faithful summary of the
 v6 Approach-C label is a weak window summary and its v6 metrics must be read with that caveat.
 B≠C grows with W and isolates within-window heterogeneity: ~7% of windows at W=9 for the smooth
 versions, but **~15% for v6** (0.11 at W=3 → 0.15 at W=9), where B and C most often diverge.
+
+## Case_D_window_sampling/ — Approach D window sampling (per class)
+
+Implements Approach D (proportional agreement scatter) from Robert's framework, **per class**
+rather than collapsed to binary. Source: `scripts/window_sampling_approachD.py`. Same setup as
+Case B/C (interpreted reference vs. model v2–v6, deduped seed 42 all years, exhaustive
+non-overlapping tiling). For each class c and window, prop_map = fraction of the window's
+jointly-valid pixels that are class c in the map, prop_ref = same in the reference; the pair is
+plotted against the 1:1 line. **No confusion matrix / no OA by design** — a continuous view of
+whether each variant carries the right class abundance in the right area. W ∈ {3,5,7,9} (W=1 is
+degenerate). **Windows where both proportions are 0 are dropped and counted** (rare classes are
+heavily zero-inflated — e.g. v6 Development 42% dropped, Insect/Disease 30%); each panel is
+annotated with the retained window count.
+
+- `window_sampling_metrics.csv` — version × W × class: n_retained, n_dropped, frac_dropped,
+  rmse (to 1:1), mae, bias (prop_map − prop_ref), corr (Pearson)
+- `prop_scatter_<version>.png` — 10 classes (rows) × W (cols) proportional-agreement densities
+- `tightness_vs_W.png` — RMSE-to-1:1 vs W, per class, lines per version
+
+Reading it: RMSE-to-1:1 falls with W for every class and variant — the models carry roughly the
+right class abundance but misplace pixels locally, so aggregating to larger windows tightens the
+scatter onto 1:1. v2/v3/v5 track tightest for the stable classes (Water RMSE 0.16 at W=9); **v4
+is the abundance outlier** for Water/Urban/Agriculture (RMSE 0.37–0.42 at W=9). v6 is the worst
+for Forest (0.54, bias −0.38 — it under-represents forest abundance). Caveat on v6's *low* RMSE
+for the rare disturbance classes: its Pearson corr is ≈0 there, i.e. its per-pixel speckle gives
+diffuse, near-constant proportions that don't track the reference — the low RMSE reflects uniform
+smallness, not agreement, and should be read with the corr column, not on its own.
