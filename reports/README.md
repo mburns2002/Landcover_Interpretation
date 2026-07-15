@@ -16,10 +16,20 @@ Source: `scripts/compare_interpreters.py` + `scripts/disagreement_summary.py`.
 - `lowest_agreement_pairs.csv` / `flagged_pairs_for_review.csv` — pairs to review
 - `global_metrics.txt` — pooled metrics
 - `global_confusion_matrix.png`, `class_disagreement_top.png` — key figures
+- `per_class_agreement_ci.csv` + `per_class_agreement_table.md` / `.tex` +
+  `per_class_agreement_forest.png` — **per-class F1 with bootstrap CIs** (manuscript table)
 
 Headline: mean per-pair agreement **0.77** (kappa 0.60). Reviewers agree on
 Water/Forest/Agriculture; four boundaries drive ~68% of disagreement
 (Forest↔Wetland, Agriculture↔Grass/Shrub, Grass/Shrub↔Forest, Grass/Shrub↔Wetland).
+
+**Per-class reliability with CIs** (`scripts/interpreter_class_ci.py`): per-class F1 with
+95% cluster (pair) bootstrap CIs — the resampling unit is the pair, not the pixel, since
+pixels within a cell are autocorrelated. High: Water 0.92 (0.86–0.95), Forest 0.90
+(0.88–0.91), Agriculture 0.78 (0.72–0.82). **Low (unreliable reference): Wetland 0.47
+(0.37–0.55), Grass/Shrub 0.30 (0.23–0.36)**, plus the rare disturbance classes. Any model
+scored against a single interpretation of Grass/Shrub or Wetland is bounded by reference
+noise, not just model error, and should be reported with that caveat.
 
 ## model_comparison/ — interpreted vs. AlphaEarth model maps
 
