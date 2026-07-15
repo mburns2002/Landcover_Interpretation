@@ -29,7 +29,7 @@ Approach B
   prefer (1,1),(0,0),(1,0),(0,1) — does not generalize to 10 classes; this ordering is the
   documented substitution.)
 
-Outputs (reports/model_comparison/)
+Outputs (reports/Case_B_window_sampling/)
   - window_sampling_metrics.csv     version x W: OA, macro-F1, mean IoU, kappa, n_windows,
                                     windows_per_cell, edge_discarded_px/frac
   - window_sampling_confusion.csv   long-format confusion (version, W, ref, map, count)
@@ -53,7 +53,7 @@ import rasterio
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import compare_interpreted_vs_model as C
 
-OUT = "reports/model_comparison"
+OUT = "reports/Case_B_window_sampling"
 WS = [1, 3, 5, 7, 9]
 N = 10
 VERSIONS = ["v2", "v3", "v4", "v5", "v6"]

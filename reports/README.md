@@ -173,29 +173,6 @@ Across 100 random selections the OA range per version is ≈0.01 and the version
 (v2 > v3 > v5 > v4 > v6) never changes — so the arbitrary choice of which reviewer's
 interpretation is used at each double-labeled location does not affect the conclusions.
 
-### Window sampling — Approach B (`scripts/window_sampling_approachB.py`)
-
-Implements Approach B (dominant pixel-pair per window) from Robert's window-sampling
-framework (`disturbance_uncertainty/docs/window_sampling_methods.md`), adapted from binary to
-our 10-class scheme. Reference = interpreted cells (deduped, one per location, seed 42, all
-target years); map field = model v2–v6. Each cell is tiled EXHAUSTIVELY with non-overlapping
-W×W windows (not random sequential adsorption — our cells are complete frame enumerations, so
-tiling gives inclusion probabilities known by construction); partial edge windows are dropped
-and the discarded pixels reported. Per window, all W² valid (map, ref) pairs are tallied over
-the 10×10 combinations and the single most frequent one is the window's one contribution to
-the confusion matrix. **Tie rule substitution:** Robert's binary preference (1,1)>(0,0)>(1,0)>
-(0,1) does not generalize, so ties break by lowest map code then lowest reference code. W ∈
-{1,3,5,7,9}; **W=1 reproduces the per-pixel `compare_interpreted_vs_model.py` confusion exactly
-(asserted, PASS for all five versions)** before proceeding. Files: `window_sampling_metrics.csv`,
-`window_sampling_confusion.csv`, `window_sampling_metrics.png`.
-
-As W grows, dominant-pair aggregation removes minority within-window disagreement, so agreement
-rises monotonically for the smooth versions (v2 OA 0.66→0.74, κ 0.53→0.62 from W=1→9); the
-speckly v6 barely benefits (OA 0.19→0.24, saturating by W=5 — no dominant pair in per-pixel
-noise). This is a diagnostic of how within-window aggregation changes the assessment, not a
-better accuracy: the per-window design keeps inclusion probabilities exact but effective sample
-size falls as ~1/W² (windows per cell 113,576 → 1,369 from W=1 to W=9; edge discard ≤ 2.4%).
-
 ### Date alignment (target year 2019)
 
 The model maps are a 2018–2020 GEE composite (bracket year 2019). Only interpreted
@@ -263,3 +240,31 @@ grain, v6 (speckle) < v4 (fragmented) < **interpreted** < v5 < v2 < v3 (over-smo
 v5 is closest to the interpreted scale; v2/v3 over-smooth the large classes most
 (Water patches 6–8 ha vs. the interpreted 2.2 ha; Agriculture ~5 ha vs. ~1 ha). Moran's I
 mainly isolates v6 (0.09) and mildly v4 (0.71); v2/v3/v5 cluster near 0.82.
+
+## Case_B_window_sampling/ — Approach B window sampling
+
+Implements Approach B (dominant pixel-pair per window) from Robert's window-sampling
+framework (`disturbance_uncertainty/docs/window_sampling_methods.md`), adapted from binary to
+our 10-class scheme. Source: `scripts/window_sampling_approachB.py`. Reference = interpreted
+cells (deduped, one per location, seed 42, all target years); map field = model v2–v6. Each
+cell is tiled EXHAUSTIVELY with non-overlapping W×W windows (not random sequential adsorption —
+our cells are complete frame enumerations, so tiling gives inclusion probabilities known by
+construction); partial edge windows are dropped and the discarded pixels reported. Per window,
+all W² valid (map, ref) pairs are tallied over the 10×10 combinations and the single most
+frequent one is the window's one contribution to the confusion matrix. **Tie rule
+substitution:** Robert's binary preference (1,1)>(0,0)>(1,0)>(0,1) does not generalize, so ties
+break by lowest map code then lowest reference code. W ∈ {1,3,5,7,9}; **W=1 reproduces the
+per-pixel `compare_interpreted_vs_model.py` confusion exactly (asserted, PASS for all five
+versions)** before proceeding.
+
+- `window_sampling_metrics.csv` — version × W: OA, macro-F1, mean IoU, kappa, n_windows,
+  windows_per_cell, edge-discard
+- `window_sampling_confusion.csv` — long-format confusion (version, W, ref, map, count)
+- `window_sampling_metrics.png` — metrics vs W per version, with windows/cell
+
+As W grows, dominant-pair aggregation removes minority within-window disagreement, so agreement
+rises monotonically for the smooth versions (v2 OA 0.66→0.74, κ 0.53→0.62 from W=1→9); the
+speckly v6 barely benefits (OA 0.19→0.24, saturating by W=5 — no dominant pair in per-pixel
+noise). This is a diagnostic of how within-window aggregation changes the assessment, not a
+better accuracy: the per-window design keeps inclusion probabilities exact but effective sample
+size falls as ~1/W² (windows per cell 113,576 → 1,369 from W=1 to W=9; edge discard ≤ 2.4%).
