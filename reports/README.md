@@ -26,7 +26,7 @@ Source: `scripts/compare_interpreters.py` + `scripts/disagreement_summary.py`.
 - `global_confusion_matrix.png`, `class_disagreement_top.png` — key figures
 - `per_class_agreement_ci.csv` + `per_class_agreement_table.md` / `.tex` +
   `per_class_agreement_forest.png` — **per-class F1 with bootstrap CIs** (manuscript table)
-- `pairs/` — all 69 per-pair side-by-side figures (`<grid>_<revA>_vs_<revB>.png`:
+- `pairs/` — all 72 per-pair side-by-side figures (`<grid>_<revA>_vs_<revB>.png`:
   Reviewer A | Reviewer B | Agreement)
 - `flagged_pairs/` — the 17 pairs below 0.70 agreement, rank-prefixed (`01_…` =
   lowest agreement) so they sort worst-first, matching `flagged_pairs_for_review.csv`
@@ -332,3 +332,37 @@ for Forest (0.54, bias −0.38 — it under-represents forest abundance). Caveat
 for the rare disturbance classes: its Pearson corr is ≈0 there, i.e. its per-pixel speckle gives
 diffuse, near-constant proportions that don't track the reference — the low RMSE reflects uniform
 smallness, not agreement, and should be read with the corr column, not on its own.
+
+## Case_A_window_sampling/ — Approach A as a design experiment
+
+Approach A (pixel-level enumeration) from Robert's framework, run as a DESIGN EXPERIMENT, not
+another aggregation scheme. Source: `scripts/window_sampling_approachA.py`. Under the exhaustive
+tiling used for B/C/D, A collapses to the per-pixel comparison at any W, so it only becomes
+informative under SAMPLING. Setup: interpreted reference vs. model v2–v6, de-duplicated one
+interpretation per location (seed 42, all target years); the cells are a simple random sample
+from the grid_112_naip_brackets frame, so the cell is the primary sampling unit. Within each
+cell, n windows of size W×W are placed at random (RSA, reject overlaps), all W² pixels enumerated
+and pooled into a confusion matrix — one draw. Sweep n ∈ {1,2,5,10,25,50}, W ∈ {1,3,5,7,9}, 200
+draws each; per draw record OA, macro-F1, kappa; compare the sampling distribution to the census
+(we have every pixel, so the census is the known truth). **These are draws from a design whose
+properties we characterize — NOT accuracy estimates.**
+
+(Note: the deduped set is now 180 cells, not the 154 in the original spec, because 30 newly
+pulled interpreted cells — 26 bekka singletons on new grids — are part of the same frame sample.
+The design conclusions are identical either way.)
+
+- `approachA_design.csv` — version × n × W: census, mean/SD/2.5-97.5 pct of each metric, bias,
+  mean pixels, binomial SD, design effect, SD ratio, effective sample size
+- `sd_vs_cost.png` — SD(OA) vs pixels sampled per cell (n·W²), one line per W, per version
+- `design_effect_vs_W.png` — design effect vs W (+ information retained per pixel)
+- `bias_vs_W.png` — mean sampled OA − census OA vs W (unbiasedness check)
+
+Findings. **Bias ≈ 0 at all W** (max |bias| 0.005) — random window placement recovers the census.
+**Precision is not set by pixel count:** (n=50, W=1) and (n=2, W=5) both touch 50 pixels/cell but
+W=1 is far more precise, because pixels within a window are autocorrelated. **Design effect** (the
+cost of that autocorrelation) is ~0.8–0.95 at W=1 (≈ independent) and climbs steeply to ~28–32 at
+W=9 for the smooth versions — a 9×9 window's 81 pixels carry only ~3 independent pixels' worth of
+information. The **speckly v6 pays far less** (deff ~8 at W=9) because adjacent pixels are not
+autocorrelated. Effective sample size (N / deff) makes the tradeoff legible: at equal pixels
+interpreted, **many small windows beat a few large ones** — decisively for smooth maps, marginally
+for v6.

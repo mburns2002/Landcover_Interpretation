@@ -263,6 +263,46 @@ DESC = {
  "Interpret: v2/v3/v5 over-smooth the large classes (Water/Agriculture patches far larger "
  "than interpreted), v4 is fragmented, v6 ~0 everywhere (speckle)."),
 
+"sd_vs_cost.png": (
+ "Approach A design experiment: precision at equal cost",
+ "Approach A (window-as-sampling-unit) precision vs sampling cost.\n"
+ "Layout: one panel per model version. Axes: x = pixels sampled per cell (n*W^2, log); y = "
+ "SD of overall accuracy across 200 random draws (log); one line per window size W.\n"
+ "Method: within each cell, n non-overlapping WxW windows are placed at random (random "
+ "sequential adsorption), all W^2 pixels enumerated and pooled into a confusion matrix.\n"
+ "Why: at equal x, two designs interpret the same number of pixels — the lower curve "
+ "extracts more information per pixel.\n"
+ "Interpret: for the smooth versions (v2-v5), W=1 sits well below larger W at equal cost, so "
+ "many small windows (or single pixels) buy far more precision per pixel interpreted than a "
+ "few large windows — because pixels within a window are spatially autocorrelated. For the "
+ "speckly v6 the curves nearly coincide (little autocorrelation to waste). These are draws "
+ "from a design, NOT accuracy estimates."),
+
+"design_effect_vs_W.png": (
+ "Approach A design effect (cost of autocorrelation)",
+ "How much within-window autocorrelation inflates sampling variance.\n"
+ "Left panel: design effect = Var(sampled OA) / Var_binomial vs W, one line per version "
+ "(Var_binomial = p(1-p)/N from the census OA p and the pooled pixel count N; a VARIANCE "
+ "ratio, its square root is the SD ratio); dashed line at 1. Right panel: information "
+ "retained per pixel = 1 / design effect vs W.\n"
+ "Why: quantifies how far the effective sample size falls short of the nominal pixel count "
+ "— 'how much autocorrelation costs you.'\n"
+ "Interpret: at W=1 the design effect is ~0.8-0.95 (≈ independent pixels; slightly below 1 "
+ "from cell stratification), rising steeply to ~28-32 at W=9 for the smooth versions — a 9x9 "
+ "window's 81 pixels are worth only ~3 independent pixels. The speckly v6 stays low (~8 at "
+ "W=9) because adjacent pixels are not autocorrelated. Effective sample size = N / deff."),
+
+"bias_vs_W.png": (
+ "Approach A unbiasedness check",
+ "Does the sampling design recover the known census value?\n"
+ "Axes: x = window size W; y = mean sampled overall accuracy (over 200 draws) minus the "
+ "census OA; one line per version; dashed at 0.\n"
+ "Why: a valid design should equal the census in expectation; the census is the truth here "
+ "because we have every pixel.\n"
+ "Interpret: bias is ~0 at all W (max |bias| ~0.005), so window aggregation under random "
+ "placement is unbiased for the census — larger windows cost precision (see the design "
+ "effect), not accuracy."),
+
 "morans_i_by_source.png": (
  "Moran's I of the class raster, by source",
  "Spatial autocorrelation (Moran's I) of the class raster, per source.\n"
