@@ -5,7 +5,7 @@
 
 ## Summary
 
-Sixty-nine grid cells were independently interpreted by two reviewers each. Pooled
+Seventy-two grid cells were independently interpreted by two reviewers each (a later batch added three bekka-robert pairs and turned one existing mina-peter cell into a mina/peter/robert triple, currently scored as its mina-peter pair). Pooled
 agreement is moderate (overall agreement 0.77, Cohen's κ 0.66), but this masks a strong
 per-class split: reviewers agree on unambiguous cover (Water, Forest, Agriculture; F1 ≥ 0.78)
 and diverge sharply on transitional and disturbance classes (Grass/Shrub F1 0.30, Wetland
@@ -22,7 +22,7 @@ and should be reported with that caveat.
 
 ## Data and setup
 
-Each of the 69 double-interpreted cells is a Sentinel-2 grid cell (10 m, EPSG:5070, ~337 × 337
+Each of the 72 double-interpreted cells is a Sentinel-2 grid cell (10 m, EPSG:5070, ~337 × 337
 px) labeled by two of five reviewers (ash, bekka, mina, peter, robert). Reviewers drew training
 polygons; every pixel inside a polygon became a labeled training sample (`samples_generated`
 sidecars), and a Random Forest produced the wall-to-wall classification (`rf_class` raster) used
@@ -72,7 +72,7 @@ Four undirected boundaries account for ~68% of all disagreeing pixels: Forest↔
 Agriculture↔Grass/Shrub (17%), Grass/Shrub↔Forest (14%), Grass/Shrub↔Wetland (14%).
 
 Disagreement patches (per directed class pair, 8-connected labeling; area, 4-connected perimeter,
-and shape index P/(2√(πA))) show two regimes. **By count** it is pixel-edge speckle: of 250,547
+and shape index P/(2√(πA))) show two regimes. **By count** it is pixel-edge speckle: of 255,985
 disagreement patches, 93% are ≤ 1 px wide and 99% ≤ 2 px (median width 0.5 px), and the pooled
 shape index (~1.13–1.20) is essentially the single-pixel value (a 1×1 patch has shape index 1.128).
 **By area** the picture inverts. Weighting by area rather than patch count, the patches that hold
@@ -110,7 +110,7 @@ boundary specifically there is a reviewer "wetness" axis: robert (+2.85) and, mi
 (+0.28/+0.19) lean Wetland, while ash (+0.63) and peter (+1.64) lean Grass/Shrub. Disagreement on
 these boundaries is thus partly a reproducible difference in how individual reviewers apply the
 class definitions. *Caveat:* the index is relative to comparison partners, and the co-labeling
-graph is unbalanced (bekka and mina share 22 of the 69 pairs), so paired reviewers' indices are two
+graph is unbalanced (bekka and mina share 22 of the 72 pairs), so paired reviewers' indices are two
 views of the same contrast; rare-class extremes (Beaver, Unknown) are unstable.
 
 ## Diagnostic 5 — Edge-driven vs conceptual disagreement (spatial tolerance)

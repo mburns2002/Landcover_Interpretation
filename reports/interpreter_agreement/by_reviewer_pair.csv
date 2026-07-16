@@ -2,7 +2,7 @@ pair,n,overall_agreement,macro_f1,mean_iou,kappa
 mina-robert,6,0.87,0.691,0.646,0.744
 peter-robert,3,0.859,0.562,0.474,0.593
 bekka-peter,10,0.824,0.5,0.422,0.677
-bekka-robert,5,0.808,0.433,0.35,0.667
+bekka-robert,8,0.822,0.492,0.414,0.648
 ash-bekka,10,0.774,0.456,0.374,0.596
 ash-peter,1,0.757,0.507,0.422,0.572
 ash-mina,7,0.749,0.466,0.384,0.612

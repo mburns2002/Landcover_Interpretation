@@ -6,7 +6,8 @@ scripts in `scripts/` to reproduce everything.
 
 ## interpreter_agreement/ — inter-interpreter agreement
 
-Same grid cell independently labeled by two reviewers (69 pairs).
+Same grid cell independently labeled by two reviewers (72 pairs; 69 pairs + a first
+mina/peter/robert triple scored as its mina-peter pair).
 Source: `scripts/compare_interpreters.py` + `scripts/disagreement_summary.py`.
 
 - `per_pair_metrics.csv` — one row per reviewer pair (agreement, F1, IoU, kappa)
@@ -59,7 +60,7 @@ asymmetric (e.g. Urban recovers A→B but not B→A), as expected.
 
 **Directional asymmetry / reviewer bias** (`scripts/reviewer_directional_asymmetry.py`):
 tests whether the top-10 "mina=Wetland vs partner=Grass/Shrub" direction generalizes. Across
-all 69 pairs, the full directed confusion is pooled per reviewer in pixels (area, not patch
+all 72 pairs, the full directed confusion is pooled per reviewer in pixels (area, not patch
 count); the over-assignment index = log2((px R claims class C, partner doesn't + 1)/(px
 partner claims C, R doesn't + 1)), with cluster (pair) bootstrap CIs (seed 42). Files:
 `reviewer_class_overassignment.csv`, `reviewer_directed_classpairs.csv`,
@@ -81,7 +82,7 @@ DIRECTED class pair (reviewer_a said A, reviewer_b said B — direction kept, no
 symmetrized), the per-cell disagreement mask is 8-connected-labeled and each patch is
 measured for area, 4-connected perimeter (single pixel = 4), perimeter/area, and shape
 index P/(2√(πA)). Agreement areas get the same geometry as a reference (the size of the
-features being mapped). No de-duplication — the 69 replicate pairs are the point.
+features being mapped). No de-duplication — the 72 replicate pairs are the point.
 Files: `patch_geometry.csv` (one row per patch: cell_id, reviewer_a/b, class_a/b, patch_id,
 area_px, area_ha, perimeter, pa_ratio, shape_index, width_px, touches_edge, kind),
 `patchpair_summary.csv` (per pair × {all, interior}: n, area median/IQR, shape median,

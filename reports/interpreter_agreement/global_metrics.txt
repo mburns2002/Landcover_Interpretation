@@ -1,24 +1,24 @@
-multi-reviewer pairs: 69
-pooled valid pixels: 7,837,946
+multi-reviewer pairs: 72
+pooled valid pixels: 8,178,653
 
-mean per-pair overall agreement: 0.7718
-mean per-pair kappa:             0.5947
+mean per-pair overall agreement: 0.7748
+mean per-pair kappa:             0.5957
 
-pooled overall agreement: 0.7717
-pooled macro F1:          0.4748
-pooled mean IoU:          0.3642
-pooled kappa:             0.6633
+pooled overall agreement: 0.7747
+pooled macro F1:          0.4796
+pooled mean IoU:          0.3703
+pooled kappa:             0.6675
 
 class                   f1     iou   support(px)
-Urban                0.604   0.433       377,082
-Agriculture          0.776   0.634     2,726,861
-Grass/Shrub          0.296   0.173     1,233,209
-Forest               0.898   0.815     8,100,180
-Water                0.919   0.850     1,308,352
-Wetland              0.467   0.305     1,653,591
+Urban                0.608   0.436       386,852
+Agriculture          0.779   0.639     2,901,239
+Grass/Shrub          0.289   0.169     1,261,973
+Forest               0.899   0.817     8,457,183
+Water                0.919   0.850     1,315,666
+Wetland              0.475   0.311     1,707,542
 Unknown              0.451   0.291        38,595
-Other                0.000   0.000         4,874
-Harvest              0.696   0.533       149,427
-Development          0.283   0.165        11,192
-Insect/Disease       0.230   0.130        63,358
-Beaver               0.077   0.040         9,171
+Other                0.000   0.000         5,076
+Harvest              0.747   0.597       199,144
+Development          0.280   0.163        11,320
+Insect/Disease       0.229   0.129        63,533
+Beaver               0.077   0.040         9,183
