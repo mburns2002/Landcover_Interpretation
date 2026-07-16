@@ -1,16 +1,21 @@
 #!/usr/bin/env python3
-"""Embed a structured explanation into each report figure's PNG metadata.
+"""Add a visible caption band (and embedded metadata) explaining each report figure.
 
-Writes a `Title` and `Description` tEXt chunk (axes, metric definition, why the figure
-exists, how to interpret) into every PNG under reports/. The text travels inside the file;
-read it back with `exiftool <file>`, ImageMagick `identify -verbose`, or PIL
-(`Image.open(p).text`). Re-runnable — apply again after regenerating any figure.
+Draws a caption under every PNG under reports/ — title, axes, metric definition, why the
+figure exists, and how to interpret it — so the explanation is visible when viewing the
+image normally. The same text is also written to the PNG's `Title`/`Description` metadata
+(read with `exiftool`, `identify -verbose`, or PIL `Image.open(p).text`).
+
+Idempotent: a `Captioned` flag in the metadata prevents stacking captions on re-runs.
+Post-processes existing PNGs, so no plotting script needs to be re-run. If you regenerate a
+figure (fresh, uncaptioned), just run this again to re-caption it.
 
 Usage:
-    python scripts/annotate_figures.py            # annotate all
-    python scripts/annotate_figures.py --check     # print embedded text, don't write
+    python scripts/annotate_figures.py             # caption + embed metadata
+    python scripts/annotate_figures.py --meta-only # embed metadata only, no caption band
+    python scripts/annotate_figures.py --check      # print embedded text, don't write
 
-Requires: pillow
+Requires: pillow, matplotlib (for the bundled DejaVu font)
 """
 
 import argparse
@@ -18,9 +23,11 @@ import glob
 import os
 import re
 
-from PIL import Image, PngImagePlugin
+import matplotlib
+from PIL import Image, ImageDraw, ImageFont, PngImagePlugin
 
 REPORTS = "reports"
+FONT_DIR = os.path.join(matplotlib.get_data_path(), "fonts", "ttf")
 
 # ---- exact-basename descriptions (unique figures) -------------------------------------
 DESC = {
@@ -344,18 +351,68 @@ def describe(path):
     return None
 
 
+def _font(size, bold=False):
+    return ImageFont.truetype(
+        os.path.join(FONT_DIR, "DejaVuSans-Bold.ttf" if bold else "DejaVuSans.ttf"), size)
+
+
+def _wrap(draw, text, font, max_w):
+    """Word-wrap `text` to `max_w` pixels, preserving explicit newlines as paragraph breaks."""
+    lines = []
+    for para in text.split("\n"):
+        if not para.strip():
+            lines.append("")
+            continue
+        cur = ""
+        for word in para.split(" "):
+            trial = (cur + " " + word).strip()
+            if not cur or draw.textlength(trial, font=font) <= max_w:
+                cur = trial
+            else:
+                lines.append(cur)
+                cur = word
+        lines.append(cur)
+    return lines
+
+
+def render_caption(im, title, body):
+    """Return a new image = `im` with a white caption band (title + body) drawn beneath it."""
+    W = im.width
+    margin = 20
+    fs = max(13, min(20, W // 95))
+    tf, bf = _font(fs + 2, bold=True), _font(fs)
+    lh_t, lh_b = fs + 8, fs + 6
+    scratch = ImageDraw.Draw(im)
+    max_w = W - 2 * margin
+    tlines = _wrap(scratch, title, tf, max_w)
+    blines = _wrap(scratch, body, bf, max_w)
+    cap_h = margin + len(tlines) * lh_t + 8 + len(blines) * lh_b + margin
+    canvas = Image.new("RGB", (W, im.height + cap_h), "white")
+    canvas.paste(im, (0, 0))
+    d = ImageDraw.Draw(canvas)
+    d.line([(0, im.height), (W, im.height)], fill=(150, 150, 150), width=2)
+    y = im.height + margin
+    for ln in tlines:
+        d.text((margin, y), ln, fill=(0, 0, 0), font=tf); y += lh_t
+    y += 8
+    for ln in blines:
+        d.text((margin, y), ln, fill=(45, 45, 45), font=bf); y += lh_b
+    return canvas
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--check", action="store_true", help="print embedded text instead of writing")
+    ap.add_argument("--meta-only", action="store_true", help="embed metadata but do not draw a caption")
     args = ap.parse_args()
 
     pngs = sorted(glob.glob(os.path.join(REPORTS, "**", "*.png"), recursive=True))
-    done = missing = 0
+    captioned = embedded = missing = 0
     for p in pngs:
         if args.check:
             t = Image.open(p).text
-            print(f"\n=== {p} ===")
+            print(f"\n=== {p} ===  (captioned={t.get('Captioned','0')})")
             print("Title:", t.get("Title", "(none)"))
             print(t.get("Description", "(no Description)")[:300])
             continue
@@ -365,15 +422,22 @@ def main():
             print(f"  NO DESCRIPTION: {p}")
             continue
         title, desc = d
-        im = Image.open(p)
+        orig = Image.open(p)
+        already = orig.text.get("Captioned") == "1"
         info = PngImagePlugin.PngInfo()
         info.add_text("Title", title)
         info.add_text("Description", desc)
         info.add_text("Source", "Landcover_Interpretation / scripts/annotate_figures.py")
-        im.save(p, pnginfo=info)
-        done += 1
+        if args.meta_only or already:
+            info.add_text("Captioned", "1" if already else "0")
+            orig.save(p, pnginfo=info)
+            embedded += 1
+        else:
+            info.add_text("Captioned", "1")
+            render_caption(orig.convert("RGB"), title, desc).save(p, pnginfo=info)
+            captioned += 1
     if not args.check:
-        print(f"\nannotated {done} figures; {missing} without a description")
+        print(f"\ncaptioned {captioned}; metadata-only {embedded}; {missing} without a description")
 
 
 if __name__ == "__main__":

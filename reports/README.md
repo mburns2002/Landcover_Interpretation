@@ -4,11 +4,12 @@ Curated summary artifacts so results are viewable on GitHub without regenerating
 them. The full per-cell/per-pair figures live in `outputs/` (git-ignored); rerun the
 scripts in `scripts/` to reproduce everything.
 
-Every `.png` here carries an embedded explanation (axes, metric definition, why the
-figure exists, how to interpret) in its PNG metadata. Read it with
-`exiftool <file>`, ImageMagick `identify -verbose <file>`, or in Python
-`from PIL import Image; print(Image.open(path).text["Description"])`.
-Re-apply after regenerating figures with `python scripts/annotate_figures.py`.
+Every `.png` here has an explanation rendered directly beneath the figure (title, axes,
+metric definition, why it exists, how to interpret) — visible when you open the image.
+The same text is also embedded in the PNG metadata (read with `exiftool <file>` or
+`from PIL import Image; Image.open(p).text["Description"]`). Regenerating a figure
+overwrites it without the caption; re-apply with `python scripts/annotate_figures.py`
+(idempotent — a `Captioned` flag prevents stacking).
 
 ## interpreter_agreement/ — inter-interpreter agreement
 
