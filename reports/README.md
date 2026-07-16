@@ -4,6 +4,12 @@ Curated summary artifacts so results are viewable on GitHub without regenerating
 them. The full per-cell/per-pair figures live in `outputs/` (git-ignored); rerun the
 scripts in `scripts/` to reproduce everything.
 
+Every `.png` here carries an embedded explanation (axes, metric definition, why the
+figure exists, how to interpret) in its PNG metadata. Read it with
+`exiftool <file>`, ImageMagick `identify -verbose <file>`, or in Python
+`from PIL import Image; print(Image.open(path).text["Description"])`.
+Re-apply after regenerating figures with `python scripts/annotate_figures.py`.
+
 ## interpreter_agreement/ — inter-interpreter agreement
 
 Same grid cell independently labeled by two reviewers (72 pairs; 69 pairs + a first
