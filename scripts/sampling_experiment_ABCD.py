@@ -1,0 +1,489 @@
+#!/usr/bin/env python3
+"""Sampling experiment against known truth: approaches A/B/C/D under two designs.
+
+Separate from the exhaustive-tiling runs in Case_{A,B,C,D}_window_sampling/ (those are the
+census); this measures how fast SAMPLED estimates approach that census, and whether they get
+there at all. Draws from designs whose properties we characterize -- NOT accuracy estimates.
+
+Setup: interpreted CKIT-RF cells = reference, model maps v2-v6 = map field; de-duplicated one
+interpretation per location (grid+sample+target), default_rng seed 42, all target years. The
+cells are a simple random sample from the grid_112_naip_brackets_5_11_26 frame, so the cell is
+the primary sampling unit and the pixels within it are a census.
+
+Population of windows: the exhaustive non-overlapping WxW tiling of each cell (positions
+i*W,j*W), restricted to windows whose CENTER pixel is jointly valid (reference and model class
+both in 1..10). Sampling draws n distinct windows (without replacement) from this pooled,
+finite population -- so sampled windows never overlap. Stratum = the center pixel's reference
+class (10 strata). W in {1,3,5,7,9}; n in {20,50,100,200,500,1000,2000,5000} (total across the
+pooled frame, not per cell); 100 iterations per (n, W, design). Seeds derived from base 42.
+
+Stratum ceiling: the count of population windows per center reference class (per W) -- reported
+as a table; it bounds what any design can achieve for a class (once a stratum is exhausted,
+more n buys nothing for it).
+
+Design 1 (simple random): n windows uniform from the pool. Self-weighting; unbiased for the
+census; expected to FAIL for rare classes (documented, not hidden): per class per (n,W) we
+report the fraction of iterations in which the class is entirely absent.
+
+Design 2 (stratified on center reference class): equal allocation n/10 per stratum; if a
+stratum has fewer windows than its allocation, take all and record the shortfall (other strata
+are not enlarged). Equal allocation oversamples rare classes on purpose. Estimators are
+Horvitz-Thompson: window weight = N_h / n_h (population / realized stratum size). We report the
+WEIGHTED estimate (weights = true center-class proportions; converges to census) and the
+UNWEIGHTED one (won't), so the gap is visible.
+
+Approaches per iteration, per variant:
+  A per-pixel: pool all W^2 pixels of sampled windows into a confusion matrix (no aggregation).
+  B dominant (map,ref) pair per window; ties = lowest map code then lowest ref code (documented
+    substitution for Robert's binary tie rule).
+  C plurality class per field independently; ties = lowest class code; also the fraction of
+    windows whose plurality was a true majority.
+  D per-class prop_map vs prop_ref; CORRELATION is the primary tightness metric (RMSE rewards
+    predicting near-zero for rare classes -- corr leads; rmse and bias reported alongside).
+    Correlation is undefined for a stratum with no variance -- reported, not dropped.
+  W=1 collapses A=B=C to the same per-pixel quantity -- asserted as a correctness check.
+
+Reported (long-format CSVs under reports/Case_ABCD_sampling/):
+  stratum_ceiling.csv, census.csv, metrics_by_n.csv (bias/SD vs census, design effect, eff n),
+  class_absence.csv, stratum_realized.csv, strat_efficiency.csv, d_correlation.csv
+Plots (no gridlines, keep x/y axes): sd_vs_n_OA, bias_vs_n_OA, design_effect_vs_W,
+  strat_efficiency, class_absence, d_corr_vs_n.
+
+Requires: rasterio, numpy, pandas, matplotlib
+"""
+
+import argparse
+import glob
+import os
+import sys
+
+import numpy as np
+import pandas as pd
+import rasterio
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import compare_interpreted_vs_model as C
+
+OUT = "reports/Case_ABCD_sampling"
+N = 10
+WS = [1, 3, 5, 7, 9]
+NSAMP = [20, 50, 100, 200, 500, 1000, 2000, 5000]
+VERSIONS = ["v2", "v3", "v4", "v5", "v6"]
+ITERS = 100
+SEED = 42
+
+
+# ---- metrics from a (float-weighted) confusion matrix; returns scalars + per-class F1 -------
+def cm_metrics(cm):
+    tp = np.diag(cm).astype(float)
+    row = cm.sum(1); col = cm.sum(0); tot = cm.sum()
+    if tot <= 0:
+        return np.nan, np.nan, np.nan, np.full(N, np.nan)
+    oa = tp.sum() / tot
+    pe = (row * col).sum() / (tot * tot)
+    kappa = (oa - pe) / (1 - pe) if (1 - pe) != 0 else np.nan
+    with np.errstate(divide="ignore", invalid="ignore"):
+        prec = np.where(col > 0, tp / col, np.nan)
+        rec = np.where(row > 0, tp / row, np.nan)
+        f1 = np.where((prec + rec) > 0, 2 * prec * rec / (prec + rec), np.nan)
+    present = (row + col) > 0
+    macro = np.nanmean(f1[present]) if present.any() else np.nan
+    return oa, kappa, macro, f1
+
+
+def precompute_population(cells, ref_cache, tiles, W):
+    """Build per-window population arrays for one variant and window size W.
+
+    Returns dict with, over windows whose center pixel is jointly valid:
+      cent (uint8 center ref class 1..10), codes (Npop, W*W) uint8 pair code or 255,
+      domB, plmap, plref (uint8), majmap, majref (bool), pmap/pref (Npop,10) f32, nvalid (int).
+    """
+    cent_l, codes_l, domB_l, plmap_l, plref_l = [], [], [], [], []
+    majmap_l, majref_l, pmap_l, pref_l, nval_l = [], [], [], [], []
+    half = W // 2
+    for f in cells:
+        ref = ref_cache[f]
+        with rasterio.open(f) as ds:
+            mdl = C.stitch_model_to_cell(ds, tiles)
+        H, Wd = ref.shape
+        nH, nW = H // W, Wd // W
+        if nH == 0 or nW == 0:
+            continue
+        r = ref[:nH * W, :nW * W].astype(np.int16)
+        m = mdl[:nH * W, :nW * W].astype(np.int16)
+        v = (r >= 1) & (r <= N) & (m >= 1) & (m <= N)
+        # window blocks: (nH, W, nW, W) -> (nH, nW, W, W)
+        rb = r.reshape(nH, W, nW, W).transpose(0, 2, 1, 3).reshape(nH * nW, W * W)
+        mb = m.reshape(nH, W, nW, W).transpose(0, 2, 1, 3).reshape(nH * nW, W * W)
+        vb = v.reshape(nH, W, nW, W).transpose(0, 2, 1, 3).reshape(nH * nW, W * W)
+        # center pixel of each window
+        rc = r[half::W, half::W][:nH, :nW].reshape(-1)
+        mc = m[half::W, half::W][:nH, :nW].reshape(-1)
+        keep = (rc >= 1) & (rc <= N) & (mc >= 1) & (mc <= N)
+        if not keep.any():
+            continue
+        rb, mb, vb = rb[keep], mb[keep], vb[keep]
+        nvalid = vb.sum(1)
+        codes = np.where(vb, (rb - 1) * N + (mb - 1), 255).astype(np.uint8)
+        # per-window class counts (map, ref) over valid pixels -> plurality, majority, props
+        mc_counts = np.zeros((len(rb), N), np.int32)
+        rc_counts = np.zeros((len(rb), N), np.int32)
+        for c in range(N):
+            mc_counts[:, c] = ((mb == c + 1) & vb).sum(1)
+            rc_counts[:, c] = ((rb == c + 1) & vb).sum(1)
+        plmap = mc_counts.argmax(1).astype(np.uint8)          # ties -> lowest class code
+        plref = rc_counts.argmax(1).astype(np.uint8)
+        majmap = mc_counts.max(1) * 2 > nvalid
+        majref = rc_counts.max(1) * 2 > nvalid
+        nv = np.maximum(nvalid, 1)[:, None]
+        pmap = (mc_counts / nv).astype(np.float32)
+        pref = (rc_counts / nv).astype(np.float32)
+        # dominant joint pair per window (ties -> lowest pair code == lowest map then ref)
+        pair_counts = np.zeros((len(rb), N * N), np.int32)
+        for p in range(N * N):
+            pair_counts[:, p] = (codes == p).sum(1)
+        domB = pair_counts.argmax(1).astype(np.uint8)
+
+        cent_l.append(rc[keep].astype(np.uint8)); codes_l.append(codes)
+        domB_l.append(domB); plmap_l.append(plmap); plref_l.append(plref)
+        majmap_l.append(majmap); majref_l.append(majref)
+        pmap_l.append(pmap); pref_l.append(pref); nval_l.append(nvalid.astype(np.int32))
+
+    return dict(cent=np.concatenate(cent_l), codes=np.concatenate(codes_l),
+                domB=np.concatenate(domB_l), plmap=np.concatenate(plmap_l),
+                plref=np.concatenate(plref_l), majmap=np.concatenate(majmap_l),
+                majref=np.concatenate(majref_l), pmap=np.concatenate(pmap_l),
+                pref=np.concatenate(pref_l), nvalid=np.concatenate(nval_l))
+
+
+def confusion_from_windows(pop, idx, weights, W):
+    """Weighted A/B/C confusion matrices for the sampled window indices."""
+    wB = weights
+    cmB = np.bincount(pop["domB"][idx], weights=wB, minlength=N * N).reshape(N, N)
+    cmC = np.bincount(pop["plref"][idx] * N + pop["plmap"][idx], weights=wB,
+                      minlength=N * N).reshape(N, N)
+    # A: pixel codes of sampled windows, each pixel weighted by its window weight
+    codes = pop["codes"][idx].reshape(-1)
+    wpix = np.repeat(weights, W * W)
+    good = codes != 255
+    cmA = np.bincount(codes[good], weights=wpix[good], minlength=N * N).reshape(N, N)
+    return cmA, cmB, cmC
+
+
+def d_correlation(pop, idx):
+    """Per-class Pearson corr of prop_map vs prop_ref over sampled windows (+ rmse, bias)."""
+    pm = pop["pmap"][idx]; pr = pop["pref"][idx]
+    corr = np.full(N, np.nan); rmse = np.full(N, np.nan); bias = np.full(N, np.nan)
+    for c in range(N):
+        x, y = pm[:, c], pr[:, c]
+        rmse[c] = np.sqrt(np.mean((x - y) ** 2))
+        bias[c] = float(x.mean() - y.mean())
+        sx, sy = x.std(), y.std()
+        if sx > 0 and sy > 0:
+            corr[c] = float(np.corrcoef(x, y)[0, 1])
+    return corr, rmse, bias
+
+
+def main():
+    ap = argparse.ArgumentParser(description=__doc__,
+                                 formatter_class=argparse.RawDescriptionHelpFormatter)
+    ap.add_argument("--versions", nargs="+", default=VERSIONS)
+    ap.add_argument("--ws", nargs="+", type=int, default=WS)
+    ap.add_argument("--ns", nargs="+", type=int, default=NSAMP)
+    ap.add_argument("--iters", type=int, default=ITERS)
+    args = ap.parse_args()
+
+    rf2common, names, colors = C.load_mappings()
+    cells = sorted(glob.glob(os.path.join(C.RF_DIR, "**", "rf_class*Sentinel-2*.tif"), recursive=True))
+    cells, ndup = C.dedupe_cells(cells, SEED)
+    print(f"de-duplicated: {ndup} location(s); {len(cells)} cells (all target years, seed {SEED})")
+    os.makedirs(OUT, exist_ok=True)
+    ref_cache = {}
+    for f in cells:
+        with rasterio.open(f) as ds:
+            ref_cache[f] = C.to_common_rf(ds.read(1), rf2common)
+
+    ss = np.random.SeedSequence(SEED)
+    ceiling_rows, census_rows, metric_rows = [], [], []
+    absence_rows, realized_rows, deff_rows, dcorr_rows, effrows = [], [], [], [], []
+
+    for v in args.versions:
+        tiles = [rasterio.open(t) for t in C.model_tiles(v)]
+        for W in args.ws:
+            pop = precompute_population(cells, ref_cache, tiles, W)
+            Npop = pop["cent"].size
+            strata = {h: np.where(pop["cent"] == h + 1)[0] for h in range(N)}
+            Nh = np.array([strata[h].size for h in range(N)])
+            wclass = Nh / Nh.sum()                     # true center-class proportions
+            # stratum ceiling (report once per W, version-independent center classes -> report per version anyway)
+            if v == args.versions[0]:
+                for h in range(N):
+                    ceiling_rows.append(dict(W=W, cls=names[h + 1], n_windows=int(Nh[h]),
+                                             proportion=round(float(wclass[h]), 5)))
+            # census (all windows, unit weights)
+            wall = np.ones(Npop)
+            cmA, cmB, cmC = confusion_from_windows(pop, np.arange(Npop), wall, W)
+            cenA, cenB, cenC = cm_metrics(cmA), cm_metrics(cmB), cm_metrics(cmC)
+            corr_all, _, _ = d_correlation(pop, np.arange(Npop))
+            for ap_name, cen in [("A", cenA), ("B", cenB), ("C", cenC)]:
+                census_rows.append(dict(version=v, W=W, approach=ap_name,
+                                        oa=round(cen[0], 4), kappa=round(cen[1], 4),
+                                        macro_f1=round(cen[2], 4)))
+            if W == 1:  # correctness check
+                assert np.allclose(cenA[0], cenB[0]) and np.allclose(cenA[0], cenC[0]), \
+                    f"W=1 A/B/C mismatch for {v}"
+
+            rng = np.random.default_rng(ss.spawn(1)[0])
+            for n in args.ns:
+                # storage across iterations for each design
+                store = {d: dict(oaA=[], kaA=[], mfA=[], oaB=[], oaC=[], oaAw=[], mfAw=[],
+                                 f1A=[], f1Aw=[], major=[], npix=[]) for d in ("simple", "strat")}
+                absA = {d: np.zeros(N) for d in ("simple", "strat")}
+                dcorr = {d: [] for d in ("simple", "strat")}
+                realized = np.zeros(N); shortfall = np.zeros(N)
+                per = n // N
+                for it in range(args.iters):
+                    # --- design 1: simple random (self-weighting) ---
+                    k = min(n, Npop)
+                    idx = rng.choice(Npop, size=k, replace=False)
+                    w = np.ones(k)
+                    _run(pop, idx, w, W, store["simple"], absA["simple"], dcorr["simple"], unweighted=True)
+                    # --- design 2: stratified on center ref class, equal allocation ---
+                    sidx, sw = [], []
+                    for h in range(N):
+                        g = strata[h]
+                        take = min(per, g.size)
+                        realized[h] += take; shortfall[h] += max(0, per - g.size)
+                        if take == 0:
+                            continue
+                        pick = g[rng.choice(g.size, size=take, replace=False)]
+                        sidx.append(pick)
+                        sw.append(np.full(take, Nh[h] / take))          # HT weight N_h/n_h
+                    sidx = np.concatenate(sidx); sw = np.concatenate(sw)
+                    _run(pop, sidx, sw, W, store["strat"], absA["strat"], dcorr["strat"],
+                         unweighted=True)
+                # summarize this (n, W, version)
+                _summarize(v, W, n, Npop, store, absA, dcorr, realized, shortfall, per,
+                           names, wclass, cenA, cenB, cenC, corr_all,
+                           metric_rows, absence_rows, realized_rows, deff_rows, dcorr_rows, effrows)
+            print(f"  {v} W={W} done", flush=True)
+        for t in tiles:
+            t.close()
+
+    _write_and_plot(names, ceiling_rows, census_rows, metric_rows, absence_rows,
+                    realized_rows, deff_rows, dcorr_rows, effrows, args.versions)
+    print(f"\noutputs -> {OUT}/  (draws from designs, NOT accuracy estimates)")
+
+
+def _run(pop, idx, w, W, st, absA, dcorr, unweighted):
+    cmA, cmB, cmC = confusion_from_windows(pop, idx, w, W)
+    cmA_u, _, _ = confusion_from_windows(pop, idx, np.ones(len(idx)), W)  # unweighted for absence/simple
+    oaA, kaA, mfA, f1A = cm_metrics(cmA_u)          # unweighted (self-weighting for simple; contrast for strat)
+    oaAw, _, mfAw, f1Aw = cm_metrics(cmA)           # weighted
+    oaB, _, _, _ = cm_metrics(cmB)
+    oaC, _, _, _ = cm_metrics(cmC)
+    st["oaA"].append(oaA); st["kaA"].append(kaA); st["mfA"].append(mfA)
+    st["oaAw"].append(oaAw); st["mfAw"].append(mfAw)
+    st["oaB"].append(oaB); st["oaC"].append(oaC)
+    st["f1A"].append(f1A); st["f1Aw"].append(f1Aw)
+    st["major"].append(float(pop["majmap"][idx].mean()))
+    st["npix"].append(int((pop["codes"][idx] != 255).sum()))
+    # class absence: no sampled pixel labels the class in ref or map (unweighted A support)
+    row = cmA_u.sum(1); col = cmA_u.sum(0)
+    absA += ((row + col) == 0).astype(float)
+    corr, rmse, bias = d_correlation(pop, idx)
+    dcorr.append((corr, rmse, bias))
+
+
+def _summarize(v, W, n, Npop, store, absA, dcorr, realized, shortfall, per, names, wclass,
+               cenA, cenB, cenC, corr_all, metric_rows, absence_rows, realized_rows,
+               deff_rows, dcorr_rows, effrows):
+    iters = len(store["simple"]["oaA"])
+    census = dict(A=cenA[0], B=cenB[0], C=cenC[0], mfA=cenA[2], kaA=cenA[1])
+    for design in ("simple", "strat"):
+        s = store[design]
+        for metric, arr, cval in [("A_oa", s["oaA"], census["A"]), ("A_kappa", s["kaA"], census["kaA"]),
+                                  ("A_macrof1", s["mfA"], census["mfA"]), ("B_oa", s["oaB"], census["B"]),
+                                  ("C_oa", s["oaC"], census["C"]),
+                                  ("A_oa_wtd", s["oaAw"], census["A"]),
+                                  ("A_macrof1_wtd", s["mfAw"], census["mfA"])]:
+            a = np.array(arr, float)
+            metric_rows.append(dict(design=design, version=v, W=W, n=n, metric=metric,
+                                    census=round(float(cval), 4), mean=round(float(np.nanmean(a)), 4),
+                                    sd=round(float(np.nanstd(a, ddof=1)), 5),
+                                    bias=round(float(np.nanmean(a) - cval), 5),
+                                    lo=round(float(np.nanpercentile(a, 2.5)), 4),
+                                    hi=round(float(np.nanpercentile(a, 97.5)), 4)))
+        # majority fraction (C)
+        metric_rows.append(dict(design=design, version=v, W=W, n=n, metric="C_frac_majority",
+                                census=np.nan, mean=round(float(np.mean(s["major"])), 4),
+                                sd=round(float(np.std(s["major"], ddof=1)), 5), bias=np.nan,
+                                lo=np.nan, hi=np.nan))
+    # design effect (approach A OA, simple design)
+    meanN = float(np.mean(store["simple"]["npix"]))
+    p = census["A"]
+    sd_obs = float(np.nanstd(store["simple"]["oaA"], ddof=1))
+    sd_bin = np.sqrt(p * (1 - p) / meanN) if 0 < p < 1 and meanN else np.nan
+    deff = (sd_obs / sd_bin) ** 2 if sd_bin and sd_bin > 0 else np.nan
+    deff_rows.append(dict(version=v, W=W, n=n, mean_pixels=round(meanN, 1),
+                          sd_obs=round(sd_obs, 5), sd_binom=round(float(sd_bin), 6),
+                          design_effect=round(float(deff), 3),
+                          eff_sample_size=round(meanN / deff, 1) if deff == deff and deff else np.nan))
+    # class absence (both designs)
+    for design in ("simple", "strat"):
+        for h in range(N):
+            absence_rows.append(dict(design=design, version=v, W=W, n=n, cls=names[h + 1],
+                                     frac_absent=round(absA[design][h] / iters, 4)))
+    # realized stratified allocation + shortfall
+    for h in range(N):
+        realized_rows.append(dict(version=v, W=W, n=n, cls=names[h + 1], target_alloc=per,
+                                  mean_realized=round(realized[h] / iters, 2),
+                                  mean_shortfall=round(shortfall[h] / iters, 2)))
+    # per-class F1 SD, stratification efficiency = SD_strat / SD_simple.
+    # use the design-consistent estimand for each arm: simple is self-weighting (f1A);
+    # stratified equal-allocation must use the WEIGHTED per-class F1 (f1Aw), else the ratio
+    # compares different estimands and rare classes look wrongly inflated.
+    f1s_simple = np.array(store["simple"]["f1A"])   # (iters, N)
+    f1s_strat = np.array(store["strat"]["f1Aw"])
+    sd_simple = np.nanstd(f1s_simple, axis=0, ddof=1)
+    sd_strat = np.nanstd(f1s_strat, axis=0, ddof=1)
+    for h in range(N):
+        eff = sd_strat[h] / sd_simple[h] if sd_simple[h] > 0 else np.nan
+        effrows.append(dict(version=v, W=W, n=n, cls=names[h + 1],
+                            sd_simple=round(float(sd_simple[h]), 5), sd_strat=round(float(sd_strat[h]), 5),
+                            strat_efficiency=round(float(eff), 3) if eff == eff else np.nan))
+    # D correlation per class per design
+    for design in ("simple", "strat"):
+        arr = dcorr[design]
+        corrs = np.array([a[0] for a in arr]); rmses = np.array([a[1] for a in arr])
+        biases = np.array([a[2] for a in arr])
+        for h in range(N):
+            cvals = corrs[:, h]
+            dcorr_rows.append(dict(design=design, version=v, W=W, n=n, cls=names[h + 1],
+                                   census_corr=round(float(corr_all[h]), 4) if corr_all[h] == corr_all[h] else np.nan,
+                                   mean_corr=round(float(np.nanmean(cvals)), 4),
+                                   frac_undefined=round(float(np.isnan(cvals).mean()), 4),
+                                   mean_rmse=round(float(np.nanmean(rmses[:, h])), 4),
+                                   mean_bias=round(float(np.nanmean(biases[:, h])), 4)))
+
+
+def _classic(ax):
+    ax.grid(False)
+    for s in ("top", "right"):
+        ax.spines[s].set_visible(False)
+
+
+def _logscale(ax, axes="x"):
+    """Set log scale only where the plotted data is present and strictly positive."""
+    for a in axes:
+        vals = np.concatenate([(ln.get_xdata() if a == "x" else ln.get_ydata())
+                               for ln in ax.lines]) if ax.lines else np.array([])
+        vals = vals[np.isfinite(vals)]
+        if vals.size and (vals > 0).all():
+            (ax.set_xscale if a == "x" else ax.set_yscale)("log")
+
+
+def _write_and_plot(names, ceiling_rows, census_rows, metric_rows, absence_rows, realized_rows,
+                    deff_rows, dcorr_rows, effrows, versions):
+    import matplotlib
+    matplotlib.use("Agg")
+    import matplotlib.pyplot as plt
+
+    pd.DataFrame(ceiling_rows).to_csv(os.path.join(OUT, "stratum_ceiling.csv"), index=False)
+    pd.DataFrame(census_rows).to_csv(os.path.join(OUT, "census.csv"), index=False)
+    md = pd.DataFrame(metric_rows); md.to_csv(os.path.join(OUT, "metrics_by_n.csv"), index=False)
+    ab = pd.DataFrame(absence_rows); ab.to_csv(os.path.join(OUT, "class_absence.csv"), index=False)
+    pd.DataFrame(realized_rows).to_csv(os.path.join(OUT, "stratum_realized.csv"), index=False)
+    de = pd.DataFrame(deff_rows); de.to_csv(os.path.join(OUT, "design_effect.csv"), index=False)
+    ef = pd.DataFrame(effrows); ef.to_csv(os.path.join(OUT, "strat_efficiency.csv"), index=False)
+    dc = pd.DataFrame(dcorr_rows); dc.to_csv(os.path.join(OUT, "d_correlation.csv"), index=False)
+
+    wpal = {1: "#1f77b4", 3: "#2ca02c", 5: "#9467bd", 7: "#ff7f0e", 9: "#d62728"}
+    vpal = {"v2": "#1f77b4", "v3": "#2ca02c", "v4": "#9467bd", "v5": "#ff7f0e", "v6": "#d62728"}
+
+    # 1) SD of A_oa vs n, line per W, panel per version (simple design)
+    fig, axes = plt.subplots(1, len(versions), figsize=(3.3 * len(versions), 4), sharey=True)
+    axes = np.atleast_1d(axes)
+    for ax, v in zip(axes, versions):
+        s = md[(md.metric == "A_oa") & (md.design == "simple") & (md.version == v)]
+        for W in sorted(s.W.unique()):
+            sw = s[s.W == W].sort_values("n")
+            ax.plot(sw.n, sw.sd, "o-", color=wpal[W], label=f"W={W}", ms=4)
+        ax.set_xlabel("n (windows)"); ax.set_title(v); _logscale(ax, "xy")
+        if ax is axes[0]:
+            ax.set_ylabel("SD of OA (approach A)")
+        ax.legend(fontsize=7, frameon=False); _classic(ax)
+    fig.suptitle("Precision vs sample size (simple random): SD of sampled OA falls with n\n"
+                 "draws from a design, not accuracy estimates", fontsize=11)
+    fig.tight_layout(rect=[0, 0, 1, 0.9]); fig.savefig(os.path.join(OUT, "sd_vs_n_OA.png"), dpi=140,
+                                                       bbox_inches="tight"); plt.close(fig)
+
+    # 2) bias vs n, approach A OA, simple vs stratified weighted vs stratified unweighted (v2)
+    fig, ax = plt.subplots(figsize=(8, 5))
+    for lab, design, metric, c in [("simple (unwtd)", "simple", "A_oa", "#1f77b4"),
+                                   ("stratified, weighted", "strat", "A_oa_wtd", "#2ca02c"),
+                                   ("stratified, unweighted", "strat", "A_oa", "#d62728")]:
+        s = md[(md.design == design) & (md.metric == metric) & (md.version == "v2") & (md.W == 3)].sort_values("n")
+        ax.plot(s.n, s.bias, "o-", color=c, label=lab)
+    ax.axhline(0, ls="--", color="k", lw=0.8)
+    ax.set_xlabel("n (windows)"); ax.set_ylabel("mean sampled OA − census OA"); _logscale(ax, "x")
+    ax.set_title("Bias vs n (v2, W=3): weighted stratified recovers census; unweighted does not")
+    ax.legend(fontsize=8, frameon=False); _classic(ax)
+    fig.tight_layout(); fig.savefig(os.path.join(OUT, "bias_vs_n_OA.png"), dpi=140, bbox_inches="tight")
+    plt.close(fig)
+
+    # 3) design effect vs W (mean over n), line per version
+    fig, ax = plt.subplots(figsize=(8, 5))
+    g = de.groupby(["version", "W"]).design_effect.mean().reset_index()
+    for v in versions:
+        s = g[g.version == v]
+        ax.plot(s.W, s.design_effect, "o-", color=vpal[v], label=v)
+    ax.axhline(1, ls="--", color="k", lw=0.8); ax.set_xticks(WS)
+    ax.set_xlabel("window size W"); ax.set_ylabel("design effect  Var_obs / Var_binomial")
+    ax.set_title("Cost of autocorrelation: design effect vs W (≈1 at W=1)")
+    ax.legend(fontsize=8, frameon=False); _classic(ax)
+    fig.tight_layout(); fig.savefig(os.path.join(OUT, "design_effect_vs_W.png"), dpi=140, bbox_inches="tight")
+    plt.close(fig)
+
+    # 4) stratification efficiency per class (v2, W=1, largest n), SD_strat/SD_simple
+    fig, ax = plt.subplots(figsize=(10, 5))
+    nmax = max(ef.n)
+    s = ef[(ef.version == "v2") & (ef.W == 1) & (ef.n == nmax)].dropna(subset=["strat_efficiency"])
+    order = s.sort_values("strat_efficiency")
+    ax.bar(order.cls, order.strat_efficiency, color=["#2ca02c" if x < 1 else "#d62728" for x in order.strat_efficiency])
+    ax.axhline(1, ls="--", color="k", lw=0.8)
+    ax.set_ylabel("SD_stratified / SD_simple  (<1 = stratification helps)")
+    ax.set_title(f"Stratification efficiency by class (v2, W=1, n={nmax}): helps rare, hurts common")
+    ax.set_xticklabels(order.cls, rotation=45, ha="right"); _classic(ax)
+    fig.tight_layout(); fig.savefig(os.path.join(OUT, "strat_efficiency.png"), dpi=140, bbox_inches="tight")
+    plt.close(fig)
+
+    # 5) class absence vs n (simple design, v2, W=1), line per class
+    fig, ax = plt.subplots(figsize=(9, 5))
+    s = ab[(ab.design == "simple") & (ab.version == "v2") & (ab.W == 1)]
+    for cls in s.cls.unique():
+        sc = s[s.cls == cls].sort_values("n")
+        ax.plot(sc.n, sc.frac_absent, "o-", label=cls, ms=4)
+    ax.set_xlabel("n (windows)")
+    ax.set_ylabel("fraction of iterations where class is entirely absent"); _logscale(ax, "x")
+    ax.set_title("Simple random fails for rare classes (v2, W=1): absence vs n")
+    ax.legend(fontsize=7, frameon=False, ncol=2); _classic(ax)
+    fig.tight_layout(); fig.savefig(os.path.join(OUT, "class_absence.png"), dpi=140, bbox_inches="tight")
+    plt.close(fig)
+
+    # 6) D correlation vs n, per class (v2, W=5, simple)
+    fig, ax = plt.subplots(figsize=(9, 5))
+    s = dc[(dc.design == "simple") & (dc.version == "v2") & (dc.W == 5)]
+    for cls in s.cls.unique():
+        sc = s[s.cls == cls].sort_values("n")
+        ax.plot(sc.n, sc.mean_corr, "o-", label=cls, ms=4)
+    ax.set_xlabel("n (windows)")
+    ax.set_ylabel("mean per-class corr(prop_map, prop_ref)"); _logscale(ax, "x")
+    ax.set_title("Approach D: per-class proportion correlation vs n (v2, W=5, simple)")
+    ax.legend(fontsize=7, frameon=False, ncol=2); _classic(ax)
+    fig.tight_layout(); fig.savefig(os.path.join(OUT, "d_corr_vs_n.png"), dpi=140, bbox_inches="tight")
+    plt.close(fig)
+
+
+if __name__ == "__main__":
+    main()

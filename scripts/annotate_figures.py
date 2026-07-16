@@ -263,6 +263,62 @@ DESC = {
  "Interpret: v2/v3/v5 over-smooth the large classes (Water/Agriculture patches far larger "
  "than interpreted), v4 is fragmented, v6 ~0 everywhere (speckle)."),
 
+"sd_vs_n_OA.png": (
+ "Sampling experiment: precision vs sample size",
+ "Approach A under simple random sampling: how precision improves with sample size.\n"
+ "Layout: one panel per model version. Axes: x = n (windows drawn from the pooled frame, "
+ "log); y = SD of overall accuracy across 100 draws (log); one line per window size W.\n"
+ "Why: characterizes the sampling design's precision, against the exhaustive-tiling census.\n"
+ "Interpret: SD falls ~1/sqrt(n); at equal n, larger W has higher SD because within-window "
+ "pixels are spatially autocorrelated. Draws from a design, NOT accuracy estimates."),
+
+"bias_vs_n_OA.png": (
+ "Sampling experiment: weighted vs unweighted stratified bias",
+ "Bias of sampled overall accuracy vs n (v2, W=3) for three estimators.\n"
+ "Axes: x = n (log); y = mean sampled OA minus the census OA; dashed at 0. Lines: simple "
+ "random (unweighted); stratified WEIGHTED (Horvitz-Thompson, window weight N_h/n_h, i.e. "
+ "true center-class proportions); stratified UNWEIGHTED.\n"
+ "Why: equal-allocation stratification oversamples rare classes on purpose, so the unweighted "
+ "stratified mean does not target the census; weighting by the true proportions restores it.\n"
+ "Interpret: simple and weighted-stratified converge to zero bias; unweighted stratified "
+ "stays biased (~ -0.19) — the visible gap is the point."),
+
+"class_absence.png": (
+ "Sampling experiment: simple random fails for rare classes",
+ "The documented failure of the simple-random arm for rare classes (v2, W=1).\n"
+ "Axes: x = n (windows, log); y = fraction of 100 iterations in which the class is ENTIRELY "
+ "absent (no sampled pixel labels it in reference or map); one line per class.\n"
+ "Why: absence is a headline result, not a nuisance — when a class is absent its per-class "
+ "metrics are undefined.\n"
+ "Interpret: Development is absent in ~78% of iterations at n=20 and ~25% at n=200; the rare "
+ "disturbance classes need large n before they appear reliably. This control motivates "
+ "stratification."),
+
+"strat_efficiency.png": (
+ "Sampling experiment: stratification efficiency by class",
+ "Whether stratifying on the center reference class reduces per-class variance (v2, W=1, "
+ "n=5000).\n"
+ "Axes: x = class (sorted); y = SD_stratified / SD_simple of the per-class F1, using the "
+ "design-consistent (Horvitz-Thompson weighted) estimate for the stratified arm; dashed at 1. "
+ "Green (<1) = stratification helps; red (>1) = hurts.\n"
+ "Why: equal-allocation stratification trades common-class precision for rare-class "
+ "precision.\n"
+ "Interpret: it helps the rare classes enormously (Beaver ~0.14, an ~86% variance reduction) "
+ "and hurts the common classes (Forest ~1.9), which equal allocation starves. The crossover "
+ "(around Grass/Shrub-Water) is the design finding."),
+
+"d_corr_vs_n.png": (
+ "Sampling experiment: Approach D per-class correlation vs n",
+ "Approach D under sampling: per-class proportion correlation vs sample size (v2, W=5, simple "
+ "random).\n"
+ "Axes: x = n (log); y = mean per-class Pearson corr(prop_map, prop_ref) across draws; one "
+ "line per class.\n"
+ "Why: correlation is the primary D tightness metric (RMSE rewards predicting near-zero for "
+ "rare classes and produces artifacts); it should stabilize as n grows.\n"
+ "Interpret: common classes reach a stable correlation quickly; rare classes are noisy at "
+ "small n (few sampled windows contain them) and converge slowly. Correlation is undefined "
+ "when a sample has no variance in a class (reported separately as frac_undefined)."),
+
 "sd_vs_cost.png": (
  "Approach A design experiment: precision at equal cost",
  "Approach A (window-as-sampling-unit) precision vs sampling cost.\n"
@@ -378,8 +434,23 @@ def pair_desc(path):
  "disagreement." + extra)
 
 
+DESIGN_EFFECT_ABCD = (
+ "Sampling experiment: design effect vs W",
+ "How much within-window spatial autocorrelation inflates sampling variance.\n"
+ "Axes: x = window size W; y = design effect = Var(sampled OA) / Var_binomial, one line per "
+ "model version; dashed at 1. Var_binomial = p(1-p)/(n*W^2) treats the sampled pixels as "
+ "independent.\n"
+ "Why: quantifies how far the effective sample size falls short of the nominal pixel count.\n"
+ "Interpret: the design effect is ~1 at W=1 (verified — a per-pixel simple random sample "
+ "behaves binomially), and rises steeply with W (~38-47 at W=9 for the smooth versions; ~10 "
+ "for the speckly v6, whose adjacent pixels are not autocorrelated). Effective sample size = "
+ "n*W^2 / design effect.")
+
+
 def describe(path):
     base = os.path.basename(path)
+    if base == "design_effect_vs_W.png" and "Case_ABCD_sampling" in path:
+        return DESIGN_EFFECT_ABCD
     if base in DESC:
         return DESC[base]
     if base == "window_sampling_metrics.png":

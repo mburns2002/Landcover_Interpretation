@@ -366,3 +366,39 @@ information. The **speckly v6 pays far less** (deff ~8 at W=9) because adjacent 
 autocorrelated. Effective sample size (N / deff) makes the tradeoff legible: at equal pixels
 interpreted, **many small windows beat a few large ones** — decisively for smooth maps, marginally
 for v6.
+
+## Case_ABCD_sampling/ — sampling experiment against known truth
+
+A/B/C/D under two sampling designs, measured against the exhaustive-tiling census (which is
+the known truth — we have every pixel). Source: `scripts/sampling_experiment_ABCD.py`.
+Separate from `Case_{A,B,C,D}_window_sampling/` (those are the census). **Draws from designs
+whose properties we characterize — NOT accuracy estimates.** Setup: interpreted reference vs.
+model v2–v6, de-duplicated one interpretation per location (seed 42, all years, 180 cells);
+cell = primary sampling unit, pixels within a cell = census. Population = the exhaustive
+non-overlapping W×W tiling windows with a jointly-valid center; sampling draws n distinct
+(non-overlapping) windows. W ∈ {1,3,5,7,9}; n ∈ {20,50,100,200,500,1000,2000,5000} total across
+the frame; 100 iterations per (n, W, design); seeds from base 42. **W=1 collapses A=B=C —
+asserted (verified for all five versions).**
+
+- `stratum_ceiling.csv` — windows per center reference class per W (the ceiling that bounds
+  each class; Beaver ~0.05%, ~10k windows)
+- `census.csv` — the truth (A/B/C OA/kappa/macro-F1) per version × W
+- `metrics_by_n.csv` — bias/SD/2.5-97.5 pct vs census, per design × version × W × n × metric
+  (incl. weighted `A_oa_wtd`, `C_frac_majority`)
+- `class_absence.csv` / `class_absence.png` — fraction of iterations each class is absent
+- `stratum_realized.csv` — realized equal allocation and shortfall per stratum
+- `design_effect.csv` / `design_effect_vs_W.png` — deff and effective sample size
+- `strat_efficiency.csv` / `strat_efficiency.png` — SD_stratified / SD_simple per class
+- `d_correlation.csv` / `d_corr_vs_n.png` — Approach D per-class correlation (leads; rmse/bias alongside)
+- `sd_vs_n_OA.png`, `bias_vs_n_OA.png`
+
+Findings. **Design 1 (simple random) fails for rare classes at small budgets**, documented:
+at n=20, W=1, Development is entirely absent in 78% of iterations, Insect/Disease 66%, Harvest
+58%; all classes appear by n≈1000. **Design 2 (stratified, equal allocation)** deliberately
+oversamples rare classes — so the **unweighted** estimate is biased (OA off by ~-0.19 from the
+census at n=5000), while the **Horvitz-Thompson weighted** estimate recovers the census (bias
+~-0.0004). **Design effect ≈ 1 at W=1** (verified — simple random per-pixel is binomial) and
+climbs steeply (~38-47 at W=9 for smooth versions, ~10 for the speckly v6). **Stratification
+efficiency** shows the crossover: it helps the rare classes enormously (Beaver SD ratio ~0.14,
+Development ~0.18, Insect/Disease ~0.27) and hurts the common classes (Forest ~1.9, Agriculture
+~1.35), because equal allocation starves them — the crossover sits around Grass/Shrub–Water.
