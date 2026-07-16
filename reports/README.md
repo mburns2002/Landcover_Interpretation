@@ -401,4 +401,6 @@ census at n=5000), while the **Horvitz-Thompson weighted** estimate recovers the
 climbs steeply (~38-47 at W=9 for smooth versions, ~10 for the speckly v6). **Stratification
 efficiency** shows the crossover: it helps the rare classes enormously (Beaver SD ratio ~0.14,
 Development ~0.18, Insect/Disease ~0.27) and hurts the common classes (Forest ~1.9, Agriculture
-~1.35), because equal allocation starves them — the crossover sits around Grass/Shrub–Water.
+~1.35), because equal allocation starves them — the crossover sits around Grass/Shrub–Water. 
+
+**Cross-variant differences the strategies expose** (`scripts/sampling_variant_comparison.py`, `variant_comparison.png`): the sampling designs discriminate the classifier variants. (1) Design effect separates the dot-product v6 (~10 at W=9) from the smooth v2-v5 (~38-47) — v6's per-pixel errors are spatially independent, so windows waste ~4x less information. (2) Approach D proportion correlation orders their quality: v2≈v3≈v5 track abundance well (Water 0.97, Agriculture 0.87), v4 is intermediate (Water 0.56, Urban 0.18), and v6 is near zero everywhere (Water 0.07, Urban -0.05) — it carries almost no class-abundance signal. (3) v6's speckle makes rare classes less often absent under simple random (spurious presence, not signal); v4 is idiosyncratic (rarely predicts Beaver, over-predicts Urban). The stratification crossover holds across all variants.

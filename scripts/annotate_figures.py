@@ -263,6 +263,24 @@ DESC = {
  "Interpret: v2/v3/v5 over-smooth the large classes (Water/Agriculture patches far larger "
  "than interpreted), v4 is fragmented, v6 ~0 everywhere (speckle)."),
 
+"variant_comparison.png": (
+ "Embedding classifier variants under the sampling strategies",
+ "How the model variants (v2-v6, different classifiers over the same AlphaEarth embeddings; "
+ "v6 = dot-product) differ on the design properties the sampling strategies expose.\n"
+ "Panel 1: design effect vs W per variant — v6 is ~4x lower (its per-pixel dot-product "
+ "classification gives spatially independent errors, so windows waste far less information; "
+ "the smooth variants are highly autocorrelated). Panel 2: Approach D proportion correlation "
+ "to the reference (class x variant heatmap) — v2/v3/v5 track abundance well (Water 0.97, "
+ "Agriculture 0.87), v4 is intermediate (Water 0.56, Urban 0.18), and v6 is near zero "
+ "everywhere (it carries almost no class-abundance signal). Panel 3: rare-class absence under "
+ "simple random at n=20 — v6's speckle scatters every class per pixel, so rare classes are "
+ "less often entirely absent (spurious presence, not signal); v4 is idiosyncratic (rarely "
+ "predicts Beaver, over-predicts Urban).\n"
+ "Why/Interpret: the sampling designs discriminate the variants. Design effect separates the "
+ "dot-product v6 from the smooth v2-v5, and Approach D correlation orders their quality "
+ "(v2≈v3≈v5 > v4 > v6). The stratification crossover (helps rare, hurts common) holds across "
+ "all variants. Draws from designs, not accuracy estimates."),
+
 "sd_vs_n_OA.png": (
  "Sampling experiment: precision vs sample size",
  "Approach A under simple random sampling: how precision improves with sample size.\n"
