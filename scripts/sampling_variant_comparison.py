@@ -88,6 +88,39 @@ def main():
     plt.close(fig)
     print(f"wrote {D}/variant_comparison.png")
 
+    separation_scatter(de, dc)
+
+
+def separation_scatter(de, dc):
+    """One point per variant: abundance-weighted Approach D correlation vs design effect."""
+    ceil = pd.read_csv(os.path.join(D, "stratum_ceiling.csv"))
+    wt = ceil[ceil.W == 1].set_index("cls").proportion            # true pixel abundance per class
+    corr = dc[(dc.design == "simple") & (dc.W == 5) & (dc.n == 5000)].pivot(
+        index="cls", columns="version", values="census_corr")
+    w = wt.reindex(corr.index).to_numpy()
+    x = {v: float(np.nansum(corr[v].to_numpy() * w) / w.sum()) for v in VERS}   # abundance-weighted
+    y = {v: float(de[(de.version == v) & (de.W == 9)].design_effect.mean()) for v in VERS}
+
+    fig, ax = plt.subplots(figsize=(8, 6))
+    for v in VERS:
+        ax.scatter(x[v], y[v], s=160, color=VPAL[v], edgecolors="k", zorder=3)
+        ax.annotate(v, (x[v], y[v]), textcoords="offset points", xytext=(9, 4), fontsize=11)
+    ax.set_xlabel("abundance-weighted proportion correlation to reference  (Approach D) →  better")
+    ax.set_ylabel("design effect at W=9  →  more spatial autocorrelation")
+    ax.set_title("How the embedding variants separate\n"
+                 "smooth & faithful (v2/v3/v5) — intermediate (v4) — dot-product (v6)")
+    ax.annotate("v2/v3/v5: coherent, tracks abundance", (x["v2"], y["v2"]),
+                textcoords="offset points", xytext=(-6, -22), fontsize=8, color="0.3", ha="right")
+    ax.annotate("v6: per-pixel, no abundance signal", (x["v6"], y["v6"]),
+                textcoords="offset points", xytext=(12, 10), fontsize=8, color="0.3")
+    _classic(ax)
+    fig.tight_layout()
+    fig.savefig(os.path.join(D, "variant_separation_scatter.png"), dpi=140, bbox_inches="tight")
+    plt.close(fig)
+    print(f"wrote {D}/variant_separation_scatter.png")
+    print("  abundance-weighted D-corr:", {v: round(x[v], 3) for v in VERS})
+    print("  design effect (W=9):      ", {v: round(y[v], 1) for v in VERS})
+
 
 if __name__ == "__main__":
     main()

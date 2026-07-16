@@ -263,6 +263,20 @@ DESC = {
  "Interpret: v2/v3/v5 over-smooth the large classes (Water/Agriculture patches far larger "
  "than interpreted), v4 is fragmented, v6 ~0 everywhere (speckle)."),
 
+"variant_separation_scatter.png": (
+ "How the embedding variants separate (single summary)",
+ "One point per model variant, summarizing how the sampling diagnostics separate them.\n"
+ "Axes: x = abundance-weighted Approach D proportion correlation to the reference (mean of "
+ "per-class corr(prop_map, prop_ref) weighted by true class abundance; higher = tracks how "
+ "much of each class is present); y = design effect at W=9 (higher = more spatially "
+ "autocorrelated errors).\n"
+ "Why: collapses the cross-variant story to two axes — abundance fidelity and spatial "
+ "structure.\n"
+ "Interpret: v2/v3/v5 cluster upper-right (coherent smooth classifiers that track abundance, "
+ "x 0.61-0.69, deff 38-47); v4 is upper-middle (autocorrelated but weaker tracking, x 0.48); "
+ "v6 is isolated bottom-left (dot-product: near-no abundance signal x 0.29, and low "
+ "autocorrelation deff 10). Draws from designs, not accuracy estimates."),
+
 "variant_comparison.png": (
  "Embedding classifier variants under the sampling strategies",
  "How the model variants (v2-v6, different classifiers over the same AlphaEarth embeddings; "
