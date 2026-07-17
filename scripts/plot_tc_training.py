@@ -102,20 +102,63 @@ def mean_delta_heatmap(df):
     _save(fig, "tc_mean_delta_heatmap.png")
 
 
+def _repel_labels(anchors, xlim, ylim, iters=400):
+    """Push label positions off each other and off every anchor so all ten stay readable.
+
+    Works in axis-normalized [0,1] coords (so brightness and greenness get equal weight), then
+    maps back to data coords. Deterministic — starts each label just up-right of its anchor.
+    """
+    (x0, x1), (y0, y1) = xlim, ylim
+    Wx, Wy = x1 - x0, y1 - y0
+    a = np.column_stack([(anchors[:, 0] - x0) / Wx, (anchors[:, 1] - y0) / Wy])
+    lab = a + np.array([0.025, 0.025])
+    for _ in range(iters):
+        disp = np.zeros_like(lab)
+        for i in range(len(lab)):
+            dl = lab[i] - lab                                   # repel from other labels
+            dist = np.hypot(dl[:, 0], dl[:, 1])
+            for j in range(len(lab)):
+                if i != j and dist[j] < 0.11:
+                    disp[i] += dl[j] / (dist[j] + 1e-6) * (0.11 - dist[j]) * 0.5
+            da = lab[i] - a                                     # repel from all anchor dots
+            dda = np.hypot(da[:, 0], da[:, 1])
+            for j in range(len(lab)):
+                if dda[j] < 0.05:
+                    disp[i] += da[j] / (dda[j] + 1e-6) * (0.05 - dda[j]) * 0.4
+            sp = a[i] - lab[i]                                  # spring back toward own anchor
+            if np.hypot(*sp) > 0.07:
+                disp[i] += sp * 0.12
+        lab = np.clip(lab + disp, 0.01, 0.99)
+    return np.column_stack([lab[:, 0] * Wx + x0, lab[:, 1] * Wy + y0])
+
+
 def trajectory(df):
     """2018->2020 movement of each class centroid in brightness-greenness space."""
-    fig, ax = plt.subplots(figsize=(9, 7.5))
-    for lab in sorted(NAMES):
-        s = df[df.label == lab]
-        b0, g0 = s.brightness_2018.mean(), s.greenness_2018.mean()
-        b1, g1 = s.brightness_2020.mean(), s.greenness_2020.mean()
-        lw = 2.4 if lab in CHANGE else 1.0
-        ax.annotate("", xy=(b1, g1), xytext=(b0, g0),
-                    arrowprops=dict(arrowstyle="->", color=PAL[lab], lw=lw))
-        ax.scatter([b0], [g0], s=30, color=PAL[lab], edgecolors="k", zorder=3)
-        ax.annotate(NAMES[lab], (b1, g1), textcoords="offset points", xytext=(6, 3),
-                    fontsize=9, color=PAL[lab],
-                    fontweight="bold" if lab in CHANGE else "normal")
+    labs = sorted(NAMES)
+    b0 = np.array([df[df.label == l].brightness_2018.mean() for l in labs])
+    g0 = np.array([df[df.label == l].greenness_2018.mean() for l in labs])
+    b1 = np.array([df[df.label == l].brightness_2020.mean() for l in labs])
+    g1 = np.array([df[df.label == l].greenness_2020.mean() for l in labs])
+
+    fig, ax = plt.subplots(figsize=(11, 8.5))
+    allx = np.concatenate([b0, b1]); ally = np.concatenate([g0, g1])
+    xpad = (allx.max() - allx.min()) * 0.16; ypad = (ally.max() - ally.min()) * 0.16
+    xlim = (allx.min() - xpad, allx.max() + xpad); ylim = (ally.min() - ypad, ally.max() + ypad)
+    ax.set_xlim(*xlim); ax.set_ylim(*ylim)
+
+    for i, l in enumerate(labs):
+        lw = 2.4 if l in CHANGE else 1.0
+        ax.annotate("", xy=(b1[i], g1[i]), xytext=(b0[i], g0[i]),
+                    arrowprops=dict(arrowstyle="->", color=PAL[l], lw=lw))
+        ax.scatter([b0[i]], [g0[i]], s=34, color=PAL[l], edgecolors="k", zorder=3)
+
+    pos = _repel_labels(np.column_stack([b1, g1]), xlim, ylim)
+    for i, l in enumerate(labs):
+        ax.annotate(NAMES[l], xy=(b1[i], g1[i]), xytext=(pos[i, 0], pos[i, 1]),
+                    fontsize=9, color=PAL[l], ha="center", va="center",
+                    fontweight="bold" if l in CHANGE else "normal",
+                    arrowprops=dict(arrowstyle="-", color=PAL[l], lw=0.6, alpha=0.55,
+                                    shrinkA=2, shrinkB=6))
     ax.set_xlabel("brightness"); ax.set_ylabel("greenness")
     ax.set_title("Class centroids move in brightness–greenness space, 2018→2020\n"
                  "dot = 2018, arrowhead = 2020; bold arrows = the four change classes", fontsize=12)
