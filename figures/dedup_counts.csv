@@ -1,0 +1,11 @@
+code,class,n_before,n_after,n_dropped,type
+1,Harvest,200,99,101,change
+2,Development,200,90,110,change
+3,Forest,200,200,0,stable
+4,Urban,200,199,1,stable
+5,Water,200,200,0,stable
+6,Agriculture,200,200,0,stable
+7,Grass/Shrub,200,200,0,stable
+8,Wetland,200,199,1,stable
+9,Beaver,200,92,108,change
+10,Insect/Disease,200,111,89,change
