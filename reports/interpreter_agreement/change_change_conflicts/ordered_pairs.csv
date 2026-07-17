@@ -1,0 +1,14 @@
+A_class,B_class,class_pair,pixels,area_ha
+Insect/Disease,Beaver,Insect/Disease->Beaver,1549,15.49
+Insect/Disease,Beaver,Insect/Disease<->Beaver (symmetrized),1549,15.49
+Harvest,Insect/Disease,Harvest<->Insect/Disease (symmetrized),816,8.16
+Insect/Disease,Harvest,Insect/Disease->Harvest,725,7.25
+Harvest,Beaver,Harvest<->Beaver (symmetrized),109,1.09
+Beaver,Harvest,Beaver->Harvest,108,1.08
+Harvest,Insect/Disease,Harvest->Insect/Disease,91,0.91
+Harvest,Development,Harvest<->Development (symmetrized),62,0.62
+Development,Harvest,Development->Harvest,59,0.59
+Insect/Disease,Development,Insect/Disease->Development,15,0.15
+Development,Insect/Disease,Development<->Insect/Disease (symmetrized),15,0.15
+Harvest,Development,Harvest->Development,3,0.03
+Harvest,Beaver,Harvest->Beaver,1,0.01

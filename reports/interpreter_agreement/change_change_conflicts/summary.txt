@@ -1,0 +1,20 @@
+change/change conflicts between interpreters
+(both reviewers called change, disagreed on which change type)
+
+double-interpreted cells (pairs): 72
+cells with at least one conflict: 16
+
+total conflict pixels: 2,551  (25.5 ha)
+  (this is small: a few thousand pixels across all pairs, as expected)
+  as a fraction of all disagreement pixels (1,842,349): 0.1385%
+  as a fraction of all change-labeled pixels (196,982): 1.2950%
+
+Unknown-vs-change pixels (reported separately, NOT counted as conflicts): 519  (5.2 ha)
+
+connected-component patches (8-connectivity): 748
+  median patch area: 0.010 ha (1 px)
+  max patch area:    2.450 ha (245 px)
+
+convention: reviewer A/B ordering is alphabetical and arbitrary, so directed pair
+counts (A_class->B_class) carry no meaning on their own; the symmetrized counts in
+ordered_pairs.csv are the reviewer-order-independent totals.

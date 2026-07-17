@@ -136,6 +136,26 @@ and nearest-training distance per reviewer, class breakdown, category),
 Source `samples_generated` shapefiles are fetched via rclone into `data/raw/samples_generated/`
 (git-ignored).
 
+**Change/change type conflicts** (`scripts/interpreter_change_change_conflicts.py`, in
+`change_change_conflicts/`): pixels where both reviewers called change but disagreed on which
+change type. Change classes in the RF scheme are Harvest (20), Development (30), Insect/Disease
+(50), Beaver (62); Fire (40) has zero pixels. **Unknown (10) is excluded** — it is unattributed
+disturbance, so Unknown-vs-Harvest is one reviewer declining to attribute, not a type conflict;
+Unknown-vs-change is reported separately. Across the 72 double-interpreted cells, 8-connected
+patches are labeled per cell. Files: `change_change_pixels_long.csv` (one row per cell × reviewer
+pair × directed class pair), `ordered_pairs.csv` (directed and symmetrized change-class pair
+totals), `change_change_patches.csv` (one row per connected patch), `summary.txt`.
+
+Findings: this is **small, as expected** — change is ~1.5% of pixels and most change-class
+disagreement goes to *stable* classes, not to other change classes. **Total conflict is 2,551 px
+= 25.5 ha across all pairs: 0.14% of all disagreement and 1.30% of all change-labeled pixels.**
+Only 16 of 72 cells carry any. It is overwhelmingly scattered single pixels (748 patches, median
+1 px, max 2.45 ha). Symmetrized, **Insect/Disease↔Beaver dominates (15.5 ha)** — and a single
+cell (grid 10333, bekka vs mina) holds 1,548 of those 1,549 px — followed by Harvest↔Insect/
+Disease (8.2 ha); all others are <1.1 ha. Unknown-vs-change is a separate 519 px (5.2 ha).
+Reviewer A/B ordering is alphabetical and arbitrary, so the directed counts carry no meaning on
+their own; the symmetrized totals are the reviewer-order-independent numbers.
+
 ## model_comparison/ — interpreted vs. AlphaEarth model maps
 
 Each interpreted Sentinel-2 cell vs. the model maps (v2–v6).
