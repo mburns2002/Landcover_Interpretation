@@ -566,3 +566,41 @@ classes overwhelmingly map to Stable (Harvest 0.78→Stable, Development 0.89→
 Stable leaks to Beaver (1.35 M px for v2), so change-class precision is near zero (Beaver 0.002,
 Development 0.007). macro-F1 here (~0.18–0.22) averages 5 classes versus 10 in the 10-class
 matrices and is **not comparable as a level**.
+
+## model_comparison_2018_2020/ — interpreted vs model, temporally matched cells
+
+Rerun of the interpreted-vs-model comparison on **only the temporally matched cells**, and the
+version that **supersedes the all-years runs for the model-comparison arm**. The model maps v2-v6
+are classified from 2018 and 2020 embeddings, so only interpreted cells with target year 2019
+carry the matching NAIP bracket (2018-2020); target 2018 brackets 2017-2019, 2021 brackets
+2020-2022, etc. Filtering to target 2019 and de-duplicating (numpy `default_rng` seed 42) gives
+**36 cells** (the plan named 30; the data has grown), all confirmed at bracket 2018-2020
+(`cells.csv`). Variants v2-v6. Source: `scripts/model_comparison_2018_2020.py`. The existing
+`model_comparison/` all-years outputs are left untouched.
+
+Per variant, both schemes: 10-class and 5-class collapsed confusion (raw + row-normalized CSVs,
+row-normalized heatmap figures with no gridlines), OA / macro-F1 / mean IoU / kappa, and per-class
+precision/recall/F1/IoU/support. Files: `confusion_<scheme>_<v>_counts.csv` / `_rownorm.csv` /
+`_rownorm.png`, `metrics_long.csv`, `summary_by_variant.md` / `.tex`, `summary.txt`, `cells.csv`.
+
+**Inference.** Target year is a property of the cell (it follows from NAIP availability), not of
+the random draw, so if interpreters worked a randomized list the target-2019 subset is a
+probability sample of the **2018/2020-eligible subpopulation**, which is narrower than the full
+21,561-cell frame. That subpopulation is estimated at ~4,312 cells (sample proportion of 2019
+cells), and the ratio-estimator FPC uses it, not 21,561 (numerically 0.996 either way). CIs use
+the cell as the primary sampling unit, cross-checked with a cell-level bootstrap (seed 42). **With
+n=36 the intervals are wide and are reported, not suppressed.** Per-class metrics are **design-aware
+flagged**: scored only if the class has ≥100 px AND appears in ≥3 cells; `cells_present` is in
+`metrics_long.csv`. Here every change class clears both (Harvest 18 cells, Development 10,
+Insect/Disease 8, Beaver 5), so none are suppressed, but Beaver rests on 5 cells with very wide CIs.
+
+Findings: **temporal matching matters.** On the matched cells the 10-class metrics are meaningfully
+better than the collapsed/all-years views: v2 OA 0.72, kappa 0.59 (v3 0.70/0.57, v5 0.65/0.51,
+v4 0.64/0.46, and the speckly **v6 collapses to 0.19/0.08**). But that kappa is stable-class skill:
+the row-normalized 10-class matrix shows change classes revert to the stable class they resemble
+(Harvest 0.63→Forest, Insect/Disease 0.70→Forest, Beaver 0.39→Wetland). The **5-class collapse
+confirms the census story on these cells too** — every variant's OA (0.69-0.94) is below the
+all-Stable baseline 0.979 with kappa ≈ 0 (v4 highest at 0.157). One bright spot: **Harvest
+precision reaches 0.54 (0.28-0.71) for v2**, far above its near-zero all-years value, so temporal
+matching does recover some Harvest signal. macro-F1 averages 5 vs 10 classes across the two schemes
+and is not comparable as a level, nor with the earlier all-years matrices.

@@ -1,0 +1,29 @@
+interpreted-vs-model comparison on the temporally matched cells (supersedes all-years)
+target year 2019, NAIP bracket 2018-2020, matching the model's 2018/2020 embeddings.
+cells: 36 (deduped, seed 42) of 180 all-years locations. The plan named 30; the data now holds 36 target-2019 cells (data added since).
+
+Inference: target year is a property of the cell (it follows from NAIP availability), not
+of the random draw. If interpreters worked a randomized list, the target-2019 subset is a
+probability sample of the 2018/2020-ELIGIBLE subpopulation, which is narrower than the full
+21,561-cell frame. That subpopulation is estimated at ~4,312 cells (sample proportion
+of 2019 cells), and the FPC uses it: sqrt(1 - 36/4,312) = 0.996. With n=36 the CIs are wide; they are reported, not suppressed.
+
+variant     OA10  kappa10     OA5  all-Stable   kappa5
+v2         0.719    0.589   0.894       0.979    0.059
+v3         0.698    0.569   0.859       0.979    0.023
+v4         0.635    0.463   0.944       0.979    0.157
+v5         0.648    0.514   0.796       0.979    0.017
+v6         0.193    0.082   0.689       0.979    0.011
+
+As in the census, every variant's 5-class OA is below the all-Stable baseline with
+kappa ~ 0: the collapsed maps carry almost no change-detection information here either.
+The 10-class kappa is much higher (v2 0.59, v6 0.08) because it credits stable-class
+discrimination that the collapse strips away.
+
+Per-class support flagging is design-aware: a class is scored only if it has >= 100 px AND appears in >= 3 cells (else no between-cell variance). Here every
+change class clears both (Harvest 18 cells, Development 10, Insect/Disease 8, Beaver 5),
+so none are suppressed: none. But Beaver rests on 5
+cells and its CIs are very wide; cells_present is in metrics_long.csv so the fragility
+is visible. With n=36 all change-class CIs are wide and are reported, not suppressed.
+macro-F1 averages 5 classes (5-class) or 10 (10-class) and is not comparable across
+the two, nor as a level with earlier all-years matrices.
