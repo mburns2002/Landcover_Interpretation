@@ -298,11 +298,16 @@ DESC = {
 "sd_vs_n_OA.png": (
  "Sampling experiment: precision vs sample size",
  "Approach A under simple random sampling: how precision improves with sample size.\n"
- "Layout: one panel per model version. Axes: x = n (windows drawn from the pooled frame, "
- "log); y = SD of overall accuracy across 100 draws (log); one line per window size W.\n"
- "Why: characterizes the sampling design's precision, against the exhaustive-tiling census.\n"
- "Interpret: SD falls ~1/sqrt(n); at equal n, larger W has higher SD because within-window "
- "pixels are spatially autocorrelated. Draws from a design, NOT accuracy estimates."),
+ "Layout: one panel per model version. Axes: x = n (windows drawn from the pooled frame, log, "
+ "ticks at the actual n values); y = SD of overall accuracy across 100 draws (log). One line "
+ "per window size W; dashed = a 1/sqrt(n) slope reference anchored at the W=1 line.\n"
+ "Why: characterizes the sampling design's precision against the exhaustive-tiling census, and "
+ "exposes the design effect.\n"
+ "Interpret: every line is parallel to the dashed 1/sqrt(n) reference (n counts windows, each "
+ "an independent draw, so SD ∝ 1/sqrt(n) at all W). Because larger W samples more pixels per "
+ "window, at equal n it can sit BELOW W=1 — and the size of that gap is the design effect: "
+ "small for the autocorrelated v2-v5 (the extra within-window pixels are largely redundant), "
+ "large for the near-independent v6. Draws from a design, NOT accuracy estimates."),
 
 "bias_vs_n_OA.png": (
  "Sampling experiment: weighted vs unweighted stratified bias",

@@ -191,9 +191,15 @@ def main():
     ap.add_argument("--ws", nargs="+", type=int, default=WS)
     ap.add_argument("--ns", nargs="+", type=int, default=NSAMP)
     ap.add_argument("--iters", type=int, default=ITERS)
+    ap.add_argument("--plots-only", action="store_true",
+                    help="regenerate plots from the existing CSVs without re-running the experiment")
     args = ap.parse_args()
 
     rf2common, names, colors = C.load_mappings()
+    if args.plots_only:
+        _make_plots(names, args.versions)
+        print(f"regenerated plots -> {OUT}/")
+        return
     cells = sorted(glob.glob(os.path.join(C.RF_DIR, "**", "rf_class*Sentinel-2*.tif"), recursive=True))
     cells, ndup = C.dedupe_cells(cells, SEED)
     print(f"de-duplicated: {ndup} location(s); {len(cells)} cells (all target years, seed {SEED})")
@@ -383,25 +389,46 @@ def _logscale(ax, axes="x"):
             (ax.set_xscale if a == "x" else ax.set_yscale)("log")
 
 
+LABELED_N = (20, 100, 500, 2000, 5000)   # label a readable subset; rest are unlabeled ticks
+
+
+def _nticks(ax, n_values):
+    """Put ticks at the actual n values and label only a subset (no sci-notation / minor clutter)."""
+    nv = sorted(n_values)
+    ax.set_xticks(nv)
+    ax.set_xticklabels([str(n) if n in LABELED_N else "" for n in nv])
+    ax.minorticks_off()
+
+
 def _write_and_plot(names, ceiling_rows, census_rows, metric_rows, absence_rows, realized_rows,
                     deff_rows, dcorr_rows, effrows, versions):
+    pd.DataFrame(ceiling_rows).to_csv(os.path.join(OUT, "stratum_ceiling.csv"), index=False)
+    pd.DataFrame(census_rows).to_csv(os.path.join(OUT, "census.csv"), index=False)
+    pd.DataFrame(metric_rows).to_csv(os.path.join(OUT, "metrics_by_n.csv"), index=False)
+    pd.DataFrame(absence_rows).to_csv(os.path.join(OUT, "class_absence.csv"), index=False)
+    pd.DataFrame(realized_rows).to_csv(os.path.join(OUT, "stratum_realized.csv"), index=False)
+    pd.DataFrame(deff_rows).to_csv(os.path.join(OUT, "design_effect.csv"), index=False)
+    pd.DataFrame(effrows).to_csv(os.path.join(OUT, "strat_efficiency.csv"), index=False)
+    pd.DataFrame(dcorr_rows).to_csv(os.path.join(OUT, "d_correlation.csv"), index=False)
+    _make_plots(names, versions)
+
+
+def _make_plots(names, versions):
+    """Regenerate all plots from the CSVs in OUT (so plotting can be redone without re-sampling)."""
     import matplotlib
     matplotlib.use("Agg")
     import matplotlib.pyplot as plt
 
-    pd.DataFrame(ceiling_rows).to_csv(os.path.join(OUT, "stratum_ceiling.csv"), index=False)
-    pd.DataFrame(census_rows).to_csv(os.path.join(OUT, "census.csv"), index=False)
-    md = pd.DataFrame(metric_rows); md.to_csv(os.path.join(OUT, "metrics_by_n.csv"), index=False)
-    ab = pd.DataFrame(absence_rows); ab.to_csv(os.path.join(OUT, "class_absence.csv"), index=False)
-    pd.DataFrame(realized_rows).to_csv(os.path.join(OUT, "stratum_realized.csv"), index=False)
-    de = pd.DataFrame(deff_rows); de.to_csv(os.path.join(OUT, "design_effect.csv"), index=False)
-    ef = pd.DataFrame(effrows); ef.to_csv(os.path.join(OUT, "strat_efficiency.csv"), index=False)
-    dc = pd.DataFrame(dcorr_rows); dc.to_csv(os.path.join(OUT, "d_correlation.csv"), index=False)
-
+    md = pd.read_csv(os.path.join(OUT, "metrics_by_n.csv"))
+    ab = pd.read_csv(os.path.join(OUT, "class_absence.csv"))
+    de = pd.read_csv(os.path.join(OUT, "design_effect.csv"))
+    ef = pd.read_csv(os.path.join(OUT, "strat_efficiency.csv"))
+    dc = pd.read_csv(os.path.join(OUT, "d_correlation.csv"))
+    n_values = sorted(md.n.unique())
     wpal = {1: "#1f77b4", 3: "#2ca02c", 5: "#9467bd", 7: "#ff7f0e", 9: "#d62728"}
     vpal = {"v2": "#1f77b4", "v3": "#2ca02c", "v4": "#9467bd", "v5": "#ff7f0e", "v6": "#d62728"}
 
-    # 1) SD of A_oa vs n, line per W, panel per version (simple design)
+    # 1) SD of A_oa vs n (log-log), line per W, panel per version + 1/sqrt(n) reference
     fig, axes = plt.subplots(1, len(versions), figsize=(3.3 * len(versions), 4), sharey=True)
     axes = np.atleast_1d(axes)
     for ax, v in zip(axes, versions):
@@ -409,16 +436,26 @@ def _write_and_plot(names, ceiling_rows, census_rows, metric_rows, absence_rows,
         for W in sorted(s.W.unique()):
             sw = s[s.W == W].sort_values("n")
             ax.plot(sw.n, sw.sd, "o-", color=wpal[W], label=f"W={W}", ms=4)
-        ax.set_xlabel("n (windows)"); ax.set_title(v); _logscale(ax, "xy")
+        # 1/sqrt(n) reference anchored at the W=1 line's smallest-n SD (slope -0.5)
+        w1 = s[s.W == 1].sort_values("n")
+        if len(w1):
+            n0, sd0 = float(w1.n.iloc[0]), float(w1.sd.iloc[0])
+            nn = np.array(n_values, float)
+            ax.plot(nn, sd0 * np.sqrt(n0 / nn), "k--", lw=1, zorder=1,
+                    label="independent (slope −0.5)")
+        ax.set_xlabel("n (windows)"); ax.set_title(v); _logscale(ax, "xy"); _nticks(ax, n_values)
         if ax is axes[0]:
             ax.set_ylabel("SD of OA (approach A)")
-        ax.legend(fontsize=7, frameon=False); _classic(ax)
+        ax.legend(fontsize=6.5, frameon=False); _classic(ax)
     fig.suptitle("Precision vs sample size (simple random): SD of sampled OA falls with n\n"
-                 "draws from a design, not accuracy estimates", fontsize=11)
+                 "dashed = 1/√n slope reference anchored at W=1 (independent single-pixel sampling); "
+                 "every line is parallel to it (SD ∝ 1/√n). The gap between W=1 and larger-W lines is "
+                 "the design effect — small for the autocorrelated v2–v5, large for the near-independent "
+                 "v6. Draws from a design, not accuracy estimates.", fontsize=10)
     fig.tight_layout(rect=[0, 0, 1, 0.9]); fig.savefig(os.path.join(OUT, "sd_vs_n_OA.png"), dpi=140,
                                                        bbox_inches="tight"); plt.close(fig)
 
-    # 2) bias vs n, approach A OA, simple vs stratified weighted vs stratified unweighted (v2)
+    # 2) bias vs n (v2, W=3): simple vs stratified weighted vs stratified unweighted
     fig, ax = plt.subplots(figsize=(8, 5))
     for lab, design, metric, c in [("simple (unwtd)", "simple", "A_oa", "#1f77b4"),
                                    ("stratified, weighted", "strat", "A_oa_wtd", "#2ca02c"),
@@ -427,6 +464,7 @@ def _write_and_plot(names, ceiling_rows, census_rows, metric_rows, absence_rows,
         ax.plot(s.n, s.bias, "o-", color=c, label=lab)
     ax.axhline(0, ls="--", color="k", lw=0.8)
     ax.set_xlabel("n (windows)"); ax.set_ylabel("mean sampled OA − census OA"); _logscale(ax, "x")
+    _nticks(ax, n_values)
     ax.set_title("Bias vs n (v2, W=3): weighted stratified recovers census; unweighted does not")
     ax.legend(fontsize=8, frameon=False); _classic(ax)
     fig.tight_layout(); fig.savefig(os.path.join(OUT, "bias_vs_n_OA.png"), dpi=140, bbox_inches="tight")
@@ -445,20 +483,21 @@ def _write_and_plot(names, ceiling_rows, census_rows, metric_rows, absence_rows,
     fig.tight_layout(); fig.savefig(os.path.join(OUT, "design_effect_vs_W.png"), dpi=140, bbox_inches="tight")
     plt.close(fig)
 
-    # 4) stratification efficiency per class (v2, W=1, largest n), SD_strat/SD_simple
+    # 4) stratification efficiency per class (v2, W=1, largest n)
     fig, ax = plt.subplots(figsize=(10, 5))
     nmax = max(ef.n)
     s = ef[(ef.version == "v2") & (ef.W == 1) & (ef.n == nmax)].dropna(subset=["strat_efficiency"])
     order = s.sort_values("strat_efficiency")
-    ax.bar(order.cls, order.strat_efficiency, color=["#2ca02c" if x < 1 else "#d62728" for x in order.strat_efficiency])
+    ax.bar(order.cls, order.strat_efficiency,
+           color=["#2ca02c" if x < 1 else "#d62728" for x in order.strat_efficiency])
     ax.axhline(1, ls="--", color="k", lw=0.8)
     ax.set_ylabel("SD_stratified / SD_simple  (<1 = stratification helps)")
     ax.set_title(f"Stratification efficiency by class (v2, W=1, n={nmax}): helps rare, hurts common")
-    ax.set_xticklabels(order.cls, rotation=45, ha="right"); _classic(ax)
+    ax.set_xticks(range(len(order))); ax.set_xticklabels(order.cls, rotation=45, ha="right"); _classic(ax)
     fig.tight_layout(); fig.savefig(os.path.join(OUT, "strat_efficiency.png"), dpi=140, bbox_inches="tight")
     plt.close(fig)
 
-    # 5) class absence vs n (simple design, v2, W=1), line per class
+    # 5) class absence vs n (simple, v2, W=1), line per class
     fig, ax = plt.subplots(figsize=(9, 5))
     s = ab[(ab.design == "simple") & (ab.version == "v2") & (ab.W == 1)]
     for cls in s.cls.unique():
@@ -466,6 +505,7 @@ def _write_and_plot(names, ceiling_rows, census_rows, metric_rows, absence_rows,
         ax.plot(sc.n, sc.frac_absent, "o-", label=cls, ms=4)
     ax.set_xlabel("n (windows)")
     ax.set_ylabel("fraction of iterations where class is entirely absent"); _logscale(ax, "x")
+    _nticks(ax, n_values)
     ax.set_title("Simple random fails for rare classes (v2, W=1): absence vs n")
     ax.legend(fontsize=7, frameon=False, ncol=2); _classic(ax)
     fig.tight_layout(); fig.savefig(os.path.join(OUT, "class_absence.png"), dpi=140, bbox_inches="tight")
@@ -479,6 +519,7 @@ def _write_and_plot(names, ceiling_rows, census_rows, metric_rows, absence_rows,
         ax.plot(sc.n, sc.mean_corr, "o-", label=cls, ms=4)
     ax.set_xlabel("n (windows)")
     ax.set_ylabel("mean per-class corr(prop_map, prop_ref)"); _logscale(ax, "x")
+    _nticks(ax, n_values)
     ax.set_title("Approach D: per-class proportion correlation vs n (v2, W=5, simple)")
     ax.legend(fontsize=7, frameon=False, ncol=2); _classic(ax)
     fig.tight_layout(); fig.savefig(os.path.join(OUT, "d_corr_vs_n.png"), dpi=140, bbox_inches="tight")
