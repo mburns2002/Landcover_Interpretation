@@ -31,6 +31,72 @@ FONT_DIR = os.path.join(matplotlib.get_data_path(), "fonts", "ttf")
 
 # ---- exact-basename descriptions (unique figures) -------------------------------------
 DESC = {
+"tc_delta_scatter.png": (
+ "Tasseled Cap change space: where the disturbance classes live",
+ "Training points (Landsat 8, 2000 pts, 10 balanced classes) in Tasseled Cap CHANGE space "
+ "(2018→2020 deltas).\n"
+ "Layout: three panels, one per pair of Δ components (Δbrightness–Δgreenness, Δbrightness–"
+ "Δwetness, Δgreenness–Δwetness). Grey = the six stable land-cover classes pooled; coloured = "
+ "the four change classes (Harvest, Development, Beaver, Insect/Disease). Zero lines mark 'no "
+ "change'.\n"
+ "Why: disturbance has a spectral-change signature; this shows how separable the change classes "
+ "are in the raw TC deltas the classifier keys on.\n"
+ "Interpret: the Δbrightness–Δwetness panel shows the classic disturbance arm — Development "
+ "reaches furthest (brighten and dry), Harvest follows the same diagonal but milder, while "
+ "Insect/Disease stays near zero brightness with greenness/wetness loss (standing dead, no "
+ "brightening). Stable classes cluster at the origin. Labels use the common scheme "
+ "(1=Harvest…10=Insect/Disease)."),
+
+"tc_delta_boxplots.png": (
+ "Tasseled Cap deltas per class: spread, not just the mean",
+ "Per-class distribution of each Tasseled Cap delta (2018→2020) for the 10-class training set.\n"
+ "Layout: three stacked panels (Δbrightness, Δgreenness, Δwetness); x = class (1–10); boxes = "
+ "IQR with median, whiskers to 1.5·IQR, outliers hidden. Filled boxes = the four change "
+ "classes; faint = stable classes.\n"
+ "Why: the mean signature (heatmap) hides overlap; the spread shows how reliably a single point "
+ "can be assigned from its TC change alone.\n"
+ "Interpret: change classes have wide, overlapping delta distributions that straddle the stable "
+ "boxes — the disturbance signal is real in the mean but noisy point-by-point, consistent with "
+ "the weak class separation seen in the LDA projection."),
+
+"tc_mean_delta_heatmap.png": (
+ "Tasseled Cap mean-delta class signature",
+ "Compact 10×3 signature: mean Tasseled Cap delta (2018→2020) per class.\n"
+ "Layout: rows = the 10 classes, columns = Δbrightness/Δgreenness/Δwetness; diverging colour "
+ "(red = increase, blue = decrease) symmetric about zero; cell text = the mean value.\n"
+ "Why: summarises the average spectral-change direction each class carries.\n"
+ "Interpret: Development brightens most (+0.10) while greenness/wetness drop; Harvest and "
+ "Agriculture share the brighten-and-dry pattern; Insect/Disease loses greenness (−0.05) "
+ "without brightening (standing dead); Beaver loses greenness and wetness (flooding); the "
+ "stable classes sit near zero. This is the mean only — see the boxplots for spread."),
+
+"tc_trajectory.png": (
+ "Class centroids moving in brightness–greenness space, 2018→2020",
+ "Where each class's average point sits in 2018 and where it moves to by 2020.\n"
+ "Layout: x = brightness, y = greenness; dot = 2018 centroid, arrowhead = 2020 centroid, one "
+ "arrow per class. Bold arrows = the four change classes; thin = stable.\n"
+ "Why: shows change as displacement in the absolute TC space rather than as a delta, so the "
+ "starting land-cover context is visible.\n"
+ "Interpret: stable classes barely move; the change classes translate down-and-right (greenness "
+ "loss, brightness gain), the disturbance direction. Arrow length is the magnitude of average "
+ "spectral change for that class over the two years."),
+
+"tc_lda_projection.png": (
+ "Linear-discriminant projection: how separable the 10 classes are",
+ "Two-component LDA of the training points on the six independent TC features "
+ "(brightness/greenness/wetness for 2018 and 2020; the three deltas are exact linear "
+ "combinations and are dropped to keep within-class scatter non-singular). Computed by "
+ "whitening the within-class scatter then diagonalising the between-class scatter (numpy, no "
+ "sklearn).\n"
+ "Layout: x = LD1, y = LD2 (the two most class-separating linear axes); one colour per class; "
+ "change classes drawn larger/opaque.\n"
+ "Why: shows the best-case linear separability in the space the classifier actually sees — an "
+ "upper bound on how distinguishable the classes are.\n"
+ "Interpret: Water separates cleanly (far along LD1) and Urban spreads along LD2, but the four "
+ "change classes overlap heavily with each other and with stable cover in the central mass. In "
+ "Tasseled Cap space the disturbance types are not cleanly separable — consistent with the "
+ "near-zero collapsed-scheme kappa found in the sampling experiment."),
+
 "global_confusion_matrix.png": (
  "Inter-interpreter agreement confusion matrix",
  "Row-normalized confusion matrix of inter-interpreter agreement, pooled over all "
