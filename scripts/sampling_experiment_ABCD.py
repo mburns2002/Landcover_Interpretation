@@ -72,6 +72,19 @@ VERSIONS = ["v2", "v3", "v4", "v5", "v6"]
 ITERS = 100
 SEED = 42
 
+# ---- optional 5-class collapse (see --collapse): merge all stable classes into one, keep the
+# change classes distinct, exclude Unknown (observed-but-unattributed change, no model equivalent).
+COLLAPSE = False
+NAMES_5 = {1: "Stable", 2: "Harvest", 3: "Development", 4: "Insect/Disease", 5: "Beaver"}
+# reference is in RF codes; Stable = urban/ag/grass-shrub/forest/water/wetland/other; Unknown(10)
+# and Fire(40, absent) -> 0 (excluded).
+_REF_COLLAPSE = np.zeros(63, np.uint8)
+for _c in (0, 1, 2, 3, 4, 5, 13):
+    _REF_COLLAPSE[_c] = 1
+_REF_COLLAPSE[20] = 2; _REF_COLLAPSE[30] = 3; _REF_COLLAPSE[50] = 4; _REF_COLLAPSE[62] = 5
+# model is in common 0..10 codes: 3-8 stable; 1 harvest; 2 development; 10 insect/disease; 9 beaver.
+_MODEL_COLLAPSE = np.array([0, 2, 3, 1, 1, 1, 1, 1, 1, 5, 4], np.uint8)
+
 
 # ---- metrics from a (float-weighted) confusion matrix; returns scalars + per-class F1 -------
 def cm_metrics(cm):
@@ -105,6 +118,8 @@ def precompute_population(cells, ref_cache, tiles, W):
         ref = ref_cache[f]
         with rasterio.open(f) as ds:
             mdl = C.stitch_model_to_cell(ds, tiles)
+        if COLLAPSE:                                  # common 1..10 -> collapsed 1..5
+            mdl = _MODEL_COLLAPSE[mdl]
         H, Wd = ref.shape
         nH, nW = H // W, Wd // W
         if nH == 0 or nW == 0:
@@ -193,9 +208,16 @@ def main():
     ap.add_argument("--iters", type=int, default=ITERS)
     ap.add_argument("--plots-only", action="store_true",
                     help="regenerate plots from the existing CSVs without re-running the experiment")
+    ap.add_argument("--collapse", action="store_true",
+                    help="5-class collapse: merge all stable classes into Stable, keep the change "
+                         "classes distinct, exclude Unknown; writes to Case_ABCD_sampling_5class/")
     args = ap.parse_args()
 
+    global N, OUT, COLLAPSE
     rf2common, names, colors = C.load_mappings()
+    if args.collapse:
+        N, OUT, COLLAPSE, names = 5, "reports/Case_ABCD_sampling_5class", True, NAMES_5
+
     if args.plots_only:
         _make_plots(names, args.versions)
         print(f"regenerated plots -> {OUT}/")
@@ -204,10 +226,30 @@ def main():
     cells, ndup = C.dedupe_cells(cells, SEED)
     print(f"de-duplicated: {ndup} location(s); {len(cells)} cells (all target years, seed {SEED})")
     os.makedirs(OUT, exist_ok=True)
+
     ref_cache = {}
-    for f in cells:
-        with rasterio.open(f) as ds:
-            ref_cache[f] = C.to_common_rf(ds.read(1), rf2common)
+    if COLLAPSE:
+        unk = tot = 0
+        for f in cells:
+            with rasterio.open(f) as ds:
+                rf = ds.read(1)
+            safe = np.where((rf >= 0) & (rf <= 62), rf, 0)
+            ref_cache[f] = _REF_COLLAPSE[safe]         # RF codes -> collapsed 1..5 (Unknown/Fire -> 0)
+            unk += int((rf == 10).sum()); tot += rf.size
+        with open(os.path.join(OUT, "exclusion.txt"), "w") as fh:
+            fh.write("5-class collapse: Stable = urban/agriculture/grass-shrub/forest/water/wetland/other;\n"
+                     "change classes kept distinct = Harvest, Development, Insect/Disease, Beaver.\n\n"
+                     "Unknown (unattributed change, no model equivalent) is EXCLUDED — a substantive\n"
+                     "exclusion, not a technicality: dropping observed-but-unattributed disturbance makes\n"
+                     "the Stable stratum marginally purer than the landscape.\n\n"
+                     f"excluded Unknown pixels: {unk:,}\n"
+                     f"total reference pixels:  {tot:,}\n"
+                     f"share of frame:          {unk / tot:.4%}\n")
+        print(f"[collapse] excluded Unknown pixels: {unk:,} ({unk / tot:.3%} of the frame)")
+    else:
+        for f in cells:
+            with rasterio.open(f) as ds:
+                ref_cache[f] = C.to_common_rf(ds.read(1), rf2common)
 
     ss = np.random.SeedSequence(SEED)
     ceiling_rows, census_rows, metric_rows = [], [], []

@@ -1,0 +1,10 @@
+5-class collapse: Stable = urban/agriculture/grass-shrub/forest/water/wetland/other;
+change classes kept distinct = Harvest, Development, Insect/Disease, Beaver.
+
+Unknown (unattributed change, no model equivalent) is EXCLUDED — a substantive
+exclusion, not a technicality: dropping observed-but-unattributed disturbance makes
+the Stable stratum marginally purer than the landscape.
+
+excluded Unknown pixels: 1,823
+total reference pixels:  20,443,094
+share of frame:          0.0089%

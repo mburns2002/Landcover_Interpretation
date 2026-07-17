@@ -295,6 +295,33 @@ DESC = {
  "(v2≈v3≈v5 > v4 > v6). The stratification crossover (helps rare, hurts common) holds across "
  "all variants. Draws from designs, not accuracy estimates."),
 
+"change_convergence.png": (
+ "5-class collapse vs 10-class: change-class convergence",
+ "Does merging the stable classes speed up convergence for the change classes?\n"
+ "Layout: one panel per change class. Axes: x = n (log); y = stratified SD of that class's "
+ "per-class F1 (v2, W=1, log); red dashed = 10-class scheme, blue = 5-class collapse.\n"
+ "Why: the 5-class scheme gives each change stratum n/5 windows (vs n/10) — double the "
+ "allocation — but it also collapses the six stable strata into one, so Stable is sampled "
+ "n/5 instead of 6*n/10.\n"
+ "Interpret: a CROSSOVER. 5-class converges faster at small n (the allocation benefit — SD "
+ "lower for n<=~200), but for the rarest classes (Development, Beaver) the 10-class scheme "
+ "catches up and passes at large n, because under-sampling Stable degrades change-class F1 "
+ "PRECISION (false positives live in the stable background). Recall gain vs precision cost. "
+ "Draws from a design, not accuracy estimates."),
+
+"collapse_summary.png": (
+ "5-class collapse vs 10-class: OA, macro-F1, design effect",
+ "Overall comparison of the two class schemes.\n"
+ "Panels: OA SD vs n (W=1); macro-F1 SD vs n (W=1); design effect vs W. Solid = 5-class, "
+ "dashed = 10-class; one line per variant.\n"
+ "Interpret: OA SD is comparable between schemes (both fall ~1/sqrt(n)). macro-F1 SD is HIGHER "
+ "and non-monotonic for the 5-class scheme — each of the four change classes carries 1/5 weight "
+ "(vs 1/10), so their intermittent presence dominates the macro average; and macro-F1 is NOT "
+ "comparable as a level across schemes (it averages 5 classes here, 10 there). Design effect is "
+ "HIGHER under the collapse (the collapsed OA is dominated by the ~98% Stable class, which is "
+ "highly spatially autocorrelated), lifting even the speckly v6 from ~10 to ~23 at W=9. Draws "
+ "from a design, not accuracy estimates."),
+
 "sd_vs_n_OA.png": (
  "Sampling experiment: precision vs sample size",
  "Approach A under simple random sampling: how precision improves with sample size.\n"
@@ -484,12 +511,25 @@ DESIGN_EFFECT_ABCD = (
  "n*W^2 / design effect.")
 
 
+def _five_class_wrap(result, path):
+    """Shared experiment figures live in both the 10-class and 5-class folders under the same
+    basename; flag the collapse version so its numbers aren't read as the 10-class ones."""
+    if result and "Case_ABCD_sampling_5class" in path and \
+            os.path.basename(path) not in ("change_convergence.png", "collapse_summary.png"):
+        title, body = result
+        return ("[5-class collapse] " + title,
+                "5-CLASS COLLAPSE version (Stable + Harvest/Development/Insect-Disease/Beaver; "
+                "Unknown excluded). Class-specific numbers quoted below are from the 10-class run; "
+                "the structure and interpretation carry over.\n" + body)
+    return result
+
+
 def describe(path):
     base = os.path.basename(path)
     if base == "design_effect_vs_W.png" and "Case_ABCD_sampling" in path:
-        return DESIGN_EFFECT_ABCD
+        return _five_class_wrap(DESIGN_EFFECT_ABCD, path)
     if base in DESC:
-        return DESC[base]
+        return _five_class_wrap(DESC[base], path)
     if base == "window_sampling_metrics.png":
         return window_metrics_desc(path)
     if base.startswith("prop_scatter_"):

@@ -404,3 +404,34 @@ Development ~0.18, Insect/Disease ~0.27) and hurts the common classes (Forest ~1
 ~1.35), because equal allocation starves them — the crossover sits around Grass/Shrub–Water. 
 
 **Cross-variant differences the strategies expose** (`scripts/sampling_variant_comparison.py`, `variant_comparison.png`): the sampling designs discriminate the classifier variants. (1) Design effect separates the dot-product v6 (~10 at W=9) from the smooth v2-v5 (~38-47) — v6's per-pixel errors are spatially independent, so windows waste ~4x less information. (2) Approach D proportion correlation orders their quality: v2≈v3≈v5 track abundance well (Water 0.97, Agriculture 0.87), v4 is intermediate (Water 0.56, Urban 0.18), and v6 is near zero everywhere (Water 0.07, Urban -0.05) — it carries almost no class-abundance signal. (3) v6's speckle makes rare classes less often absent under simple random (spurious presence, not signal); v4 is idiosyncratic (rarely predicts Beaver, over-predicts Urban). The stratification crossover holds across all variants.  collapses this to two axes — abundance-weighted Approach D correlation (x) vs design effect at W=9 (y): v2/v3/v5 cluster upper-right (coherent, faithful), v4 upper-middle, and v6 sits isolated bottom-left (dot-product: no abundance signal, low autocorrelation).
+
+## Case_ABCD_sampling_5class/ — sampling experiment under a 5-class collapse
+
+The sampling experiment (as `Case_ABCD_sampling/`) rerun under a **5-class collapse**: all stable
+classes merged into **Stable** (urban/agriculture/grass-shrub/forest/water/wetland/other), the
+four change classes kept distinct (Harvest, Development, Insect/Disease, Beaver). Source:
+`scripts/sampling_experiment_ABCD.py --collapse`. **Unknown (unattributed change, no model
+equivalent) is excluded** — a substantive exclusion, not a technicality: dropping observed-but-
+unattributed disturbance makes the Stable stratum marginally purer than the landscape. Excluded
+Unknown pixels: **1,823 (0.009% of the frame)** — genuinely marginal (`exclusion.txt`). Fire (40)
+has zero pixels. Census, ceilings, and all bias comparisons are recomputed under the 5-class
+scheme (the 10-class census does not transfer). W=1 A=B=C verified. Files mirror the 10-class
+folder (`census.csv`, `stratum_ceiling.csv`, `metrics_by_n.csv`, …) plus the comparison below.
+
+Collapsed census (v2, W=1): OA 0.883 but kappa 0.03 — Stable dominance (**~98.5%** of center
+pixels) inflates OA while revealing little change skill. Stratum ceiling: Stable 98.5%, Harvest
+1.1%, Insect/Disease 0.29%, Development 0.07%, Beaver 0.05% — the four change strata are what
+constrain the design.
+
+**Comparison to the 10-class run** (`scripts/sampling_collapse_comparison.py`,
+`collapse_vs_10class.csv`, `change_convergence.png`, `collapse_summary.png`): equal allocation now
+gives each change stratum n/5 (vs n/10). The question — does collapsing improve change-class
+convergence? — has a **crossover** answer: 5-class converges FASTER at small n (Development SD
+ratio 0.63, Insect/Disease 0.58 at n=50), but for the rarest classes (Development, Beaver) the
+10-class scheme **catches up and passes at large n** (Development ratio 1.80 at n=5000). Mechanism:
+collapsing doubles the change-stratum allocation (helps recall) but under-samples Stable (n/5 vs
+6·n/10), degrading change-class F1 **precision** (false positives live in the stable background) —
+recall gain vs precision cost. Also: **design effect increases** under the collapse (OA now
+dominated by the highly-autocorrelated Stable class, lifting even v6 from ~10 to ~23 at W=9), and
+**macro-F1 is not comparable as a level** between schemes (it averages 5 classes here, 10 there) —
+only its convergence behaviour is.
