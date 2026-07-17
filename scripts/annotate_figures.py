@@ -309,6 +309,25 @@ DESC = {
  "PRECISION (false positives live in the stable background). Recall gain vs precision cost. "
  "Draws from a design, not accuracy estimates."),
 
+"recall_precision_convergence.png": (
+ "5-class collapse vs 10-class: recall vs precision, shown not inferred",
+ "Splits the change-class F1 crossover into its two components so the mechanism is visible "
+ "rather than inferred from F1.\n"
+ "Layout: 2 rows x 4 change classes. Top row = stratified SD of RECALL (producer's accuracy, "
+ "TP/reference-total); bottom row = stratified SD of PRECISION (user's accuracy, TP/map-total). "
+ "Axes: x = n (log); y = SD across 100 draws (v2, W=1, log). Blue solid = 5-class collapse, "
+ "red dashed = 10-class.\n"
+ "Why: recall depends on how well the design samples the reference change class; collapse "
+ "doubles each change stratum's allocation (n/5 vs n/10), so recall should be estimated BETTER. "
+ "Precision depends on the false-positive rate, whose denominator lives in the stable "
+ "background; collapse samples Stable n/5 instead of 6*n/10, so precision should be estimated "
+ "WORSE at large n.\n"
+ "Interpret: exactly that split. Recall SD is lower under collapse at every n (ratio ~0.7-0.84). "
+ "Precision SD crosses over — collapse is better at small n but WORSE at large n for the rarest "
+ "classes (Development ~2x, Harvest ~1.6x the 10-class SD at n=5000). The F1 crossover is a "
+ "recall gain traded against a precision loss, not a single effect. Draws from a design, not "
+ "accuracy estimates."),
+
 "collapse_summary.png": (
  "5-class collapse vs 10-class: OA, macro-F1, design effect",
  "Overall comparison of the two class schemes.\n"
@@ -515,7 +534,8 @@ def _five_class_wrap(result, path):
     """Shared experiment figures live in both the 10-class and 5-class folders under the same
     basename; flag the collapse version so its numbers aren't read as the 10-class ones."""
     if result and "Case_ABCD_sampling_5class" in path and \
-            os.path.basename(path) not in ("change_convergence.png", "collapse_summary.png"):
+            os.path.basename(path) not in ("change_convergence.png", "collapse_summary.png",
+                                            "recall_precision_convergence.png"):
         title, body = result
         return ("[5-class collapse] " + title,
                 "5-CLASS COLLAPSE version (Stable + Harvest/Development/Insect-Disease/Beaver; "

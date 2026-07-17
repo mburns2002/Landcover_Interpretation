@@ -135,6 +135,62 @@ def main():
     fig.savefig(os.path.join(D5, "collapse_summary.png"), dpi=140, bbox_inches="tight")
     plt.close(fig)
 
+    # ---- recall (producer's) vs precision (user's) convergence: shows the crossover mechanism ----
+    pcm10 = pd.read_csv(os.path.join(D10, "per_class_metrics.csv"))
+    pcm5 = pd.read_csv(os.path.join(D5, "per_class_metrics.csv"))
+    fig, axes = plt.subplots(2, len(CHANGE), figsize=(3.4 * len(CHANGE), 7.5), sharex=True)
+    for r, metric in enumerate(["recall", "precision"]):
+        for cc, cls in enumerate(CHANGE):
+            ax = axes[r, cc]
+            for scheme, pcm, col, ls in [("10-class", pcm10, "#d62728", "--"), ("5-class", pcm5, "#1f77b4", "-")]:
+                s = pcm[(pcm.design == "strat") & (pcm.metric == metric) & (pcm.version == "v2") &
+                        (pcm.W == 1) & (pcm.cls == cls)].sort_values("n")
+                ax.plot(s.n, s.sd, ls, marker="o", ms=3, color=col, label=scheme)
+            try:
+                ax.set_xscale("log"); ax.set_yscale("log")
+            except ValueError:
+                pass
+            _nticks(ax, n_values)
+            if r == 0:
+                ax.set_title(cls, fontsize=10)
+            if cc == 0:
+                ax.set_ylabel(f"stratified SD of {metric}\n(v2, W=1)")
+            if r == 1:
+                ax.set_xlabel("n (windows)")
+            ax.legend(fontsize=7, frameon=False); _classic(ax)
+    fig.suptitle("Recall (producer's) vs precision (user's) convergence, 5-class vs 10-class — shown, "
+                 "not inferred from F1\ncollapse doubles each change stratum (helps RECALL) but "
+                 "under-samples Stable (hurts change-class PRECISION). Draws from a design, not accuracy "
+                 "estimates.", fontsize=10)
+    fig.tight_layout(rect=[0, 0, 1, 0.93])
+    fig.savefig(os.path.join(D5, "recall_precision_convergence.png"), dpi=140, bbox_inches="tight")
+    plt.close(fig)
+
+    # ---- FPC verification: sampling fraction & FPC factor for the constraining strata ----
+    sr5 = pd.read_csv(os.path.join(D5, "stratum_realized.csv"))
+    sr10 = pd.read_csv(os.path.join(D10, "stratum_realized.csv"))
+    print("FPC verification (empirical Monte-Carlo SD from without-replacement draws includes the FPC):")
+    print(f"  {'class':16} {'5cl f':>7} {'5cl fpc':>8} {'10cl f':>8} {'10cl fpc':>9}")
+    for cls in ["Development", "Beaver", "Insect/Disease", "Harvest"]:
+        a = sr5[(sr5.version == "v2") & (sr5.W == 1) & (sr5.n == 5000) & (sr5.cls == cls)]
+        b = sr10[(sr10.version == "v2") & (sr10.W == 1) & (sr10.n == 5000) & (sr10.cls == cls)]
+        if len(a) and len(b):
+            print(f"  {cls:16} {a.sampling_fraction.iloc[0]:>7.3f} {a.fpc_sd_factor.iloc[0]:>8.3f} "
+                  f"{b.sampling_fraction.iloc[0]:>8.3f} {b.fpc_sd_factor.iloc[0]:>9.3f}")
+    print("  -> the 5-class arm's sampling fraction is HIGHER (double allocation), so its FPC reduces "
+          "variance MORE than the 10-class arm's — the OPPOSITE direction to the crossover, so the FPC "
+          "cannot produce it.\n")
+
+    # ---- collapsed-scheme kappa across variants (W=1), stated plainly ----
+    cen5 = pd.read_csv(os.path.join(D5, "census.csv"))
+    kap = cen5[(cen5.W == 1) & (cen5.approach == "A")][["version", "oa", "kappa"]].reset_index(drop=True)
+    kap.to_csv(os.path.join(D5, "collapsed_kappa.csv"), index=False)
+    print("collapsed-scheme census kappa (W=1), all variants — change-detection skill once stable-class "
+          "discrimination is removed:")
+    print(kap.to_string(index=False))
+    print(f"  -> kappa is ~{kap.kappa.abs().max():.02f} at most across variants: the model maps have "
+          "essentially NO change-detection skill under the collapsed scheme.\n")
+
     # ---- console: change-class SD ratio (5-class / 10-class), small-n vs large-n regimes ----
     print("change-class stratified SD ratio (5-class / 10-class), v2 W=1  (<1 = 5-class better):")
     print(f"  {'class':16} {'n=50':>8} {'n=200':>8} {'n=5000':>8}")

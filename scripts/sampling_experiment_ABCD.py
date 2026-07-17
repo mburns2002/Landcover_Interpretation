@@ -86,22 +86,24 @@ _REF_COLLAPSE[20] = 2; _REF_COLLAPSE[30] = 3; _REF_COLLAPSE[50] = 4; _REF_COLLAP
 _MODEL_COLLAPSE = np.array([0, 2, 3, 1, 1, 1, 1, 1, 1, 5, 4], np.uint8)
 
 
-# ---- metrics from a (float-weighted) confusion matrix; returns scalars + per-class F1 -------
+# ---- metrics from a (float-weighted) confusion matrix (rows = reference, cols = map). Returns
+# scalars plus per-class F1, recall (producer's accuracy) and precision (user's accuracy). -------
 def cm_metrics(cm):
     tp = np.diag(cm).astype(float)
     row = cm.sum(1); col = cm.sum(0); tot = cm.sum()
     if tot <= 0:
-        return np.nan, np.nan, np.nan, np.full(N, np.nan)
+        nanv = np.full(N, np.nan)
+        return np.nan, np.nan, np.nan, nanv, nanv, nanv
     oa = tp.sum() / tot
     pe = (row * col).sum() / (tot * tot)
     kappa = (oa - pe) / (1 - pe) if (1 - pe) != 0 else np.nan
     with np.errstate(divide="ignore", invalid="ignore"):
-        prec = np.where(col > 0, tp / col, np.nan)
-        rec = np.where(row > 0, tp / row, np.nan)
+        prec = np.where(col > 0, tp / col, np.nan)    # user's accuracy (TP / map total)
+        rec = np.where(row > 0, tp / row, np.nan)      # producer's accuracy (TP / ref total)
         f1 = np.where((prec + rec) > 0, 2 * prec * rec / (prec + rec), np.nan)
     present = (row + col) > 0
     macro = np.nanmean(f1[present]) if present.any() else np.nan
-    return oa, kappa, macro, f1
+    return oa, kappa, macro, f1, rec, prec
 
 
 def precompute_population(cells, ref_cache, tiles, W):
@@ -253,7 +255,7 @@ def main():
 
     ss = np.random.SeedSequence(SEED)
     ceiling_rows, census_rows, metric_rows = [], [], []
-    absence_rows, realized_rows, deff_rows, dcorr_rows, effrows = [], [], [], [], []
+    absence_rows, realized_rows, deff_rows, dcorr_rows, effrows, pcm_rows = [], [], [], [], [], []
 
     for v in args.versions:
         tiles = [rasterio.open(t) for t in C.model_tiles(v)]
@@ -285,7 +287,8 @@ def main():
             for n in args.ns:
                 # storage across iterations for each design
                 store = {d: dict(oaA=[], kaA=[], mfA=[], oaB=[], oaC=[], oaAw=[], mfAw=[],
-                                 f1A=[], f1Aw=[], major=[], npix=[]) for d in ("simple", "strat")}
+                                 f1A=[], f1Aw=[], recAw=[], precAw=[], major=[], npix=[])
+                         for d in ("simple", "strat")}
                 absA = {d: np.zeros(N) for d in ("simple", "strat")}
                 dcorr = {d: [] for d in ("simple", "strat")}
                 realized = np.zeros(N); shortfall = np.zeros(N)
@@ -311,29 +314,31 @@ def main():
                     _run(pop, sidx, sw, W, store["strat"], absA["strat"], dcorr["strat"],
                          unweighted=True)
                 # summarize this (n, W, version)
-                _summarize(v, W, n, Npop, store, absA, dcorr, realized, shortfall, per,
+                _summarize(v, W, n, Npop, Nh, store, absA, dcorr, realized, shortfall, per,
                            names, wclass, cenA, cenB, cenC, corr_all,
-                           metric_rows, absence_rows, realized_rows, deff_rows, dcorr_rows, effrows)
+                           metric_rows, absence_rows, realized_rows, deff_rows, dcorr_rows,
+                           effrows, pcm_rows)
             print(f"  {v} W={W} done", flush=True)
         for t in tiles:
             t.close()
 
     _write_and_plot(names, ceiling_rows, census_rows, metric_rows, absence_rows,
-                    realized_rows, deff_rows, dcorr_rows, effrows, args.versions)
+                    realized_rows, deff_rows, dcorr_rows, effrows, pcm_rows, args.versions)
     print(f"\noutputs -> {OUT}/  (draws from designs, NOT accuracy estimates)")
 
 
 def _run(pop, idx, w, W, st, absA, dcorr, unweighted):
     cmA, cmB, cmC = confusion_from_windows(pop, idx, w, W)
     cmA_u, _, _ = confusion_from_windows(pop, idx, np.ones(len(idx)), W)  # unweighted for absence/simple
-    oaA, kaA, mfA, f1A = cm_metrics(cmA_u)          # unweighted (self-weighting for simple; contrast for strat)
-    oaAw, _, mfAw, f1Aw = cm_metrics(cmA)           # weighted
-    oaB, _, _, _ = cm_metrics(cmB)
-    oaC, _, _, _ = cm_metrics(cmC)
+    oaA, kaA, mfA, f1A, _, _ = cm_metrics(cmA_u)    # unweighted (self-weighting for simple; contrast for strat)
+    oaAw, _, mfAw, f1Aw, recAw, precAw = cm_metrics(cmA)   # weighted (design-consistent)
+    oaB = cm_metrics(cmB)[0]
+    oaC = cm_metrics(cmC)[0]
     st["oaA"].append(oaA); st["kaA"].append(kaA); st["mfA"].append(mfA)
     st["oaAw"].append(oaAw); st["mfAw"].append(mfAw)
     st["oaB"].append(oaB); st["oaC"].append(oaC)
     st["f1A"].append(f1A); st["f1Aw"].append(f1Aw)
+    st["recAw"].append(recAw); st["precAw"].append(precAw)
     st["major"].append(float(pop["majmap"][idx].mean()))
     st["npix"].append(int((pop["codes"][idx] != 255).sum()))
     # class absence: no sampled pixel labels the class in ref or map (unweighted A support)
@@ -343,9 +348,9 @@ def _run(pop, idx, w, W, st, absA, dcorr, unweighted):
     dcorr.append((corr, rmse, bias))
 
 
-def _summarize(v, W, n, Npop, store, absA, dcorr, realized, shortfall, per, names, wclass,
+def _summarize(v, W, n, Npop, Nh, store, absA, dcorr, realized, shortfall, per, names, wclass,
                cenA, cenB, cenC, corr_all, metric_rows, absence_rows, realized_rows,
-               deff_rows, dcorr_rows, effrows):
+               deff_rows, dcorr_rows, effrows, pcm_rows):
     iters = len(store["simple"]["oaA"])
     census = dict(A=cenA[0], B=cenB[0], C=cenC[0], mfA=cenA[2], kaA=cenA[1])
     for design in ("simple", "strat"):
@@ -382,11 +387,36 @@ def _summarize(v, W, n, Npop, store, absA, dcorr, realized, shortfall, per, name
         for h in range(N):
             absence_rows.append(dict(design=design, version=v, W=W, n=n, cls=names[h + 1],
                                      frac_absent=round(absA[design][h] / iters, 4)))
-    # realized stratified allocation + shortfall
+    # realized stratified allocation + shortfall + finite-population correction magnitude.
+    # the reported SDs are empirical Monte Carlo from WITHOUT-replacement draws, so the FPC is
+    # applied implicitly (a fully-sampled stratum is identical every iteration -> zero variance);
+    # the sampling fraction and FPC factor make its size visible.
     for h in range(N):
-        realized_rows.append(dict(version=v, W=W, n=n, cls=names[h + 1], target_alloc=per,
-                                  mean_realized=round(realized[h] / iters, 2),
-                                  mean_shortfall=round(shortfall[h] / iters, 2)))
+        realized_h = realized[h] / iters
+        Nh_h = int(Nh[h])
+        frac = realized_h / Nh_h if Nh_h > 0 else np.nan
+        fpc = np.sqrt(max(0.0, (Nh_h - realized_h) / (Nh_h - 1))) if Nh_h > 1 else np.nan
+        realized_rows.append(dict(version=v, W=W, n=n, cls=names[h + 1], stratum_ceiling=Nh_h,
+                                  target_alloc=per, mean_realized=round(realized_h, 2),
+                                  mean_shortfall=round(shortfall[h] / iters, 2),
+                                  sampling_fraction=round(float(frac), 5),
+                                  fpc_sd_factor=round(float(fpc), 4)))
+    # per-class recall (producer's), precision (user's) and F1, design-consistent weighted, vs census
+    cen_f1, cen_rec, cen_prec = cenA[3], cenA[4], cenA[5]
+    for design in ("simple", "strat"):
+        s = store[design]
+        for mname, arrkey, cen in [("recall", "recAw", cen_rec), ("precision", "precAw", cen_prec),
+                                   ("f1", "f1Aw", cen_f1)]:
+            A = np.array(s[arrkey], float)          # (iters, N)
+            for h in range(N):
+                col = A[:, h]
+                cv = float(cen[h]) if cen[h] == cen[h] else np.nan
+                pcm_rows.append(dict(design=design, version=v, W=W, n=n, cls=names[h + 1],
+                                     metric=mname, census=round(cv, 4) if cv == cv else np.nan,
+                                     mean=round(float(np.nanmean(col)), 4),
+                                     sd=round(float(np.nanstd(col, ddof=1)), 5),
+                                     bias=round(float(np.nanmean(col) - cv), 5) if cv == cv else np.nan,
+                                     frac_undefined=round(float(np.isnan(col).mean()), 4)))
     # per-class F1 SD, stratification efficiency = SD_strat / SD_simple.
     # use the design-consistent estimand for each arm: simple is self-weighting (f1A);
     # stratified equal-allocation must use the WEIGHTED per-class F1 (f1Aw), else the ratio
@@ -443,7 +473,7 @@ def _nticks(ax, n_values):
 
 
 def _write_and_plot(names, ceiling_rows, census_rows, metric_rows, absence_rows, realized_rows,
-                    deff_rows, dcorr_rows, effrows, versions):
+                    deff_rows, dcorr_rows, effrows, pcm_rows, versions):
     pd.DataFrame(ceiling_rows).to_csv(os.path.join(OUT, "stratum_ceiling.csv"), index=False)
     pd.DataFrame(census_rows).to_csv(os.path.join(OUT, "census.csv"), index=False)
     pd.DataFrame(metric_rows).to_csv(os.path.join(OUT, "metrics_by_n.csv"), index=False)
@@ -452,6 +482,7 @@ def _write_and_plot(names, ceiling_rows, census_rows, metric_rows, absence_rows,
     pd.DataFrame(deff_rows).to_csv(os.path.join(OUT, "design_effect.csv"), index=False)
     pd.DataFrame(effrows).to_csv(os.path.join(OUT, "strat_efficiency.csv"), index=False)
     pd.DataFrame(dcorr_rows).to_csv(os.path.join(OUT, "d_correlation.csv"), index=False)
+    pd.DataFrame(pcm_rows).to_csv(os.path.join(OUT, "per_class_metrics.csv"), index=False)
     _make_plots(names, versions)
 
 

@@ -386,7 +386,11 @@ asserted (verified for all five versions).**
 - `metrics_by_n.csv` — bias/SD/2.5-97.5 pct vs census, per design × version × W × n × metric
   (incl. weighted `A_oa_wtd`, `C_frac_majority`)
 - `class_absence.csv` / `class_absence.png` — fraction of iterations each class is absent
-- `stratum_realized.csv` — realized equal allocation and shortfall per stratum
+- `stratum_realized.csv` — realized equal allocation and shortfall per stratum, plus the
+  **finite-population correction**: `stratum_ceiling` (N_h), `sampling_fraction` (n_h/N_h) and
+  `fpc_sd_factor` = sqrt((N_h−n_h)/(N_h−1)) per stratum × n
+- `per_class_metrics.csv` — per-class **recall** (producer's), **precision** (user's) and F1 vs n,
+  per design × version × W (design-consistent weighted; mean/SD/bias vs census)
 - `design_effect.csv` / `design_effect_vs_W.png` — deff and effective sample size
 - `strat_efficiency.csv` / `strat_efficiency.png` — SD_stratified / SD_simple per class
 - `d_correlation.csv` / `d_corr_vs_n.png` — Approach D per-class correlation (leads; rmse/bias alongside)
@@ -424,7 +428,8 @@ pixels) inflates OA while revealing little change skill. Stratum ceiling: Stable
 constrain the design.
 
 **Comparison to the 10-class run** (`scripts/sampling_collapse_comparison.py`,
-`collapse_vs_10class.csv`, `change_convergence.png`, `collapse_summary.png`): equal allocation now
+`collapse_vs_10class.csv`, `change_convergence.png`, `collapse_summary.png`,
+`recall_precision_convergence.png`, `collapsed_kappa.csv`): equal allocation now
 gives each change stratum n/5 (vs n/10). The question — does collapsing improve change-class
 convergence? — has a **crossover** answer: 5-class converges FASTER at small n (Development SD
 ratio 0.63, Insect/Disease 0.58 at n=50), but for the rarest classes (Development, Beaver) the
@@ -435,3 +440,29 @@ recall gain vs precision cost. Also: **design effect increases** under the colla
 dominated by the highly-autocorrelated Stable class, lifting even v6 from ~10 to ~23 at W=9), and
 **macro-F1 is not comparable as a level** between schemes (it averages 5 classes here, 10 there) —
 only its convergence behaviour is.
+
+**Recall vs precision — shown, not inferred from F1** (`recall_precision_convergence.png`,
+`per_class_metrics.csv`). Splitting the F1 crossover into its two components confirms the
+mechanism directly. Stratified SD ratio (5-class / 10-class, v2, W=1): **recall is estimated
+better under collapse at every n** (ratio ~0.69–0.84 across all four change classes — the
+allocation benefit), while **precision degrades at large n** for the rarest classes (Development
+1.97×, Harvest 1.57×, Beaver 1.15× the 10-class SD at n=5000). The F1 crossover is genuinely a
+recall gain traded against a precision loss, not a single effect read off F1.
+
+**Finite-population correction — verified and quantified** (`stratum_realized.csv`, columns
+`sampling_fraction`/`fpc_sd_factor`). The FPC is applied *implicitly*: the reported SDs are the
+empirical spread of without-replacement Monte-Carlo draws, so a fully-sampled stratum
+contributes zero variance by construction. Its magnitude is now visible. At n=5000, W=1, the
+constraining change strata sit at sampling fractions of Beaver 9.9% (5-class) / 5.0% (10-class),
+Development 6.9% / 3.4%, giving FPC SD factors of ~0.95 (5-class) vs ~0.97–0.98 (10-class). The
+**5-class arm's fraction is higher** (double allocation into a stratum of the same ceiling), so
+its FPC reduces variance *more* — the **opposite** direction to the observed crossover. The FPC
+therefore cannot manufacture the crossover; it slightly counteracts it, confirming the crossover
+is a genuine allocation/precision effect.
+
+**Collapsed-scheme kappa across all variants, stated plainly** (`collapsed_kappa.csv`). At W=1,
+collapsed-census kappa is v2 0.025, v3 0.010, v4 0.059, v5 0.007, v6 0.006 — **~0.06 at most**.
+Once stable-class discrimination is removed from the metric, every model variant (v2–v6) has
+**essentially no change-detection skill**: the high collapsed OA (0.75–0.94) is carried entirely
+by agreement on the ~98.5% Stable background, not by detecting Harvest/Development/Insect-
+Disease/Beaver. This is a substantive result about the maps, not an artefact of the collapse.
