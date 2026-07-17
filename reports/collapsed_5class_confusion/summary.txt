@@ -1,0 +1,17 @@
+collapsed 5-class census (model vs interpreted reference)
+cells: 180 (de-duplicated, seed 42) from the 21,561-cell frame; FPC sqrt(1 - n/N) applied to ratio-estimator CIs
+NOTE: the plan specified 154 cells; the current data holds 180 interpreted cells (36/year x 5 years, all overlapping the model), reflecting cells added since. The FPC is unchanged to 3 dp (0.996 either way), so the CIs are unaffected.
+
+OA is dominated by the ~98.5% Stable class. EVERY variant's OA is BELOW the
+all-Stable baseline (labeling everything Stable), and kappa ~ 0: the collapsed maps
+carry almost no change-detection information.
+
+variant       OA  all-Stable   kappa  macro-F1
+v2         0.884       0.985   0.025     0.211
+v3         0.807       0.985   0.009     0.193
+v4         0.941       0.985   0.063     0.217
+v5         0.767       0.985   0.007     0.187
+v6         0.750       0.985   0.007     0.178
+
+macro-F1 averages 5 classes here vs 10 in the 10-class matrices; not comparable
+as a level. Full per-class precision/recall/F1/IoU with CIs in metrics_long.csv.

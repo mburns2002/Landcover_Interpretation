@@ -529,3 +529,40 @@ change/change mismatches are comparatively small (33k–204k ha). Of each pair's
 change-involved patches, **6–9 of 10 intersect an interpreted cell** (recorded per pair in
 `notes.txt`), so the interpreted overlays are populated rather than empty. Interpreted cells used:
 180 (de-duplicated, seed 42).
+
+## collapsed_5class_confusion/ — census confusion under the 5-class collapse
+
+Full confusion matrix per variant under the 5-class collapsed scheme, as a **census** over the
+interpreted cells (every valid pixel counted), not a sampling experiment. Scheme: Stable (urban,
+agriculture, grass/shrub, forest, water, wetland, other) plus the four change classes kept
+distinct (Harvest, Development, Insect/Disease, Beaver). Unknown (10) is excluded; Fire (40) is
+empty. The collapse is applied after the crosswalk to both reference and model. Reference =
+interpreted cells de-duplicated to one per location (numpy `default_rng` seed 42), all target
+years. Variants **v2–v6 including v6** — the collapse is exactly the condition under which its
+per-pixel behaviour might change, so excluding it would beg the question.
+Source: `scripts/collapsed_5class_confusion.py`.
+
+Files: `confusion_<v>_counts.csv` / `_rownorm.csv` (raw and row-normalized 5×5, reference on rows
+so the row-normalized diagonal is producer's accuracy), `confusion_<v>_rownorm.png` (heatmap, no
+gridlines), `metrics_long.csv` (every metric × variant × class with ratio-estimator and bootstrap
+CIs and support), `summary_by_variant.md` / `.tex` (per-variant headline table, booktabs),
+`summary.txt`.
+
+CIs are design-based with the **cell as the primary sampling unit**: ratio estimators across
+cells (variance from the between-cell variance, FPC √(1 − n/N), N = 21,561) for the ratio-form
+metrics (OA, per-class recall/precision/IoU), cross-checked with a cell-level bootstrap (seed 42,
+2000 replicates) which also covers the non-ratio metrics (F1, macro-F1, mean IoU, kappa). The two
+agree closely; for the rarest classes the normal-approximation ratio CI can dip below 0 while the
+bootstrap stays positive, which is why the cross-check is reported. **Cell count is 180, not the
+154 the plan named** — the data now holds 36 cells/year × 5 years (2018–2022), all overlapping
+the model; the FPC is 0.996 either way, so the CIs are unaffected.
+
+Headline (stated plainly): **OA is dominated by the ~98.5% Stable class and every variant's OA is
+below the all-Stable baseline of 0.985** — labeling everything Stable beats every model — with
+**kappa ≈ 0** (v2 0.884 / κ 0.025, v3 0.807 / 0.009, v4 0.941 / 0.063, v5 0.767 / 0.007, v6 0.750
+/ 0.007). So under the collapse the maps carry almost no change-detection information; v4's higher
+OA is just closer agreement on Stable, not skill. The row-normalized matrices show why: change
+classes overwhelmingly map to Stable (Harvest 0.78→Stable, Development 0.89→Stable for v2), and
+Stable leaks to Beaver (1.35 M px for v2), so change-class precision is near zero (Beaver 0.002,
+Development 0.007). macro-F1 here (~0.18–0.22) averages 5 classes versus 10 in the 10-class
+matrices and is **not comparable as a level**.
