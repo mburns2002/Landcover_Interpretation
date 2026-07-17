@@ -486,3 +486,46 @@ Once stable-class discrimination is removed from the metric, every model variant
 **essentially no change-detection skill**: the high collapsed OA (0.75–0.94) is carried entirely
 by agreement on the ~98.5% Stable background, not by detecting Harvest/Development/Insect-
 Disease/Beaver. This is a substantive result about the maps, not an artefact of the collapse.
+
+## variant_difference_maps/ — pairwise difference maps between model variants
+
+Pairwise comparison of the four smooth classified variants (v2, v3, v4, v5). **v6 is excluded**:
+its per-pixel dot-product speckle makes every comparison read as noise. That leaves six unordered
+pairs, each in its own subfolder (`v2_vs_v3/` ...); by convention the lower version number is A.
+Source: `scripts/variant_difference_maps.py`. The mosaic is 72,577 × 48,386 at 10 m (EPSG:5070,
+two horizontal tiles); v2–v5 share the grid exactly, so windows are read directly with no
+resampling.
+
+Per pixel, in the 10-class model scheme (1/2/9/10 change, 3–8 stable), each pixel is one of:
+agree (rendered in that class's colour), stable/stable mismatch (grey), A-change/B-stable
+(magenta), B-change/A-stable (cyan; kept distinct from the former — different findings), or
+change/change mismatch (red). Background (either map 0) is black.
+
+Per pair: `difference_map.png` (full-map overview, **decimated 16× to 160 m**, disagreement given
+per-block priority so it stays visible; agree shown in muted class colours), `category_stats.csv`
+(pixel count and area per category, **computed at full 10 m resolution from windowed reads, not
+from the render**), `cat5_change_pairs.csv` (change/change by directed change-class pair),
+`cat3_Achange_by_class.csv` / `cat4_Bchange_by_class.csv` (by the detecting variant's change
+class), `zoom_topNN_*.png` (the 10 largest change-involved disagreement patches), and
+`overlay_topNN_*.png` (the 10 largest such patches intersecting an interpreted cell, as
+variant A | variant B | interpreted reference). `pairs_summary.csv` collects all six.
+
+**Patch definition.** Change-involved disagreement (categories 3+4+5) is 8-connected-labeled on
+an **80 m grid** where each block carries its exact full-resolution cat-3/4/5 pixel count, so
+component areas are exact. A block counts toward a patch only if it is **≥25% dense** in
+change-involved disagreement; without that floor the disagreement is so extensive that
+8-connectivity merges the whole diffuse field into one mosaic-spanning blob. Crops are capped at
+2.5 km so a sprawling patch never forces a multi-gigabyte read; the very largest patches are
+shown centred on their bounding box at the cap.
+
+Findings: the variants are **far from interchangeable for change**, and **v4 is the outlier**.
+Agreement is 82–86% among {v2, v3, v5} but collapses to **47% (v4_vs_v5), 51% (v3_vs_v4), 56%
+(v2_vs_v4)** — every v4 pair also carries 7–8 million ha of stable/stable mismatch, i.e. v4
+assigns the *stable* classes very differently. The change-involved disagreement is dominated by
+one-directional over-calling: v5 flags change over millions of ha the others call stable
+(v5-change/v4-stable 4.98 M ha, v5-change/v2-stable 3.34 M ha), and it is a **pervasive
+contiguous field, not discrete features** (the full-map renders show it flooding the landscape).
+change/change mismatches are comparatively small (33k–204k ha). Of each pair's 10 largest
+change-involved patches, **6–9 of 10 intersect an interpreted cell** (recorded per pair in
+`notes.txt`), so the interpreted overlays are populated rather than empty. Interpreted cells used:
+180 (de-duplicated, seed 42).

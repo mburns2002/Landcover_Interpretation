@@ -1,0 +1,5 @@
+v2 vs v4
+total change-involved disagreement patches: 450821
+largest patch: 346600.32 ha
+overall top-10 patches intersecting an interpreted cell: 8 of 10
+patches intersecting a cell (any size): 5001

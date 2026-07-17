@@ -1,0 +1,13 @@
+A_class,B_class,pixels,area_ha
+Beaver,Insect/Disease,4908718,49087.18
+Harvest,Insect/Disease,3001199,30011.99
+Beaver,Development,2533832,25338.32
+Harvest,Development,2095372,20953.72
+Beaver,Harvest,1081994,10819.94
+Development,Insect/Disease,997447,9974.47
+Development,Harvest,773647,7736.47
+Insect/Disease,Development,573318,5733.18
+Insect/Disease,Harvest,490391,4903.91
+Harvest,Beaver,308856,3088.56
+Insect/Disease,Beaver,155568,1555.68
+Development,Beaver,77680,776.8
