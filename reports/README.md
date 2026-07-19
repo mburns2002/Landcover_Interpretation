@@ -618,7 +618,9 @@ Source: `scripts/build_transfer_confusion.py`, predictions fetched by
 (unknown) and 13 (other_no_change) are dropped.
 
 Files: `cm_<variant>_<bracket>.csv` (25 matrices, 10x10 raw counts, reference on rows so the
-diagonal is producer's accuracy, prediction on columns), `transfer_metrics_long.csv` (one row per
+diagonal is producer's accuracy, prediction on columns), `cm_<variant>_<bracket>.png` (25 heatmaps,
+cells coloured by row proportion with raw counts, a producer's-accuracy column with support, a
+user's-accuracy row, and OA and kappa in the corner), `transfer_metrics_long.csv` (one row per
 variant x bracket x class with per-class precision/recall/F1/IoU/support/cells_present/low_support,
 the aggregate OA/macro-F1/mean IoU/kappa repeated on each row, and a `control` flag), and `note.md`.
 
