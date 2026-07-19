@@ -1,0 +1,337 @@
+#!/usr/bin/env python3
+"""Per-class confusion matrices for the classifier temporal-transferability experiment.
+
+A Random Forest trained once on 2018/2020 AlphaEarth embeddings was applied to five NAIP brackets
+(2017_2019, 2018_2020, 2019_2021, 2020_2022, 2021_2023), restricted to the CKIT-RF interpreted
+cells for each bracket (36 disjoint cells per bracket). 2018_2020 is the in-sample control. This
+compares the GEE-exported per-cell predictions against the CKIT-RF interpreted reference and
+accumulates a 10x10 confusion per (variant, bracket).
+
+Predictions live in data/raw/transfer_predictions/<bracket>/pred_<bracket>_cell<id>.tif, 5 bands in
+the fixed order band1=v2, band2=v3, band3=v4, band4=v5, band5=v6, values 1 to 10. The CKIT-RF
+reference rasters live in data/raw/rf_class_maps/, single band, int32, CKIT label_id codes remapped
+to the 10-class schema. The predictions were exported pinned to each CKIT raster's grid, so a
+prediction and its reference must align pixel for pixel; a grid mismatch means the pinning failed,
+and the pair is skipped rather than resampled.
+
+Outputs -> reports/transfer_confusion/
+
+Requires: rasterio, numpy, pandas
+"""
+
+import glob
+import os
+import re
+import warnings
+from collections import defaultdict
+
+import numpy as np
+import pandas as pd
+import rasterio
+
+warnings.filterwarnings("ignore")
+
+PRED_DIR = "data/raw/transfer_predictions"
+RF_DIR = "data/raw/rf_class_maps"
+OUT = "reports/transfer_confusion"
+SEED = 42
+BRACKETS = ["2017_2019", "2018_2020", "2019_2021", "2020_2022", "2021_2023"]
+CONTROL = "2018_2020"
+BANDS = {1: "v2", 2: "v3", 3: "v4", 4: "v5", 5: "v6"}   # fixed band-to-variant order
+MIN_SUP = 100                                           # px floor for a per-class metric
+MIN_CELLS = 5                                           # cells a class must appear in for reliable metrics
+
+# ckit label_id -> 10-class schema code, applied to the reference only
+CROSSWALK = {0: 4, 1: 6, 2: 7, 3: 3, 4: 5, 5: 8, 20: 1, 30: 2, 50: 10, 62: 9}
+EXCLUDE = {10, 13}                                      # unknown abstention, other_no_change: drop the pixel
+ALLOWED = set(CROSSWALK) | EXCLUDE
+NAMES = {1: "harvest", 2: "development", 3: "forest", 4: "urban", 5: "water", 6: "ag",
+         7: "grass_shrub", 8: "wetland", 9: "beaver", 10: "insect_disease"}
+LABELS = [NAMES[c] for c in range(1, 11)]
+
+# reference remap lut: crosswalk -> schema, excluded/unmapped -> 0 (dropped downstream)
+_REF_LUT = np.zeros(63, np.uint8)
+for _k, _v in CROSSWALK.items():
+    _REF_LUT[_k] = _v
+
+
+def pad(gid):
+    return str(int(gid)).zfill(5)
+
+
+def build_reference_index():
+    """cell_id -> sorted list of reference raster paths (10 m Sentinel-2 rasters only)."""
+    idx = defaultdict(list)
+    for p in sorted(glob.glob(os.path.join(RF_DIR, "**", "rf_class*.tif"), recursive=True)):
+        m = re.search(r"grid_(\d+)_sample_", os.path.basename(p))
+        if not m:
+            continue
+        # skip non-10 m rasters (e.g. the out-of-scope 30 m landsat record) so they never match
+        with rasterio.open(p) as ds:
+            if not (ds.transform.a == 10 and ds.transform.e == -10):
+                continue
+        idx[pad(m.group(1))].append(p)
+    return {k: sorted(v) for k, v in idx.items()}
+
+
+def choose_references(ref_index):
+    """Pick one reference per cell_id; random for double-interpreted cells (default_rng seed 42).
+
+    Draws are made in sorted cell_id order so the selection is deterministic and independent of
+    filesystem order. Returns (chosen, n_double).
+    """
+    rng = np.random.default_rng(SEED)
+    chosen, n_double = {}, 0
+    for cid in sorted(ref_index):
+        paths = ref_index[cid]
+        if len(paths) > 1:
+            n_double += 1
+            chosen[cid] = paths[int(rng.integers(len(paths)))]
+        else:
+            chosen[cid] = paths[0]
+    return chosen, n_double
+
+
+def grids_match(a, b, atol=1e-6):
+    if a.width != b.width or a.height != b.height:
+        return False, "size"
+    if str(a.crs) != str(b.crs):
+        return False, "crs"
+    ta, tb = a.transform, b.transform
+    if not np.allclose([ta.a, ta.b, ta.c, ta.d, ta.e, ta.f],
+                       [tb.a, tb.b, tb.c, tb.d, tb.e, tb.f], atol=atol):
+        return False, "transform"
+    return True, ""
+
+
+def metrics(M):
+    M = M.astype(float)
+    tp = np.diag(M); row = M.sum(1); col = M.sum(0); tot = M.sum()
+    with np.errstate(divide="ignore", invalid="ignore"):
+        recall = np.where(row > 0, tp / row, np.nan)        # producer's accuracy
+        precision = np.where(col > 0, tp / col, np.nan)      # user's accuracy
+        f1 = np.where((precision + recall) > 0, 2 * precision * recall / (precision + recall), np.nan)
+        iou = np.where((row + col - tp) > 0, tp / (row + col - tp), np.nan)
+    present = row > 0
+    oa = tp.sum() / tot if tot else np.nan
+    pe = (row * col).sum() / (tot * tot) if tot else np.nan
+    kappa = (oa - pe) / (1 - pe) if tot and (1 - pe) != 0 else np.nan
+    return dict(OA=oa, kappa=kappa,
+                macro_F1=np.nanmean(f1[present]) if present.any() else np.nan,
+                mean_IoU=np.nanmean(iou[present]) if present.any() else np.nan,
+                precision=precision, recall=recall, f1=f1, iou=iou, support=row)
+
+
+def main():
+    os.makedirs(OUT, exist_ok=True)
+    ref_index = build_reference_index()
+    chosen_ref, n_double = choose_references(ref_index)
+    print(f"reference cells indexed: {len(ref_index)}   double-interpreted (>=2 reviewers): "
+          f"{n_double}  -> one chosen at random per cell (default_rng seed {SEED})")
+
+    # per (variant, bracket) accumulator
+    cms = {(v, b): np.zeros((10, 10), np.int64) for v in BANDS.values() for b in BRACKETS}
+    cells_used = defaultdict(set)                       # bracket -> set of cell_ids scored
+    cells_present = {b: np.zeros(11, int) for b in BRACKETS}   # bracket -> per-class cell count
+    skipped = {"missing_ref": [], "grid_mismatch": [], "band_count": []}
+    unmapped = defaultdict(int)                         # ref value outside crosswalk/exclude -> px count
+    bracket_mismatch = []
+
+    for bracket in BRACKETS:
+        preds = sorted(glob.glob(os.path.join(PRED_DIR, bracket, f"pred_{bracket}_cell*.tif")))
+        for pp in preds:
+            m = re.search(r"cell(\d+)\.tif$", os.path.basename(pp))
+            cid = pad(m.group(1))
+            if cid not in chosen_ref:
+                skipped["missing_ref"].append((bracket, cid))
+                continue
+            rp = chosen_ref[cid]
+            # soft check: the chosen reference's bracket should match the prediction bracket
+            mo = re.search(r"opt_(\d{4}_\d{4})", os.path.basename(rp))
+            if mo and mo.group(1) != bracket:
+                bracket_mismatch.append((bracket, cid, mo.group(1)))
+            with rasterio.open(pp) as pds, rasterio.open(rp) as rds:
+                if pds.count != 5:
+                    skipped["band_count"].append((bracket, cid, pds.count))
+                    continue
+                ok, why = grids_match(pds, rds)
+                if not ok:
+                    skipped["grid_mismatch"].append(
+                        (bracket, cid, why,
+                         (pds.width, pds.height, tuple(round(x, 3) for x in pds.transform[:6])),
+                         (rds.width, rds.height, tuple(round(x, 3) for x in rds.transform[:6]))))
+                    continue
+                ref_raw = rds.read(1)
+                # flag any reference value outside the crosswalk and the exclude set
+                for val in np.unique(ref_raw):
+                    iv = int(val)
+                    if iv not in ALLOWED:
+                        unmapped[(bracket, cid, iv)] += int((ref_raw == val).sum())
+                safe = np.where((ref_raw >= 0) & (ref_raw <= 62), ref_raw, 0)
+                ref = _REF_LUT[safe]                    # excluded/unmapped -> 0
+                # count this cell once per reference class present (design-aware support)
+                for k in range(1, 11):
+                    if (ref == k).any():
+                        cells_present[bracket][k] += 1
+                for band, variant in BANDS.items():
+                    pred = pds.read(band)
+                    valid = (ref >= 1) & (ref <= 10) & (pred >= 1) & (pred <= 10)
+                    if valid.any():
+                        np.add.at(cms[(variant, bracket)], (ref[valid] - 1, pred[valid] - 1), 1)
+                cells_used[bracket].add(cid)
+
+    # ---- report gate: unmapped reference values are an encoding error ----
+    if unmapped:
+        print("\nUNMAPPED reference values found (outside crosswalk and {10,13}):")
+        agg = defaultdict(int)
+        for (bracket, cid, iv), n in unmapped.items():
+            agg[iv] += n
+            print(f"  bracket {bracket} cell {cid}: value {iv} x {n} px")
+        print(f"  totals by value: {dict(agg)}")
+
+    # ---- metrics, matrices, long table ----
+    long_rows = []
+    print(f"\n{'variant':6}{'bracket':11}{'cells':>6}{'pixels':>10}{'OA':>7}{'macF1':>7}"
+          f"{'mIoU':>7}{'kappa':>7}{'minSupCls':>22}")
+    for bracket in BRACKETS:
+        for variant in BANDS.values():
+            M = cms[(variant, bracket)]
+            pd.DataFrame(M, index=LABELS, columns=LABELS).to_csv(
+                os.path.join(OUT, f"cm_{variant}_{bracket}.csv"))
+            mt = metrics(M)
+            support = mt["support"]
+            tot = int(M.sum())
+            # lowest-support present class, to keep low support visible in the running summary
+            pres = np.where(support > 0)[0]
+            if len(pres):
+                lk = pres[np.argmin(support[pres])]
+                minsup = f"{NAMES[lk+1]}={int(support[lk])}"
+            else:
+                minsup = "none"
+            print(f"{variant:6}{bracket:11}{len(cells_used[bracket]):>6}{tot:>10,}"
+                  f"{mt['OA']:>7.3f}{mt['macro_F1']:>7.3f}{mt['mean_IoU']:>7.3f}"
+                  f"{mt['kappa']:>7.3f}{minsup:>22}")
+            for k in range(10):
+                c = k + 1
+                sup = int(support[k])
+                cp = int(cells_present[bracket][c])
+                # low support is design-aware: a class in fewer than MIN_CELLS cells, or under the
+                # pixel floor, has an unreliable per-class metric since pixels within a cell are
+                # autocorrelated
+                low = cp < MIN_CELLS or sup < MIN_SUP
+                long_rows.append(dict(
+                    variant=variant, bracket=bracket, control=(bracket == CONTROL),
+                    class_code=c, class_name=NAMES[c],
+                    precision=_r(mt["precision"][k]), recall=_r(mt["recall"][k]),
+                    f1=_r(mt["f1"][k]), iou=_r(mt["iou"][k]), support=sup,
+                    cells_present=cp, low_support=low,
+                    OA=round(mt["OA"], 5), macro_F1=round(mt["macro_F1"], 5),
+                    mean_IoU=round(mt["mean_IoU"], 5), kappa=round(mt["kappa"], 5),
+                    n_cells=len(cells_used[bracket]), total_pixels=tot))
+    pd.DataFrame(long_rows).to_csv(os.path.join(OUT, "transfer_metrics_long.csv"), index=False)
+
+    # ---- skip report ----
+    print("\nskipped pairs:")
+    print(f"  missing reference: {len(skipped['missing_ref'])}  {skipped['missing_ref'][:5]}")
+    print(f"  grid mismatch:     {len(skipped['grid_mismatch'])}")
+    for s in skipped["grid_mismatch"][:10]:
+        print(f"    {s}")
+    print(f"  band count != 5:   {len(skipped['band_count'])}  {skipped['band_count'][:5]}")
+    if bracket_mismatch:
+        print(f"  reference/prediction bracket mismatch: {len(bracket_mismatch)} {bracket_mismatch[:5]}")
+
+    write_note(n_double, cells_used, skipped, unmapped, bracket_mismatch)
+    print(f"\nwrote {OUT}/ (25 matrices, transfer_metrics_long.csv, note)")
+
+
+def _r(x):
+    return round(float(x), 5) if np.isfinite(x) else ""
+
+
+def write_note(n_double, cells_used, skipped, unmapped, bracket_mismatch):
+    low = []
+    # low-support classes are the same across variants within a bracket, so read one variant
+    long = pd.read_csv(os.path.join(OUT, "transfer_metrics_long.csv"))
+    for bracket in BRACKETS:
+        sub = long[(long.bracket == bracket) & (long.variant == "v2")]
+        lc = sub[sub.low_support][["class_name", "support", "cells_present"]]
+        low.append((bracket, [f"{r.class_name} ({r.support} px, {r.cells_present} cells)"
+                              for r in lc.itertuples()]))
+
+    lines = [
+        "# transfer_confusion",
+        "",
+        "Per-class confusion matrices and accuracy metrics for the classifier temporal-"
+        "transferability experiment: a Random Forest trained once on 2018/2020 AlphaEarth "
+        "embeddings, applied to five NAIP brackets and compared against the CKIT-RF interpreted "
+        "reference. Generated by `scripts/build_transfer_confusion.py`.",
+        "",
+        "## Inputs",
+        "",
+        "- Predictions: `data/raw/transfer_predictions/<bracket>/pred_<bracket>_cell<id>.tif`, 5 "
+        "bands in the fixed order band1=v2, band2=v3, band3=v4, band4=v5, band5=v6, values 1 to 10.",
+        "- Reference: `data/raw/rf_class_maps/rf_class_..._grid_<id>_...tif`, single band, int32, "
+        "CKIT label_id codes.",
+        "",
+        "## Crosswalk (reference only)",
+        "",
+        "CKIT label_id to the 10-class schema: "
+        + ", ".join(f"{k}->{v}" for k, v in CROSSWALK.items()) + ".",
+        "",
+        f"Excluded reference values (no 10-class equivalent, pixel dropped): "
+        f"{sorted(EXCLUDE)} (10 = unknown abstention, 13 = other_no_change). Any reference value "
+        f"outside the crosswalk and the exclude set is treated as an encoding error, counted, and "
+        f"reported.",
+        "",
+        "## Double-interpreted cells",
+        "",
+        f"Some cell ids have two CKIT reference rasters (two reviewers). One reference per cell is "
+        f"used. The choice is random with a fixed seed (`numpy.default_rng({SEED})`), drawn in "
+        f"sorted cell-id order so it is reproducible and independent of filesystem order. "
+        f"{n_double} cells were double-interpreted and had one reference dropped for this matrix.",
+        "",
+        "## Disjoint-cell caveat",
+        "",
+        "The five brackets use disjoint cell sets (36 cells each, no cell shared across brackets), "
+        "so a bracket-to-bracket difference confounds the classifier's temporal transfer with the "
+        "differing cell composition and landscape difficulty. These are five independent "
+        "assessments, not a controlled transfer curve. 2018_2020 is the in-sample control, yet it "
+        "is scored on its own 36 cells, not the cells of the other brackets, so it is not a shared "
+        "baseline either. Read each bracket on its own terms, and read the per-class support "
+        "before trusting a per-class number.",
+        "",
+        "## Support and low-support classes",
+        "",
+        "At 36 cells per bracket several classes have very few reference pixels, and their "
+        "per-class metrics are then unreliable. `transfer_metrics_long.csv` carries both `support` "
+        "(reference pixel count per class) and `cells_present` (how many of the cells contain the "
+        f"class). The `low_support` flag is design-aware: it fires when a class appears in fewer "
+        f"than {MIN_CELLS} cells or has under {MIN_SUP} px, since pixels within a cell are "
+        "autocorrelated, so a large pixel count in one or two cells is still one or two "
+        "observations. Reference support is the same across variants within a bracket, since the "
+        "reference does not change. Low-support classes per bracket (v2, representative):",
+        "",
+    ]
+    for bracket, lc in low:
+        lines.append(f"- {bracket}: {', '.join(lc) if lc else 'none flagged'}")
+    lines += ["", "## Skipped or flagged", ""]
+    lines.append(f"- Missing reference: {len(skipped['missing_ref'])}.")
+    lines.append(f"- Grid mismatch (pinning failed, not resampled): {len(skipped['grid_mismatch'])}.")
+    lines.append(f"- Prediction band count not 5: {len(skipped['band_count'])}.")
+    lines.append(f"- Reference/prediction bracket mismatch: {len(bracket_mismatch)}.")
+    lines.append(f"- Unmapped reference values: {len(unmapped)} (cell, value) occurrences.")
+    lines.append("")
+    lines.append("## Outputs")
+    lines.append("")
+    lines.append("- `cm_<variant>_<bracket>.csv`: 25 matrices (5 variants x 5 brackets), 10x10 raw "
+                 "counts, reference on rows (diagonal is producer's accuracy), prediction on columns.")
+    lines.append("- `transfer_metrics_long.csv`: one row per (variant, bracket, class) with per-class "
+                 "precision, recall, F1, IoU, support, and low_support, plus the aggregate OA, "
+                 "macro-F1, mean IoU, and kappa repeated on each row, and a `control` flag "
+                 "(true for 2018_2020).")
+    with open(os.path.join(OUT, "note.md"), "w") as fh:
+        fh.write("\n".join(lines) + "\n")
+
+
+if __name__ == "__main__":
+    main()

@@ -604,3 +604,45 @@ all-Stable baseline 0.979 with kappa ≈ 0 (v4 highest at 0.157). One bright spo
 precision reaches 0.54 (0.28-0.71) for v2**, far above its near-zero all-years value, so temporal
 matching does recover some Harvest signal. macro-F1 averages 5 vs 10 classes across the two schemes
 and is not comparable as a level, nor with the earlier all-years matrices.
+
+## transfer_confusion/ — temporal-transferability confusion matrices
+
+Per-class confusion matrices and accuracy for the classifier temporal-transferability experiment.
+A Random Forest trained once on 2018/2020 AlphaEarth embeddings was applied to five NAIP brackets
+(2017_2019, 2018_2020, 2019_2021, 2020_2022, 2021_2023), restricted to the CKIT-RF interpreted
+cells for each bracket (36 disjoint cells per bracket). 2018_2020 is the in-sample control.
+Source: `scripts/build_transfer_confusion.py`, predictions fetched by
+`scripts/fetch_transfer_predictions.py` (Drive, git-ignored). The GEE predictions carry 5 bands
+(band1=v2 ... band5=v6, values 1-10); the CKIT reference is remapped through the crosswalk
+(0->4, 1->6, 2->7, 3->3, 4->5, 5->8, 20->1, 30->2, 50->10, 62->9), and reference values 10
+(unknown) and 13 (other_no_change) are dropped.
+
+Files: `cm_<variant>_<bracket>.csv` (25 matrices, 10x10 raw counts, reference on rows so the
+diagonal is producer's accuracy, prediction on columns), `transfer_metrics_long.csv` (one row per
+variant x bracket x class with per-class precision/recall/F1/IoU/support/cells_present/low_support,
+the aggregate OA/macro-F1/mean IoU/kappa repeated on each row, and a `control` flag), and `note.md`.
+
+**Alignment held.** Each prediction was pinned to its reference grid via `ckit_cell_grids.csv`;
+the script asserts equal CRS, width, height, and transform (atol 1e-6) per pair before comparing.
+All 180 pairs matched, so **0 were skipped** for grid mismatch, band count, or missing reference,
+and no reference carried an unmapped value.
+
+**Double interpretation:** 72 cells have two reviewers' references. One reference per cell is used,
+chosen at random with a fixed seed (`numpy.default_rng(42)`, drawn in sorted cell-id order), so it
+is reproducible.
+
+**Disjoint-cell caveat (stated in the note):** the five brackets use disjoint cell sets, so a
+bracket-to-bracket difference confounds temporal transfer with the differing cell composition and
+landscape difficulty. These are five independent assessments, not a controlled transfer curve, and
+the 2018_2020 control is scored on its own 36 cells, not a shared baseline.
+
+Findings: **v2 and v3 transfer best, v4 collapses out-of-sample, v6 is poor everywhere.** v2 OA is
+0.72 in-sample (kappa 0.60) and 0.60-0.72 across the transfer brackets (kappa 0.46-0.59). v4 scores
+0.64 in-sample but drops to 0.07-0.29 on the transfer brackets (kappa 0.01-0.18), so it overfits
+the 2018/2020 window and does not carry to other years. v6 stays at OA 0.07-0.19 throughout. As
+elsewhere, the aggregate metrics are dominated by the abundant stable classes; per-class change
+metrics are weak and rest on thin support. Support is reported per class with a design-aware
+`low_support` flag (a class in fewer than 5 cells or under 100 px), since pixels within a cell are
+autocorrelated. Beaver in 2019_2021 (613 px, 4 cells) is the one flagged case, and its 0.69 recall
+sits against a 0.0007 precision, so its number should not be trusted. macro-F1 here averages 10
+classes and is not comparable as a level with the collapsed matrices.
