@@ -51,7 +51,7 @@ def main():
     ax.set_ylabel("overall accuracy (OA)")
     ax.set_title("Classifier temporal transferability: OA by variant and bracket\n"
                  "RF trained once on 2018/2020; applied to five brackets on disjoint cell sets "
-                 "(36 cells each), so these are five independent assessments, not a transfer curve",
+                 "(36 cells each)",
                  fontsize=9.5)
     ax.legend(frameon=False, ncol=5, loc="lower center", bbox_to_anchor=(0.5, -0.26))
     ax.grid(False)
