@@ -623,6 +623,8 @@ cells coloured by row proportion with raw counts, a producer's-accuracy column w
 user's-accuracy row, and OA and kappa in the corner), `transfer_metrics_long.csv` (one row per
 variant x bracket x class with per-class precision/recall/F1/IoU/support/cells_present/low_support,
 the aggregate OA/macro-F1/mean IoU/kappa repeated on each row, and a `control` flag), and `note.md`.
+`oa_by_bracket.png` and `oa_by_variant_bracket.csv` summarize OA at a glance: time period on the x
+axis, OA on the y axis, one line per variant, with the in-sample 2018_2020 control shaded.
 
 **Alignment held.** Each prediction was pinned to its reference grid via `ckit_cell_grids.csv`;
 the script asserts equal CRS, width, height, and transform (atol 1e-6) per pair before comparing.
