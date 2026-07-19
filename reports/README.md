@@ -501,8 +501,12 @@ agree (rendered in that class's colour), stable/stable mismatch (grey), A-change
 (magenta), B-change/A-stable (cyan; kept distinct from the former — different findings), or
 change/change mismatch (red). Background (either map 0) is black.
 
-Per pair: `difference_map.png` (full-map overview, **decimated 16× to 160 m**, disagreement given
-per-block priority so it stays visible; agree shown in muted class colours), `category_stats.csv`
+Per pair: `difference_map.png` (full-map overview at **160 m blocks**, each block coloured by its
+**majority composition**: whichever wins between total agreement and total disagreement across its
+256 underlying pixels, then the leading category, with agreement shown in muted class colours.
+This has no priority bias, so a mostly-agreeing block reads as the landscape and only genuinely
+disagreement-dominated blocks read as disagreement, which is why the smooth v2/v3/v5 pairs now
+look mostly like the landscape while the v4 pairs look genuinely contested), `category_stats.csv`
 (pixel count and area per category, **computed at full 10 m resolution from windowed reads, not
 from the render**), `cat5_change_pairs.csv` (change/change by directed change-class pair),
 `cat3_Achange_by_class.csv` / `cat4_Bchange_by_class.csv` (by the detecting variant's change

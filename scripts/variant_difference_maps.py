@@ -173,6 +173,17 @@ def categorize(A, B, ischange):
     return rc, dict(valid=valid, agree=agree, cat2=cat2, cat3=cat3, cat4=cat4, cat5=cat5)
 
 
+def _block_sum(mask, ds):
+    # sum a boolean mask over ds x ds blocks; pad the ragged right and bottom edges with zeros so
+    # the reshape is exact, then reduce. returns per-block counts (0..ds*ds)
+    h, w = mask.shape
+    ph, pw = (-h) % ds, (-w) % ds
+    if ph or pw:
+        mask = np.pad(mask, ((0, ph), (0, pw)))
+    hb, wb = mask.shape[0] // ds, mask.shape[1] // ds
+    return mask.reshape(hb, ds, wb, ds).sum(axis=(1, 3)).astype(np.uint16)
+
+
 def stream_pair(tilesA, tilesB, H, W, max_rows=None):
     """Single streaming pass over a pair. Returns render grid, label-count grid, and stats."""
     ischange = np.zeros(256, dtype=bool)
@@ -180,7 +191,9 @@ def stream_pair(tilesA, tilesB, H, W, max_rows=None):
 
     rH, rW = -(-H // RENDER_DS), -(-W // RENDER_DS)      # ceil division
     lH, lW = -(-H // LABEL_DS), -(-W // LABEL_DS)
-    render = np.zeros((rH, rW), dtype=np.uint8)          # 0 background
+    # per 160 m render block, count each of the 10 agree classes and the 4 disagreement categories,
+    # so the block can be coloured by what actually dominates it rather than by priority
+    blockcnt = np.zeros((rH, rW, 14), dtype=np.uint16)   # 0..9 agree class 1..10, 10..13 cat2..cat5
     labelcount = np.zeros((lH, lW), dtype=np.uint32)     # exact cat3/4/5 pixels per 80 m block
 
     cat_px = np.zeros(6, dtype=np.int64)                 # categories 0..5
@@ -212,17 +225,18 @@ def stream_pair(tilesA, tilesB, H, W, max_rows=None):
         if m["cat4"].any():
             np.add.at(cat4_cls, B[m["cat4"]], 1)
 
-        # overview render: decimated agree/background base, then disagreement painted on top by
-        # priority (higher category code wins) so sparse disagreement stays visible at 160 m
-        sub = rc[::RENDER_DS, ::RENDER_DS]
+        # overview render: accumulate per-block class and category counts (composition, not
+        # priority) so each 160 m block can later be coloured by its dominant content
         rr = r0 // RENDER_DS
-        render[rr:rr + sub.shape[0], 0:sub.shape[1]] = sub
-        dis_any = m["cat2"] | m["cat3"] | m["cat4"] | m["cat5"]
-        if dis_any.any():
-            dr, dc = np.nonzero(dis_any)
-            gr = (r0 + dr) // RENDER_DS
-            gc = dc // RENDER_DS
-            np.maximum.at(render, (gr, gc), rc[dr, dc])
+        for k in range(1, 11):                          # agree, split by the agreed class
+            am = m["agree"] & (A == k)
+            if am.any():
+                bc = _block_sum(am, RENDER_DS)
+                blockcnt[rr:rr + bc.shape[0], :bc.shape[1], k - 1] += bc
+        for j, cat in enumerate(("cat2", "cat3", "cat4", "cat5")):
+            if m[cat].any():
+                bc = _block_sum(m[cat], RENDER_DS)
+                blockcnt[rr:rr + bc.shape[0], :bc.shape[1], 10 + j] += bc
 
         # labeling grid: exact cat3/4/5 pixel count per 80 m block
         ci = m["cat3"] | m["cat4"] | m["cat5"]
@@ -231,6 +245,21 @@ def stream_pair(tilesA, tilesB, H, W, max_rows=None):
             np.add.at(labelcount, ((r0 + lr) // LABEL_DS, lc // LABEL_DS), 1)
 
         print(f"    rows {r0:>6}-{r1:<6} of {row_end}", flush=True)
+
+    # colour each block by what dominates it: compare total agree vs total disagreement pixels; if
+    # disagreement wins, use the leading disagreement category, else use the dominant agree class.
+    # blocks with no valid pixels stay background. no priority bias, so the map reflects the true
+    # per-block composition
+    agree_tot = blockcnt[:, :, :10].sum(2)
+    dis_tot = blockcnt[:, :, 10:].sum(2)
+    valid = agree_tot + dis_tot
+    render = np.zeros((rH, rW), dtype=np.uint8)          # 0 background
+    dom_agree = blockcnt[:, :, :10].argmax(2).astype(np.uint8) + 1        # 1..10
+    dom_dis = blockcnt[:, :, 10:].argmax(2).astype(np.uint8)             # 0..3 -> codes 11..14
+    dis_wins = (valid > 0) & (dis_tot > agree_tot)
+    agr_wins = (valid > 0) & ~dis_wins
+    render[agr_wins] = dom_agree[agr_wins]
+    render[dis_wins] = CAT_GREY + dom_dis[dis_wins]      # CAT_GREY=11, so 11..14
 
     stats = dict(cat_px=cat_px, cat5_pair=cat5_pair, cat3_cls=cat3_cls, cat4_cls=cat4_cls)
     return render, labelcount, stats
@@ -286,8 +315,9 @@ def render_full_map(out_dir, render, diff_cmap, diff_norm, names, colors, A_name
         Patch(facecolor=_mute(colors[3]), edgecolor="k", label="agree (muted class colour)"),
     ]
     ax.legend(handles=handles, loc="lower left", fontsize=8, framealpha=0.9)
-    ax.set_title(f"{A_name} vs {B_name}  difference map  (decimated {RENDER_DS}x, 160 m; "
-                 f"stats computed at full 10 m resolution)", fontsize=10)
+    ax.set_title(f"{A_name} vs {B_name}  difference map  (each {RENDER_DS*10} m block coloured by "
+                 f"its majority: agree vs disagreement, then the leading category; no priority bias. "
+                 f"stats at full 10 m resolution)", fontsize=9)
     fig.tight_layout()
     fig.savefig(os.path.join(out_dir, "difference_map.png"), dpi=150, bbox_inches="tight")
     plt.close(fig)
