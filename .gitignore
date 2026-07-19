@@ -94,3 +94,4 @@ Thumbs.db
 .idea/
 *.swp
 *~
+reports/variant_difference_maps/*/render_grid.npy

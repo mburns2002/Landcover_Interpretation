@@ -506,7 +506,9 @@ Per pair: `difference_map.png` (full-map overview at **160 m blocks**, each bloc
 256 underlying pixels, then the leading category, with agreement shown in muted class colours.
 This has no priority bias, so a mostly-agreeing block reads as the landscape and only genuinely
 disagreement-dominated blocks read as disagreement, which is why the smooth v2/v3/v5 pairs now
-look mostly like the landscape while the v4 pairs look genuinely contested), `category_stats.csv`
+look mostly like the landscape while the v4 pairs look genuinely contested. The four saturated
+disagreement categories are legended in the map; every muted agree class has its own swatch in a
+row beneath the map), `category_stats.csv`
 (pixel count and area per category, **computed at full 10 m resolution from windowed reads, not
 from the render**), `cat5_change_pairs.csv` (change/change by directed change-class pair),
 `cat3_Achange_by_class.csv` / `cat4_Bchange_by_class.csv` (by the detecting variant's change

@@ -304,21 +304,30 @@ def render_full_map(out_dir, render, diff_cmap, diff_norm, names, colors, A_name
     import matplotlib.pyplot as plt
     from matplotlib.patches import Patch
 
-    fig, ax = plt.subplots(figsize=(13, 9))
+    fig, ax = plt.subplots(figsize=(13, 9.6))
     ax.imshow(render, cmap=diff_cmap, norm=diff_norm, interpolation="nearest")
     ax.set_xticks([]); ax.set_yticks([])
-    handles = [
+    # disagreement categories (saturated) as an in-map legend
+    dis_handles = [
         Patch(facecolor=CAT_COLORS[CAT_A], edgecolor="k", label=f"{A_name} change / {B_name} stable"),
         Patch(facecolor=CAT_COLORS[CAT_B], edgecolor="k", label=f"{B_name} change / {A_name} stable"),
         Patch(facecolor=CAT_COLORS[CAT_CC], edgecolor="k", label="change / change mismatch"),
         Patch(facecolor=CAT_COLORS[CAT_GREY], edgecolor="k", label="stable / stable mismatch"),
-        Patch(facecolor=_mute(colors[3]), edgecolor="k", label="agree (muted class colour)"),
     ]
-    ax.legend(handles=handles, loc="lower left", fontsize=8, framealpha=0.9)
+    leg = ax.legend(handles=dis_handles, loc="lower left", fontsize=8, framealpha=0.9,
+                    title="disagreement (saturated)")
+    leg.get_title().set_fontsize(8)
+    ax.add_artist(leg)
+    # agree blocks (muted) are coloured by the agreed class; give every class its own swatch below
+    agree_handles = [Patch(facecolor=_mute(colors[c]), edgecolor="0.5", label=names[c])
+                     for c in range(1, 11)]
+    fig.legend(handles=agree_handles, loc="lower center", ncol=10, fontsize=7.5, frameon=False,
+               bbox_to_anchor=(0.5, 0.005),
+               title="agree (muted): both variants assign this land-cover class")
     ax.set_title(f"{A_name} vs {B_name}  difference map  (each {RENDER_DS*10} m block coloured by "
                  f"its majority: agree vs disagreement, then the leading category; no priority bias. "
                  f"stats at full 10 m resolution)", fontsize=9)
-    fig.tight_layout()
+    fig.tight_layout(rect=[0, 0.06, 1, 1])
     fig.savefig(os.path.join(out_dir, "difference_map.png"), dpi=150, bbox_inches="tight")
     plt.close(fig)
 
@@ -484,7 +493,8 @@ def run_pair(A_name, B_name, cells, rf2common, names, colors, cmaps, max_rows, n
     mosaic_tf = tilesA[0][0].transform
 
     render, labelcount, stats = stream_pair(tilesA, tilesB, H, W, max_rows=max_rows)
-    cat_px = write_stats(out_dir, stats, names, A_name, B_name)
+    np.save(os.path.join(out_dir, "render_grid.npy"), render)   # cache so map appearance can be
+    cat_px = write_stats(out_dir, stats, names, A_name, B_name)  # re-rendered without re-streaming
     render_full_map(out_dir, render, diff_cmap, diff_norm, names, colors, A_name, B_name)
 
     patches = label_patches(labelcount)
@@ -538,20 +548,37 @@ def main():
     ap.add_argument("--max-rows", type=int, default=None,
                     help="stop after this many mosaic rows (smoke test only)")
     ap.add_argument("--n-top", type=int, default=10, help="patches per zoom/overlay ranking")
+    ap.add_argument("--plots-only", action="store_true",
+                    help="re-render difference_map.png from cached render_grid.npy, no streaming")
     args = ap.parse_args()
 
     os.makedirs(OUT_ROOT, exist_ok=True)
     names, colors = load_legend()
     rf2common = load_crosswalk()
     cmaps = build_cmaps(names, colors)
-    cells = deduped_cells(seed=42)
-    print(f"interpreted cells (deduped, seed 42): {len(cells)}", flush=True)
 
     all_pairs = [(VARIANTS[i], VARIANTS[j])
                  for i in range(len(VARIANTS)) for j in range(i + 1, len(VARIANTS))]
     if args.pairs:
         want = set(args.pairs)
         all_pairs = [(a, b) for a, b in all_pairs if f"{a}_vs_{b}" in want]
+
+    if args.plots_only:
+        # re-draw only the overview from the cached grid, so legend or colour tweaks are instant
+        diff_cmap, diff_norm = cmaps[0], cmaps[1]
+        for A_name, B_name in all_pairs:
+            out_dir = os.path.join(OUT_ROOT, f"{A_name}_vs_{B_name}")
+            grid_path = os.path.join(out_dir, "render_grid.npy")
+            if not os.path.exists(grid_path):
+                print(f"  no cached grid for {A_name}_vs_{B_name}; run the full pass first")
+                continue
+            render_full_map(out_dir, np.load(grid_path), diff_cmap, diff_norm, names, colors,
+                            A_name, B_name)
+            print(f"  re-rendered {out_dir}/difference_map.png")
+        return
+
+    cells = deduped_cells(seed=42)
+    print(f"interpreted cells (deduped, seed 42): {len(cells)}", flush=True)
 
     summaries = []
     for A_name, B_name in all_pairs:
