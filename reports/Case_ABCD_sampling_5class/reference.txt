@@ -1,0 +1,2 @@
+reference points: adjudicated reviewer per location (truth_selections.csv)
+sampling randomness: numpy.SeedSequence(42) (unchanged)

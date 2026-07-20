@@ -453,13 +453,25 @@ Development ~0.18, Insect/Disease ~0.27) and hurts the common classes (Forest ~1
 The sampling experiment (as `Case_ABCD_sampling/`) rerun under a **5-class collapse**: all stable
 classes merged into **Stable** (urban/agriculture/grass-shrub/forest/water/wetland/other), the
 four change classes kept distinct (Harvest, Development, Insect/Disease, Beaver). Source:
-`scripts/sampling_experiment_ABCD.py --collapse`. **Unknown (unattributed change, no model
-equivalent) is excluded** — a substantive exclusion, not a technicality: dropping observed-but-
-unattributed disturbance makes the Stable stratum marginally purer than the landscape. Excluded
-Unknown pixels: **1,823 (0.009% of the frame)** — genuinely marginal (`exclusion.txt`). Fire (40)
-has zero pixels. Census, ceilings, and all bias comparisons are recomputed under the 5-class
-scheme (the 10-class census does not transfer). W=1 A=B=C verified. Files mirror the 10-class
-folder (`census.csv`, `stratum_ceiling.csv`, `metrics_by_n.csv`, …) plus the comparison below.
+`scripts/sampling_experiment_ABCD.py --collapse --truth exports/truth_selections.csv`. The
+reference points are now the **adjudicated interpretation per location** (`truth_selections.csv`,
+`notebooks/adjudicate_truth.ipynb`), not the earlier random seed-42 dedup; the sampling randomness
+stays seed 42 (`reference.txt` records this). **Unknown (unattributed change, no model equivalent)
+is excluded** — a substantive exclusion, not a technicality: dropping observed-but-unattributed
+disturbance makes the Stable stratum marginally purer than the landscape. Excluded Unknown pixels
+under the adjudicated reference: **4,139 (0.020% of the frame)** — still marginal, though larger
+than the 1,823 (0.009%) under the random pick, since the adjudicated reviewers label more Unknown
+in aggregate (`exclusion.txt`). Fire (40) has zero pixels. Census, ceilings, and all bias
+comparisons are recomputed under the 5-class scheme (the 10-class census does not transfer). W=1
+A=B=C verified. Files mirror the 10-class folder (`census.csv`, `stratum_ceiling.csv`,
+`metrics_by_n.csv`, …) plus the comparison below.
+
+Switching to the adjudicated reference barely moves the sampling results: the collapsed census is
+v2 OA 0.883 / kappa 0.027, v3 0.806 / 0.011, v4 0.940 / 0.062, v5 0.767 / 0.008, v6 0.749 / 0.006,
+all within a few thousandths of the random-reference version, and the design-effect and
+stratification findings are unchanged. Note the 10-class `Case_ABCD_sampling/` folder and the
+`sampling_collapse_comparison.py` outputs still use the random-reference reference; only this
+5-class folder was regenerated with the adjudicated set.
 
 Collapsed census (v2, W=1): OA 0.883 but kappa 0.03 — Stable dominance (**~98.5%** of center
 pixels) inflates OA while revealing little change skill. Stratum ceiling: Stable 98.5%, Harvest

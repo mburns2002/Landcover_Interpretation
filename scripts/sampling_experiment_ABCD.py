@@ -55,7 +55,9 @@ Requires: rasterio, numpy, pandas, matplotlib
 import argparse
 import glob
 import os
+import re
 import sys
+from collections import defaultdict
 
 import numpy as np
 import pandas as pd
@@ -88,6 +90,34 @@ _MODEL_COLLAPSE = np.array([0, 2, 3, 1, 1, 1, 1, 1, 1, 5, 4], np.uint8)
 
 # ---- metrics from a (float-weighted) confusion matrix (rows = reference, cols = map). Returns
 # scalars plus per-class F1, recall (producer's accuracy) and precision (user's accuracy). -------
+def select_by_truth(cells, truth_csv):
+    """Keep one raster per location using the adjudicated reviewer from the truth CSV.
+
+    Returns (kept_cells, missing_grids, mismatches). Groups the rasters by grid_id and picks the
+    one whose reviewer matches the adjudicated choice.
+    """
+    df = pd.read_csv(truth_csv, dtype=str, keep_default_na=False)
+    truth = {str(int(g)).zfill(5): rev.strip().lower() for g, rev in zip(df.grid_id, df.reviewer)}
+    rx = re.compile(r"reviewer_([A-Za-z]+)_grid_(\d+)_", re.I)
+    by_grid = defaultdict(list)
+    for c in cells:
+        m = rx.search(os.path.basename(c))
+        if m:
+            by_grid[str(int(m.group(2))).zfill(5)].append((m.group(1).lower(), c))
+    kept, missing, mismatch = [], [], []
+    for gid, revpaths in by_grid.items():
+        want = truth.get(gid)
+        if want is None:
+            missing.append(gid)
+            continue
+        match = [c for r, c in revpaths if r == want]
+        if not match:
+            mismatch.append((gid, want, [r for r, _ in revpaths]))
+            continue
+        kept.append(match[0])
+    return sorted(kept), missing, mismatch
+
+
 def cm_metrics(cm):
     tp = np.diag(cm).astype(float)
     row = cm.sum(1); col = cm.sum(0); tot = cm.sum()
@@ -213,6 +243,9 @@ def main():
     ap.add_argument("--collapse", action="store_true",
                     help="5-class collapse: merge all stable classes into Stable, keep the change "
                          "classes distinct, exclude Unknown; writes to Case_ABCD_sampling_5class/")
+    ap.add_argument("--truth", default=None,
+                    help="use the adjudicated reviewer per location from this CSV instead of the "
+                         "seed-42 random dedup (the sampling randomness stays seed 42)")
     args = ap.parse_args()
 
     global N, OUT, COLLAPSE
@@ -225,9 +258,23 @@ def main():
         print(f"regenerated plots -> {OUT}/")
         return
     cells = sorted(glob.glob(os.path.join(C.RF_DIR, "**", "rf_class*Sentinel-2*.tif"), recursive=True))
-    cells, ndup = C.dedupe_cells(cells, SEED)
-    print(f"de-duplicated: {ndup} location(s); {len(cells)} cells (all target years, seed {SEED})")
+    if args.truth:
+        cells, missing, mismatch = select_by_truth(cells, args.truth)
+        if mismatch:
+            print("STOP: truth reviewer with no matching raster:", mismatch)
+            return
+        if missing:
+            print(f"note: {len(missing)} grid(s) not in the truth set, dropped: {missing[:10]}")
+        ref_src = f"adjudicated reviewer per location ({os.path.basename(args.truth)})"
+        print(f"adjudicated reference: {len(cells)} cells from {args.truth}")
+    else:
+        cells, ndup = C.dedupe_cells(cells, SEED)
+        ref_src = f"one interpretation per location, random dedup, seed {SEED}"
+        print(f"de-duplicated: {ndup} location(s); {len(cells)} cells (all target years, seed {SEED})")
     os.makedirs(OUT, exist_ok=True)
+    with open(os.path.join(OUT, "reference.txt"), "w") as fh:
+        fh.write(f"reference points: {ref_src}\n"
+                 f"sampling randomness: numpy.SeedSequence({SEED}) (unchanged)\n")
 
     ref_cache = {}
     if COLLAPSE:
