@@ -38,6 +38,7 @@ import pandas as pd
 import rasterio
 import matplotlib.pyplot as plt
 import matplotlib.colors as mcolors
+from matplotlib.patches import Patch
 import ipywidgets as widgets
 from IPython.display import display, clear_output
 
@@ -248,7 +249,15 @@ def render(i):
         ax.set_xticks([]); ax.set_yticks([])
         for s in ax.spines.values():
             s.set_color("#bbbbbb"); s.set_linewidth(1)
-        plt.tight_layout()
+        # legend below every panel: the classes present in this location, plus the agree colours
+        present = sorted(set().union(*[set(np.unique(a).tolist()) for a in arrs]) & set(CLASS_NAME))
+        handles = [Patch(facecolor=PALETTE_HEX[c], edgecolor="0.4", label=CLASS_NAME[c])
+                   for c in present]
+        handles += [Patch(facecolor="#2ca02c", edgecolor="0.4", label="reviewers agree"),
+                    Patch(facecolor="#d62728", edgecolor="0.4", label="reviewers disagree")]
+        fig.tight_layout(rect=[0, 0.11, 1, 1])
+        fig.legend(handles=handles, loc="lower center", ncol=min(7, len(handles)), fontsize=9,
+                   frameon=False)
         plt.show()
         plt.close(fig)
 
