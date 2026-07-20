@@ -369,10 +369,12 @@ def crop_window(patch, H, W, margin=120):
     return r0, r1, c0, c1
 
 
-def render_zoom(out_dir, rank, patch, tilesA, tilesB, H, W, diff_cmap, diff_norm, A_name, B_name):
+def render_zoom(out_dir, rank, patch, tilesA, tilesB, H, W, diff_cmap, diff_norm, names, colors,
+                A_name, B_name):
     import matplotlib
     matplotlib.use("Agg")
     import matplotlib.pyplot as plt
+    from matplotlib.patches import Patch
 
     ischange = np.zeros(256, dtype=bool); ischange[CHANGE_CODES] = True
     r0, r1, c0, c1 = crop_window(patch, H, W)
@@ -380,12 +382,27 @@ def render_zoom(out_dir, rank, patch, tilesA, tilesB, H, W, diff_cmap, diff_norm
     B = read_window(tilesB, r0, r1, c0, c1)
     rc, _ = categorize(A, B, ischange)
 
-    fig, ax = plt.subplots(figsize=(6, 6))
+    fig, ax = plt.subplots(figsize=(7, 8.4))
     ax.imshow(rc, cmap=diff_cmap, norm=diff_norm, interpolation="nearest")
     ax.set_xticks([]); ax.set_yticks([])
-    ax.set_title(f"#{rank}  {patch['area_ha']} ha change-involved disagreement\n"
-                 f"{A_name} vs {B_name}  (full 10 m resolution)", fontsize=9)
-    fig.tight_layout()
+    ax.set_title(f"#{rank}   {A_name} vs {B_name}   {patch['area_ha']:,} ha change-involved "
+                 f"disagreement patch\none of the pair's 10 largest patches where the variants "
+                 f"disagree and at least one calls change; full 10 m resolution, "
+                 f"{(c1 - c0) * 10 / 1000:.0f} x {(r1 - r0) * 10 / 1000:.0f} km crop", fontsize=8.5)
+    # same two-part legend as the overview: saturated disagreement categories, muted agree classes
+    dis_handles = [
+        Patch(facecolor=CAT_COLORS[CAT_A], edgecolor="k", label=f"{A_name} change / {B_name} stable"),
+        Patch(facecolor=CAT_COLORS[CAT_B], edgecolor="k", label=f"{B_name} change / {A_name} stable"),
+        Patch(facecolor=CAT_COLORS[CAT_CC], edgecolor="k", label="change / change mismatch"),
+        Patch(facecolor=CAT_COLORS[CAT_GREY], edgecolor="k", label="stable / stable mismatch"),
+    ]
+    agree_handles = [Patch(facecolor=_mute(colors[c]), edgecolor="0.5", label=names[c])
+                     for c in range(1, 11)]
+    fig.legend(handles=dis_handles, loc="lower center", bbox_to_anchor=(0.5, 0.08), ncol=2,
+               fontsize=7.5, frameon=False, title="disagreement (saturated)")
+    fig.legend(handles=agree_handles, loc="lower center", bbox_to_anchor=(0.5, 0.0), ncol=5,
+               fontsize=7, frameon=False, title="agree (muted): both variants assign this class")
+    fig.tight_layout(rect=[0, 0.15, 1, 0.95])
     fig.savefig(os.path.join(out_dir, f"zoom_top{rank:02d}_{patch['area_px']}px.png"),
                 dpi=150, bbox_inches="tight")
     plt.close(fig)
@@ -503,7 +520,8 @@ def run_pair(A_name, B_name, cells, rf2common, names, colors, cmaps, max_rows, n
     # top-N largest patches overall -> zoomed crops
     top = patches[:n_top]
     for rank, p in enumerate(top, 1):
-        render_zoom(out_dir, rank, p, tilesA, tilesB, H, W, diff_cmap, diff_norm, A_name, B_name)
+        render_zoom(out_dir, rank, p, tilesA, tilesB, H, W, diff_cmap, diff_norm, names, colors,
+                    A_name, B_name)
 
     # how many of the overall top-N intersect an interpreted cell
     n_top_hit = sum(intersects_any_cell(p, cells, mosaic_tf) for p in top)
@@ -513,6 +531,16 @@ def run_pair(A_name, B_name, cells, rf2common, names, colors, cmaps, max_rows, n
     for rank, p in enumerate(hits, 1):
         render_overlay(out_dir, rank, p, tilesA, tilesB, H, W, cells, rf2common,
                        cls_cmap, cls_norm, names, colors, A_name, B_name, mosaic_tf)
+
+    # cache the rendered patches (bounding boxes) so the zoom and overlay crops can be redrawn
+    # from raw tiles without another streaming pass
+    cache = [dict(role="zoom", rank=i + 1, **{k: p[k] for k in
+                  ("pid", "area_px", "area_ha", "r0", "r1", "c0", "c1")})
+             for i, p in enumerate(top)]
+    cache += [dict(role="overlay", rank=i + 1, **{k: p[k] for k in
+                   ("pid", "area_px", "area_ha", "r0", "r1", "c0", "c1")})
+              for i, p in enumerate(hits)]
+    pd.DataFrame(cache).to_csv(os.path.join(out_dir, "patches_cache.csv"), index=False)
 
     for ds, _, _ in tilesA + tilesB:
         ds.close()
@@ -550,6 +578,8 @@ def main():
     ap.add_argument("--n-top", type=int, default=10, help="patches per zoom/overlay ranking")
     ap.add_argument("--plots-only", action="store_true",
                     help="re-render difference_map.png from cached render_grid.npy, no streaming")
+    ap.add_argument("--zooms-only", action="store_true",
+                    help="re-render zoom and overlay crops from cached patches_cache.csv, no streaming")
     args = ap.parse_args()
 
     os.makedirs(OUT_ROOT, exist_ok=True)
@@ -575,6 +605,34 @@ def main():
             render_full_map(out_dir, np.load(grid_path), diff_cmap, diff_norm, names, colors,
                             A_name, B_name)
             print(f"  re-rendered {out_dir}/difference_map.png")
+        return
+
+    if args.zooms_only:
+        # redraw zoom and overlay crops from the cached patch boxes, reading only small windows
+        diff_cmap, diff_norm, cls_cmap, cls_norm = cmaps
+        cells = deduped_cells(seed=42)
+        for A_name, B_name in all_pairs:
+            out_dir = os.path.join(OUT_ROOT, f"{A_name}_vs_{B_name}")
+            cache_path = os.path.join(out_dir, "patches_cache.csv")
+            if not os.path.exists(cache_path):
+                print(f"  no patch cache for {A_name}_vs_{B_name}; run the full pass first")
+                continue
+            df = pd.read_csv(cache_path)
+            tilesA, tilesB = open_tiles(A_name), open_tiles(B_name)
+            H, W = mosaic_dims(tilesA)
+            mosaic_tf = tilesA[0][0].transform
+            for row in df.itertuples():
+                patch = dict(pid=row.pid, area_px=int(row.area_px), area_ha=row.area_ha,
+                             r0=int(row.r0), r1=int(row.r1), c0=int(row.c0), c1=int(row.c1))
+                if row.role == "zoom":
+                    render_zoom(out_dir, row.rank, patch, tilesA, tilesB, H, W, diff_cmap, diff_norm,
+                                names, colors, A_name, B_name)
+                else:
+                    render_overlay(out_dir, row.rank, patch, tilesA, tilesB, H, W, cells, rf2common,
+                                   cls_cmap, cls_norm, names, colors, A_name, B_name, mosaic_tf)
+            for ds, _, _ in tilesA + tilesB:
+                ds.close()
+            print(f"  re-rendered {out_dir} zoom/overlay crops")
         return
 
     cells = deduped_cells(seed=42)

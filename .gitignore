@@ -95,3 +95,4 @@ Thumbs.db
 *.swp
 *~
 reports/variant_difference_maps/*/render_grid.npy
+reports/variant_difference_maps/*/patches_cache.csv
