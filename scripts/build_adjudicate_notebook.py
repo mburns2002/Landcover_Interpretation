@@ -24,6 +24,9 @@ Select one authoritative CKIT-RF interpretation per location, then export the tr
 2. One location (`07630`) has three interpretations, not two. The tool shows all three (A, B, C)
    with a Choose button each, so it is adjudicated without guessing.
 
+Each location also shows an **agreement pane** to the right of the interpretations: green where the
+reviewers agree, red where they disagree (for the triple, green means all three agree).
+
 Run the cells top to bottom. Re-running is safe; progress reloads from disk."""
 
 CFG = r'''# config and imports
@@ -135,14 +138,22 @@ CLASS_NAME = {int(r.code): r.display_name for r in _leg.itertuples()}
 _PALETTE_RGB = {c: mcolors.to_rgb(h) for c, h in PALETTE_HEX.items()}
 
 
-def load_rgb(path):
-    # colourize a classified raster to an RGB image with the fixed palette (white for unmapped)
+def load_class(path):
+    # read the single-band classified raster (RF interpreter codes)
     with rasterio.open(path) as ds:
-        a = ds.read(1)
+        return ds.read(1)
+
+
+def rgb_from_class(a):
+    # colourize a class array with the fixed palette (white for unmapped values)
     rgb = np.ones(a.shape + (3,), dtype=float)
     for code, col in _PALETTE_RGB.items():
         rgb[a == code] = col
-    return rgb'''
+    return rgb
+
+
+def load_rgb(path):
+    return rgb_from_class(load_class(path))'''
 
 STATE = r'''# progress persistence: load any existing choices and notes so work resumes
 PROGRESS_COLS = ["grid_id", "chosen_reviewer", "chosen_sample", "chosen_bracket", "note", "decided"]
@@ -210,11 +221,11 @@ def render(i):
 
     with img_out:
         clear_output(wait=True)
-        fig, axes = plt.subplots(1, len(interps), figsize=(5.6 * len(interps), 5.8))
-        if len(interps) == 1:
-            axes = [axes]
-        for ax, it, letter in zip(axes, interps, "ABC"):
-            ax.imshow(load_rgb(it["path"]), interpolation="nearest")
+        arrs = [load_class(it["path"]) for it in interps]
+        npanel = len(interps) + 1                          # interpretation panels plus agreement
+        fig, axes = plt.subplots(1, npanel, figsize=(5.3 * npanel, 5.6))
+        for ax, it, arr, letter in zip(axes[:-1], interps, arrs, "ABC"):
+            ax.imshow(rgb_from_class(arr), interpolation="nearest")
             chosen = entry.get("decided") and entry.get("chosen_reviewer") == it["reviewer"]
             ax.set_title(f"{letter}: {it['reviewer']}  (sample {it['sample']})"
                          + ("   [CHOSEN]" if chosen else ""),
@@ -223,6 +234,20 @@ def render(i):
             for s in ax.spines.values():
                 s.set_color("#2ca02c" if chosen else "#bbbbbb")
                 s.set_linewidth(3 if chosen else 1)
+        # agreement pane: green where all interpretations match, red where they differ
+        stack = np.stack(arrs)
+        agree = (stack == stack[0]).all(axis=0)
+        agree_rgb = np.empty(agree.shape + (3,), dtype=float)
+        agree_rgb[agree] = mcolors.to_rgb("#2ca02c")       # green: all reviewers agree
+        agree_rgb[~agree] = mcolors.to_rgb("#d62728")      # red: at least one differs
+        ax = axes[-1]
+        ax.imshow(agree_rgb, interpolation="nearest")
+        lab = "agreement" if len(interps) == 2 else "all-reviewer agreement"
+        ax.set_title(f"{lab}: green agree, red disagree  ({100 * agree.mean():.0f}% agree)",
+                     fontsize=11)
+        ax.set_xticks([]); ax.set_yticks([])
+        for s in ax.spines.values():
+            s.set_color("#bbbbbb"); s.set_linewidth(1)
         plt.tight_layout()
         plt.show()
         plt.close(fig)
