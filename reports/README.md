@@ -308,8 +308,22 @@ data/raw/transfer_predictions`; see `reference.txt`).
   of a meaningful variable.)
 
 Files: `spatial_structure_summary.csv`, `patch_size_by_class.csv`, and plots
-`patch_size_ecdf.png`, `patch_size_hist_smallmultiples.png`,
-`mean_patch_size_by_class.png`, `morans_i_by_source.png`.
+`patch_size_ecdf.png`, `patch_size_ecdf_area_weighted.png`,
+`patch_size_hist_smallmultiples.png`, `mean_patch_size_by_class.png`, `morans_i_by_source.png`.
+
+**Area-weighted patch-size ECDF** (`patch_size_ecdf_area_weighted.png`): the same pooled patches
+as `patch_size_ecdf.png`, but the y-axis is the cumulative fraction of class **area** (each patch
+weighted by its pixel count, not counted as one), so the single-pixel floor collapses and the plot
+shows where the landscape's area actually sits. `median_by_area_ha` in
+`spatial_structure_summary.csv` is the patch size where each curve crosses 0.5. This makes v6's
+speckle pathology unmistakable (**~30% of its area is in single-pixel patches, median-by-area
+0.03 ha**) and reorders the coherent sources by area-grain: v6 0.03 ≪ v5 77 < v3 94 < v2 110 <
+**interpreted 239** < v4 291 ha. Two things stand out that the count ECDF hides: the **interpreted
+reference holds the most area in the very largest patches** among the coherent sources (its human
+maps have clean whole-cell stable regions), and **v4 is bimodal** (a fat small-patch tail plus a
+few huge blobs, e.g. whole lakes called urban, which pushes its median-by-area highest). So the
+count view's "v2/v3 over-smooth" (larger mean patch than interpreted) is a small-scale effect; by
+area the smooth variants sit just left of the interpreted reference, and only v6 is pathological.
 
 | source | mean patch (ha) | Moran's I |
 |--------|:---:|:---:|

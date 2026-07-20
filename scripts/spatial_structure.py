@@ -144,6 +144,26 @@ def collect_source(name, arrays_iter, classes):
     return dict(name=name, pooled=pooled, by_class=by_class, morans=morans)
 
 
+def area_ecdf(sizes_px):
+    """Cumulative fraction of total area (a patch's area is its pixel count) in patches of size <= x.
+
+    Sorting by size and taking cumsum(size)/sum(size) weights each patch by its area, not by a count
+    of one, so the single-pixel floor collapses and the grain of the landscape shows.
+    """
+    s = np.sort(np.asarray(sizes_px, dtype=float))
+    if s.size == 0:
+        return s, s
+    return s, np.cumsum(s) / s.sum()
+
+
+def median_by_area(sizes_px):
+    """Patch size (ha) where the area-ECDF crosses 0.5: half the class area sits in smaller patches."""
+    s, cf = area_ecdf(sizes_px)
+    if s.size == 0:
+        return np.nan
+    return float(s[np.searchsorted(cf, 0.5)]) * PIX_HA
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
@@ -224,6 +244,7 @@ def main():
                          mean_patch_px=round(float(p.mean()), 2) if p.size else np.nan,
                          mean_patch_ha=round(float(p.mean()) * PIX_HA, 4) if p.size else np.nan,
                          median_patch_px=float(np.median(p)) if p.size else np.nan,
+                         median_by_area_ha=round(median_by_area(p), 4) if p.size else np.nan,
                          morans_i_mean=round(float(s["morans"].mean()), 4) if s["morans"].size else np.nan,
                          morans_i_std=round(float(s["morans"].std()), 4) if s["morans"].size else np.nan))
     summ = pd.DataFrame(rows)
@@ -244,6 +265,10 @@ def main():
 
     print("\n" + "=" * 60)
     print(summ.to_string(index=False))
+    print("\nmedian-by-area patch size (ha), smallest to largest grain "
+          "(half of a source's class area sits in patches smaller than this):")
+    for r in sorted(rows, key=lambda d: (d["median_by_area_ha"] if d["median_by_area_ha"] == d["median_by_area_ha"] else 1e9)):
+        print(f"  {r['source']:12} {r['median_by_area_ha']}")
     print(f"\noutputs -> {OUT}/")
 
 
@@ -274,7 +299,35 @@ def make_plots(sources, classes, names, colors, versions):
     ax.set_ylabel("cumulative fraction of patches")
     ax.set_title("Patch-size distribution: model variants vs. interpreted (reference)")
     ax.legend(); ax.grid(alpha=0.3)
+    xlim = ax.get_xlim()                               # reuse the same log x-range for the area ECDF
     fig.tight_layout(); fig.savefig(os.path.join(OUT, "patch_size_ecdf.png"), dpi=140, bbox_inches="tight")
+    plt.close(fig)
+
+    # 1b) AREA-WEIGHTED ECDF: cumulative fraction of class AREA in patches of size <= x. same pooling,
+    # colours, and log x-range as the count ECDF above; single-pixel specks now collapse to the left
+    fig, ax = plt.subplots(figsize=(8, 5.5))
+    for nm in order:
+        p = by_name[nm]["pooled"]                     # patch sizes in px (area = pixel count)
+        if not p.size:
+            continue
+        s, cf = area_ecdf(p)
+        xs = s * PIX_HA
+        ref = nm == "interpreted"
+        ax.plot(xs, cf, label=nm, color=palette.get(nm), lw=2.5 if ref else 1.3,
+                ls="-" if ref else "--", zorder=3 if ref else 2)
+        # mark the median-by-area (x where the curve crosses 0.5) as an ordering anchor
+        mx = xs[np.searchsorted(cf, 0.5)]
+        ax.plot([mx], [0.5], marker="o", ms=7 if ref else 5, color=palette.get(nm),
+                mec="white", mew=0.8, zorder=4)
+    ax.axhline(0.5, color="0.6", lw=0.8, ls=":", zorder=1)   # 0.5 reference for the median-by-area
+    ax.set_xscale("log"); ax.set_xlim(xlim)
+    ax.set_xlabel("patch size (ha, log scale)")
+    ax.set_ylabel("cumulative fraction of class area")
+    ax.set_title("Area-weighted patch-size distribution: model variants vs. interpreted (reference)")
+    ax.legend()
+    ax.grid(False)
+    fig.tight_layout()
+    fig.savefig(os.path.join(OUT, "patch_size_ecdf_area_weighted.png"), dpi=140, bbox_inches="tight")
     plt.close(fig)
 
     # 2) small multiples: each variant's histogram vs interpreted
