@@ -518,6 +518,74 @@ def render_cell_overlay(out_dir, rank, score, cell, tilesA, tilesB, mosaic_tf, r
     plt.close(fig)
 
 
+def _interp_from_cell(cell, rf2common):
+    with rasterio.open(cell["path"]) as ds:
+        rf = ds.read(1)
+    interp = np.zeros_like(rf, dtype=np.uint8)
+    for rf_code, cc in rf2common.items():
+        interp[rf == rf_code] = cc
+    return interp
+
+
+def build_cell_panels(cells, rf2common, cls_cmap, cls_norm, names, colors, n=20):
+    """One figure per selected interpreted cell: all five variants plus the interpreted reference,
+    cropped to the cell extent. Cells are ranked by how much the four smooth variants (v2-v5)
+    disagree inside the cell (v6 is excluded from the ranking since its per-pixel speckle disagrees
+    almost everywhere, but it is shown in the panels). No streaming; only windowed reads.
+    """
+    allv = VARIANTS + ["v6"]
+    tiles = {v: open_tiles(v) for v in allv}
+    mosaic_tf = tiles["v2"][0][0].transform
+    out_dir = os.path.join(OUT_ROOT, "cell_all_variants")
+    os.makedirs(out_dir, exist_ok=True)
+
+    scored = []
+    for cell in cells:
+        r0, r1, c0, c1 = cell_extent(cell, mosaic_tf)
+        smooth = np.stack([read_window(tiles[v], r0, r1, c0, c1) for v in VARIANTS])
+        valid = (smooth >= 1).all(0) & (smooth <= 10).all(0)
+        disagree = valid & ~(smooth == smooth[0]).all(0)      # v2-v5 not unanimous
+        scored.append((int(disagree.sum()), cell))
+    scored.sort(key=lambda s: -s[0])
+
+    for rank, (score, cell) in enumerate(scored[:n], 1):
+        render_cell_panel(out_dir, rank, score, cell, tiles, allv, mosaic_tf, rf2common,
+                          cls_cmap, cls_norm, names, colors)
+    for v in allv:
+        for ds, _, _ in tiles[v]:
+            ds.close()
+    print(f"wrote {out_dir}/  ({min(n, len(scored))} cells, 6-panel each)")
+
+
+def render_cell_panel(out_dir, rank, score, cell, tiles, allv, mosaic_tf, rf2common,
+                      cls_cmap, cls_norm, names, colors):
+    import matplotlib
+    matplotlib.use("Agg")
+    import matplotlib.pyplot as plt
+    from matplotlib.patches import Patch
+
+    r0, r1, c0, c1 = cell_extent(cell, mosaic_tf)
+    panels = [(v, read_window(tiles[v], r0, r1, c0, c1)) for v in allv]
+    panels.append(("interpreted reference", _interp_from_cell(cell, rf2common)))
+    gid = re.search(r"grid_(\d+)", cell["name"]).group(1)
+    km = cell["width"] * 10 / 1000
+
+    fig, axes = plt.subplots(2, 3, figsize=(15, 10.4))
+    for ax, (label, arr) in zip(axes.ravel(), panels):
+        ax.imshow(arr, cmap=cls_cmap, norm=cls_norm, interpolation="nearest")
+        ax.set_title(label, fontsize=11); ax.set_xticks([]); ax.set_yticks([])
+    handles = [Patch(facecolor=colors[c], edgecolor="k", label=f"{c} {names[c]}")
+               for c in range(1, 11)]
+    fig.legend(handles=handles, loc="lower center", ncol=10, fontsize=8)
+    fig.suptitle(f"interpreted cell {gid}  ({km:.1f} x {km:.1f} km, same extent in every panel)  "
+                 f"·  all five variants vs the interpreted reference  ·  ranked #{rank} by v2-v5 "
+                 f"in-cell disagreement ({score * PIX_HA:.0f} ha)", fontsize=11)
+    fig.tight_layout(rect=[0, 0.05, 1, 0.95])
+    fig.savefig(os.path.join(out_dir, f"cell{rank:02d}_grid{gid}.png"), dpi=140,
+                bbox_inches="tight")
+    plt.close(fig)
+
+
 # ----------------------------------------------------------------------------- interpreted cells
 def location_key(path):
     m = re.search(r"grid_(\d+)_sample_(\d+)_sensor_Sentinel-2_target_(\d+)", os.path.basename(path))
@@ -648,6 +716,10 @@ def main():
                     help="re-render difference_map.png from cached render_grid.npy, no streaming")
     ap.add_argument("--zooms-only", action="store_true",
                     help="re-render zoom and overlay crops from cached patches_cache.csv, no streaming")
+    ap.add_argument("--cell-panels", action="store_true",
+                    help="build cell_all_variants/: 6-panel (5 variants + interpreted) per cell, no streaming")
+    ap.add_argument("--cell-panels-n", type=int, default=20,
+                    help="number of cells for --cell-panels (default 20, ranked by v2-v5 disagreement)")
     args = ap.parse_args()
 
     os.makedirs(OUT_ROOT, exist_ok=True)
@@ -660,6 +732,13 @@ def main():
     if args.pairs:
         want = set(args.pairs)
         all_pairs = [(a, b) for a, b in all_pairs if f"{a}_vs_{b}" in want]
+
+    if args.cell_panels:
+        # 6-panel per cell (all five variants plus the interpreted reference); windowed reads only
+        _, _, cls_cmap, cls_norm = cmaps
+        build_cell_panels(deduped_cells(seed=42), rf2common, cls_cmap, cls_norm, names, colors,
+                          n=args.cell_panels_n)
+        return
 
     if args.plots_only:
         # re-draw only the overview from the cached grid, so legend or colour tweaks are instant

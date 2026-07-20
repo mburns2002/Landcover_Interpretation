@@ -517,7 +517,9 @@ class), `zoom_topNN_*.png` (the 10 largest change-involved disagreement patches)
 variant A | variant B | interpreted reference), and `overlay_cellNN_gridID.png` (5 cell-sized
 3-panel examples: the interpreted cells with the most in-cell A/B change-involved disagreement,
 cropped to the cell extent so the interpreted reference fills its panel rather than sitting as a
-speck inside a large patch crop). `pairs_summary.csv` collects all six.
+ speck inside a large patch crop). `pairs_summary.csv` collects all six.
+
+`cell_all_variants/` holds 6-panel figures (`cellNN_gridID.png`), one per interpreted cell: all five variants (v2-v6, including v6 here so its speckle is visible) plus the interpreted reference, every panel cropped to the cell's ~3.4 km extent. Cells are ranked by how much the four smooth variants (v2-v5) disagree inside the cell, so the top cells surface the sharpest inter-variant conflicts (for example cell 51040: v2/v3/v5 and the human all call a lake Water, v4 calls the whole lake Urban, v6 is pure per-pixel noise). Built by `python scripts/variant_difference_maps.py --cell-panels` (windowed reads, no streaming; `--cell-panels-n` sets the count, default 20).
 
 **Patch definition.** Change-involved disagreement (categories 3+4+5) is 8-connected-labeled on
 an **80 m grid** where each block carries its exact full-resolution cat-3/4/5 pixel count, so
