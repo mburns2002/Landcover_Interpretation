@@ -107,6 +107,11 @@ def _mute(color, frac=0.55):
     return (r + (1 - r) * frac, g + (1 - g) * frac, b + (1 - b) * frac)
 
 
+# change-focused recolour: stable classes read as one gray, only change carries colour
+CHANGE_GRAY = "#8a8a8a"                                 # all stable agree + stable/stable mismatch
+WATER_GRAY = "#565656"                                  # water is a slightly darker gray
+
+
 def build_cmaps(names, colors):
     from matplotlib.colors import ListedColormap, BoundaryNorm
     # difference-map colormap: 0 black, 1..10 muted class colours, 11..14 disagreement categories
@@ -118,6 +123,25 @@ def build_cmaps(names, colors):
     cls_cmap = ListedColormap(["#ffffff"] + [colors[c] for c in range(1, 11)])
     cls_norm = BoundaryNorm(np.arange(-0.5, 11.5), cls_cmap.N)
     return diff_cmap, diff_norm, cls_cmap, cls_norm
+
+
+def build_change_cmap(colors):
+    """Change-focused colormap over the same render codes: stable -> gray (water darker), only the
+    agreed change classes and the change-involved disagreement categories keep colour."""
+    from matplotlib.colors import ListedColormap, BoundaryNorm
+    # codes: 0 bg, 1..10 dominant agree class, 11 stable/stable, 12 A-change, 13 B-change, 14 chg/chg
+    agree = []
+    for c in range(1, 11):
+        if c in CHANGE_CODES:                          # agreed change class -> its saturated colour
+            agree.append(colors[c])
+        elif c == 5:                                   # water -> darker gray
+            agree.append(WATER_GRAY)
+        else:                                          # every other stable class -> medium gray
+            agree.append(CHANGE_GRAY)
+    cols = ["#000000"] + agree + [CHANGE_GRAY,         # 11 stable/stable mismatch -> gray too
+                                  CAT_COLORS[CAT_A], CAT_COLORS[CAT_B], CAT_COLORS[CAT_CC]]
+    cmap = ListedColormap(cols)
+    return cmap, BoundaryNorm(np.arange(-0.5, 15.5), cmap.N)
 
 
 # ----------------------------------------------------------------------------- mosaic i/o
@@ -330,6 +354,44 @@ def render_full_map(out_dir, render, diff_cmap, diff_norm, names, colors, A_name
                  f"stats at full 10 m resolution)", fontsize=9)
     fig.tight_layout(rect=[0, 0.06, 1, 1])
     fig.savefig(os.path.join(out_dir, "difference_map.png"), dpi=150, bbox_inches="tight")
+    plt.close(fig)
+
+    render_change_map(out_dir, render, names, colors, A_name, B_name)
+
+
+def render_change_map(out_dir, render, names, colors, A_name, B_name):
+    """Change-focused recolour of the same block render: stable is gray (water darker), colour only
+    for the agreed change classes and the change-involved disagreement categories."""
+    import matplotlib
+    matplotlib.use("Agg")
+    import matplotlib.pyplot as plt
+    from matplotlib.patches import Patch
+
+    cmap, norm = build_change_cmap(colors)
+    fig, ax = plt.subplots(figsize=(13, 9.6))
+    ax.imshow(render, cmap=cmap, norm=norm, interpolation="nearest")
+    ax.set_xticks([]); ax.set_yticks([])
+    dis_handles = [
+        Patch(facecolor=CAT_COLORS[CAT_A], edgecolor="k", label=f"{A_name} change / {B_name} stable"),
+        Patch(facecolor=CAT_COLORS[CAT_B], edgecolor="k", label=f"{B_name} change / {A_name} stable"),
+        Patch(facecolor=CAT_COLORS[CAT_CC], edgecolor="k", label="change / change mismatch"),
+        Patch(facecolor=CHANGE_GRAY, edgecolor="k", label="stable (agree or mismatch)"),
+        Patch(facecolor=WATER_GRAY, edgecolor="k", label="water"),
+    ]
+    leg = ax.legend(handles=dis_handles, loc="lower left", fontsize=8, framealpha=0.9,
+                    title="change-involved disagreement (stable = gray)")
+    leg.get_title().set_fontsize(8)
+    ax.add_artist(leg)
+    # the agreed change classes keep their own colour; give each a swatch below
+    agree_handles = [Patch(facecolor=colors[c], edgecolor="0.4", label=names[c]) for c in CHANGE_CODES]
+    fig.legend(handles=agree_handles, loc="lower center", ncol=len(CHANGE_CODES), fontsize=8,
+               frameon=False, bbox_to_anchor=(0.5, 0.005),
+               title="agreed change class (both variants assign the same change class)")
+    ax.set_title(f"{A_name} vs {B_name}  change-focused difference map  (stable in gray, water "
+                 f"darker; colour only for agreed change and change disagreement; {RENDER_DS*10} m "
+                 f"blocks)", fontsize=9)
+    fig.tight_layout(rect=[0, 0.05, 1, 1])
+    fig.savefig(os.path.join(out_dir, "difference_map_change.png"), dpi=150, bbox_inches="tight")
     plt.close(fig)
 
 
