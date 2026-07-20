@@ -1,0 +1,79 @@
+A_class,B_class,class_pair,pixels,area_ha
+Forest,Insect/Disease,Forest<->Insect/Disease (symmetrized),39630,396.3
+Insect/Disease,Forest,Insect/Disease->Forest,32628,326.28
+Forest,Harvest,Forest<->Harvest (symmetrized),24137,241.37
+Harvest,Forest,Harvest->Forest,18516,185.16
+Grass/Shrub,Harvest,Grass/Shrub<->Harvest (symmetrized),11843,118.43
+Wetland,Harvest,Wetland<->Harvest (symmetrized),7426,74.26
+Forest,Insect/Disease,Forest->Insect/Disease,7002,70.02
+Harvest,Grass/Shrub,Harvest->Grass/Shrub,6572,65.72
+Forest,Harvest,Forest->Harvest,5621,56.21
+Grass/Shrub,Harvest,Grass/Shrub->Harvest,5271,52.71
+Agriculture,Harvest,Agriculture<->Harvest (symmetrized),4751,47.51
+Harvest,Wetland,Harvest->Wetland,4502,45.02
+Wetland,Harvest,Wetland->Harvest,2924,29.24
+Grass/Shrub,Insect/Disease,Grass/Shrub<->Insect/Disease (symmetrized),2726,27.26
+Forest,Beaver,Forest<->Beaver (symmetrized),2553,25.53
+Agriculture,Harvest,Agriculture->Harvest,2541,25.41
+Agriculture,Development,Agriculture<->Development (symmetrized),2496,24.96
+Forest,Development,Forest<->Development (symmetrized),2427,24.27
+Development,Forest,Development->Forest,2426,24.26
+Development,Agriculture,Development->Agriculture,2264,22.64
+Insect/Disease,Grass/Shrub,Insect/Disease->Grass/Shrub,2247,22.47
+Harvest,Agriculture,Harvest->Agriculture,2210,22.1
+Urban,Development,Urban<->Development (symmetrized),2078,20.78
+Water,Insect/Disease,Water<->Insect/Disease (symmetrized),2025,20.25
+Water,Insect/Disease,Water->Insect/Disease,1863,18.63
+Forest,Beaver,Forest->Beaver,1722,17.22
+Wetland,Beaver,Wetland<->Beaver (symmetrized),1491,14.91
+Beaver,Wetland,Beaver->Wetland,1396,13.96
+Wetland,Insect/Disease,Wetland<->Insect/Disease (symmetrized),1293,12.93
+Development,Urban,Development->Urban,1232,12.32
+Grass/Shrub,Beaver,Grass/Shrub<->Beaver (symmetrized),1199,11.99
+Insect/Disease,Wetland,Insect/Disease->Wetland,1118,11.18
+Water,Beaver,Water<->Beaver (symmetrized),1023,10.23
+Grass/Shrub,Beaver,Grass/Shrub->Beaver,880,8.8
+Urban,Development,Urban->Development,846,8.46
+Beaver,Forest,Beaver->Forest,831,8.31
+Agriculture,Insect/Disease,Agriculture<->Insect/Disease (symmetrized),823,8.23
+Agriculture,Insect/Disease,Agriculture->Insect/Disease,753,7.53
+Urban,Harvest,Urban<->Harvest (symmetrized),626,6.26
+Beaver,Water,Beaver->Water,528,5.28
+Agriculture,Beaver,Agriculture<->Beaver (symmetrized),521,5.21
+Water,Beaver,Water->Beaver,495,4.95
+Grass/Shrub,Insect/Disease,Grass/Shrub->Insect/Disease,479,4.79
+Harvest,Urban,Harvest->Urban,440,4.4
+Grass/Shrub,Development,Grass/Shrub<->Development (symmetrized),420,4.2
+Other,Harvest,Other<->Harvest (symmetrized),401,4.01
+Development,Grass/Shrub,Development->Grass/Shrub,392,3.92
+Beaver,Agriculture,Beaver->Agriculture,351,3.51
+Beaver,Grass/Shrub,Beaver->Grass/Shrub,319,3.19
+Agriculture,Development,Agriculture->Development,232,2.32
+Harvest,Other,Harvest->Other,216,2.16
+Urban,Harvest,Urban->Harvest,186,1.86
+Other,Harvest,Other->Harvest,185,1.85
+Wetland,Insect/Disease,Wetland->Insect/Disease,175,1.75
+Agriculture,Beaver,Agriculture->Beaver,170,1.7
+Insect/Disease,Water,Insect/Disease->Water,162,1.62
+Other,Development,Other<->Development (symmetrized),133,1.33
+Development,Other,Development->Other,113,1.13
+Urban,Insect/Disease,Urban<->Insect/Disease (symmetrized),104,1.04
+Wetland,Beaver,Wetland->Beaver,95,0.95
+Insect/Disease,Agriculture,Insect/Disease->Agriculture,70,0.7
+Insect/Disease,Urban,Insect/Disease->Urban,59,0.59
+Urban,Insect/Disease,Urban->Insect/Disease,45,0.45
+Water,Development,Water<->Development (symmetrized),42,0.42
+Water,Harvest,Water<->Harvest (symmetrized),40,0.4
+Wetland,Development,Wetland<->Development (symmetrized),29,0.29
+Grass/Shrub,Development,Grass/Shrub->Development,28,0.28
+Water,Development,Water->Development,28,0.28
+Urban,Beaver,Urban<->Beaver (symmetrized),28,0.28
+Harvest,Water,Harvest->Water,27,0.27
+Beaver,Urban,Beaver->Urban,23,0.23
+Other,Development,Other->Development,20,0.2
+Wetland,Development,Wetland->Development,18,0.18
+Development,Water,Development->Water,14,0.14
+Water,Harvest,Water->Harvest,13,0.13
+Development,Wetland,Development->Wetland,11,0.11
+Urban,Beaver,Urban->Beaver,5,0.05
+Forest,Development,Forest->Development,1,0.01

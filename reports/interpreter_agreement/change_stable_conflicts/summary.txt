@@ -1,0 +1,25 @@
+change/stable conflicts between interpreters
+(one reviewer called change, the other called stable; either direction)
+
+double-interpreted cells (pairs): 72
+cells with at least one conflict: 55
+
+total conflict pixels: 110,265  (1,102.7 ha)
+  as a fraction of all disagreement pixels (1,842,349): 5.9850%
+  as a fraction of all change-labeled pixels (196,982): 55.9772%
+
+Unknown-vs-stable pixels (reported separately, NOT counted as conflicts): 4,557  (45.6 ha)
+
+largest symmetrized stable<->change pairs: Forest<->Insect/Disease 396.3 ha; Forest<->Harvest 241.4 ha; Grass/Shrub<->Harvest 118.4 ha; Wetland<->Harvest 74.3 ha; Agriculture<->Harvest 47.5 ha
+
+connected-component patches (8-connectivity): 16447
+  median patch area: 0.020 ha (2 px)
+  max patch area:    16.380 ha (1638 px)
+
+convention: reviewer A/B ordering is alphabetical and arbitrary, so directed pair counts
+(A_class->B_class) carry no meaning on their own; the `stable_class`/`change_class` columns
+and the symmetrized counts in ordered_pairs.csv are the reviewer-order-independent numbers.
+
+context: this is the dominant form of change-class disagreement. Compare with
+change_change_conflicts/ (both reviewers called change but disagreed on type), which is
+far smaller.

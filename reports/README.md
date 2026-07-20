@@ -156,6 +156,25 @@ Disease (8.2 ha); all others are <1.1 ha. Unknown-vs-change is a separate 519 px
 Reviewer A/B ordering is alphabetical and arbitrary, so the directed counts carry no meaning on
 their own; the symmetrized totals are the reviewer-order-independent numbers.
 
+**Change/stable conflicts** (`scripts/interpreter_change_stable_conflicts.py`, in
+`change_stable_conflicts/`): the counterpart, pixels where one reviewer called an attributed change
+class and the other called a stable class (either direction). Stable classes are Urban (0),
+Agriculture (1), Grass/Shrub (2), Forest (3), Water (4), Wetland (5), Other (13); change classes as
+above. **Unknown (10) is excluded** and Unknown-vs-stable reported separately. Same file set as the
+change/change folder (`change_stable_pixels_long.csv` with extra `stable_class`/`change_class`
+columns, `ordered_pairs.csv`, `change_stable_patches.csv`, `summary.txt`, `COLUMNS.md`).
+
+Findings: this is **the dominant form of change-class disagreement, ~43x the change/change count**.
+**Total conflict is 110,265 px = 1,102.7 ha: 5.99% of all disagreement, but 55.98% of all
+change-labeled pixels** — so when interpreters disagree about change, it is overwhelmingly one
+seeing disturbance where the other sees stable cover, not a dispute over the change type. 55 of 72
+cells carry some. Patches are larger than in the change/change case (16,447 patches, median 2 px,
+max 16.4 ha). Symmetrized, the biggest confusions are **Forest↔Insect/Disease (396 ha) and
+Forest↔Harvest (241 ha)**, then Grass/Shrub↔Harvest (118 ha), Wetland↔Harvest (74 ha), and
+Agriculture↔Harvest (48 ha): the question of whether a stand is disturbed or stable forest, or
+whether cleared/senescing vegetation is harvest or stable. Unknown-vs-stable is a separate 4,557 px
+(45.6 ha).
+
 ## model_comparison/ — interpreted vs. AlphaEarth model maps
 
 Each interpreted Sentinel-2 cell vs. the model maps (v2–v6).
