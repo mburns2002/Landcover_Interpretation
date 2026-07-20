@@ -409,11 +409,16 @@ for v6.
 ## Case_ABCD_sampling/ — sampling experiment against known truth
 
 A/B/C/D under two sampling designs, measured against the exhaustive-tiling census (which is
-the known truth — we have every pixel). Source: `scripts/sampling_experiment_ABCD.py`.
-Separate from `Case_{A,B,C,D}_window_sampling/` (those are the census). **Draws from designs
-whose properties we characterize — NOT accuracy estimates.** Setup: interpreted reference vs.
-model v2–v6, de-duplicated one interpretation per location (seed 42, all years, 180 cells);
-cell = primary sampling unit, pixels within a cell = census. Population = the exhaustive
+the known truth — we have every pixel). Source:
+`scripts/sampling_experiment_ABCD.py --truth exports/truth_selections.csv`. Separate from
+`Case_{A,B,C,D}_window_sampling/` (those are the census). **Draws from designs whose properties we
+characterize — NOT accuracy estimates.** Setup: interpreted reference vs. model v2–v6, one
+interpretation per location from the **adjudicated truth set** (`truth_selections.csv`,
+`notebooks/adjudicate_truth.ipynb`), all years, 180 cells; the sampling randomness stays seed 42
+(`reference.txt`). Switching from the earlier random seed-42 dedup barely moves anything: the
+census OA shifts by ≤0.002 per variant (v2 0.663, v3 0.612, v4 0.509, v5 0.572, v6 0.188) and the
+design conclusions are unchanged. cell = primary sampling unit, pixels within a cell = census.
+Population = the exhaustive
 non-overlapping W×W tiling windows with a jointly-valid center; sampling draws n distinct
 (non-overlapping) windows. W ∈ {1,3,5,7,9}; n ∈ {20,50,100,200,500,1000,2000,5000} total across
 the frame; 100 iterations per (n, W, design); seeds from base 42. **W=1 collapses A=B=C —
