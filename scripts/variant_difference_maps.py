@@ -68,6 +68,7 @@ PIX_HA = 0.01                                           # one 10 m pixel = 100 m
 # mosaic-spanning blob. this floor keeps "patches" to concentrated cores. stated in the caption.
 MIN_BLOCK_PX = 16                                       # >= 25% of an 80 m (64 px) block
 MAX_CROP = 2500                                         # cap on a crop dimension so reads stay bounded
+N_OVERLAY = 5                                           # patch overlays and cell examples per pair
 
 # category render codes and their colours; agree pixels keep the class code 1..10
 CAT_GREY, CAT_A, CAT_B, CAT_CC = 11, 12, 13, 14
@@ -456,6 +457,67 @@ def render_overlay(out_dir, rank, patch, tilesA, tilesB, H, W, cells, rf2common,
     plt.close(fig)
 
 
+def cell_extent(cell, mosaic_tf):
+    # cell's pixel window in the mosaic; the interpreted rasters share the 10 m grid exactly
+    c0 = round((cell["bounds"][0] - mosaic_tf.c) / 10.0)
+    r0 = round((mosaic_tf.f - cell["bounds"][3]) / 10.0)
+    return r0, r0 + cell["height"], c0, c0 + cell["width"]
+
+
+def select_cell_examples(tilesA, tilesB, cells, mosaic_tf, n=5):
+    """Rank interpreted cells by the change-involved A/B disagreement inside the cell, top n.
+
+    These become the cell-sized 3-panel examples, so the interpreted reference fills its panel
+    instead of sitting as a speck inside a much larger patch crop.
+    """
+    ischange = np.zeros(256, dtype=bool); ischange[CHANGE_CODES] = True
+    scored = []
+    for cell in cells:
+        r0, r1, c0, c1 = cell_extent(cell, mosaic_tf)
+        A = read_window(tilesA, r0, r1, c0, c1)
+        B = read_window(tilesB, r0, r1, c0, c1)
+        _, m = categorize(A, B, ischange)
+        score = int((m["cat3"] | m["cat4"] | m["cat5"]).sum())
+        scored.append((score, cell))
+    scored.sort(key=lambda s: -s[0])
+    return scored[:n]
+
+
+def render_cell_overlay(out_dir, rank, score, cell, tilesA, tilesB, mosaic_tf, rf2common,
+                        cls_cmap, cls_norm, names, colors, A_name, B_name):
+    import matplotlib
+    matplotlib.use("Agg")
+    import matplotlib.pyplot as plt
+    from matplotlib.patches import Patch
+
+    r0, r1, c0, c1 = cell_extent(cell, mosaic_tf)
+    A = read_window(tilesA, r0, r1, c0, c1)
+    B = read_window(tilesB, r0, r1, c0, c1)
+    with rasterio.open(cell["path"]) as ds:
+        rf = ds.read(1)
+    interp = np.zeros_like(rf, dtype=np.uint8)
+    for rf_code, cc in rf2common.items():
+        interp[rf == rf_code] = cc
+
+    gid = re.search(r"grid_(\d+)", cell["name"]).group(1)
+    km = cell["width"] * 10 / 1000
+    fig, axes = plt.subplots(1, 3, figsize=(15, 5.6))
+    for ax, arr, t in [(axes[0], A, f"variant {A_name}"), (axes[1], B, f"variant {B_name}"),
+                       (axes[2], interp, "interpreted reference")]:
+        ax.imshow(arr, cmap=cls_cmap, norm=cls_norm, interpolation="nearest")
+        ax.set_title(t, fontsize=10); ax.set_xticks([]); ax.set_yticks([])
+    handles = [Patch(facecolor=colors[c], edgecolor="k", label=f"{c} {names[c]}")
+               for c in range(1, 11)]
+    fig.legend(handles=handles, loc="lower center", ncol=10, fontsize=7)
+    fig.suptitle(f"interpreted cell {gid}  ({km:.1f} x {km:.1f} km, same extent in all three "
+                 f"panels)  ·  {score * PIX_HA:.0f} ha change-involved {A_name}/{B_name} "
+                 f"disagreement in the cell", fontsize=10)
+    fig.tight_layout(rect=[0, 0.06, 1, 0.95])
+    fig.savefig(os.path.join(out_dir, f"overlay_cell{rank:02d}_grid{gid}.png"),
+                dpi=140, bbox_inches="tight")
+    plt.close(fig)
+
+
 # ----------------------------------------------------------------------------- interpreted cells
 def location_key(path):
     m = re.search(r"grid_(\d+)_sample_(\d+)_sensor_Sentinel-2_target_(\d+)", os.path.basename(path))
@@ -476,7 +538,7 @@ def deduped_cells(seed=42):
     for p in sorted(kept):
         with rasterio.open(p) as ds:
             cells.append(dict(path=p, name=os.path.splitext(os.path.basename(p))[0],
-                              bounds=tuple(ds.bounds)))
+                              bounds=tuple(ds.bounds), width=ds.width, height=ds.height))
     return cells
 
 
@@ -526,11 +588,17 @@ def run_pair(A_name, B_name, cells, rf2common, names, colors, cmaps, max_rows, n
     # how many of the overall top-N intersect an interpreted cell
     n_top_hit = sum(intersects_any_cell(p, cells, mosaic_tf) for p in top)
 
-    # separately: top-N largest patches that DO intersect an interpreted cell -> 3-panel overlays
-    hits = [p for p in patches if intersects_any_cell(p, cells, mosaic_tf)][:n_top]
+    # separately: the 5 largest patches that DO intersect an interpreted cell -> 3-panel overlays
+    hits = [p for p in patches if intersects_any_cell(p, cells, mosaic_tf)][:N_OVERLAY]
     for rank, p in enumerate(hits, 1):
         render_overlay(out_dir, rank, p, tilesA, tilesB, H, W, cells, rf2common,
                        cls_cmap, cls_norm, names, colors, A_name, B_name, mosaic_tf)
+
+    # plus 5 cell-sized 3-panel examples: interpreted cells with the most in-cell A/B disagreement
+    examples = select_cell_examples(tilesA, tilesB, cells, mosaic_tf, n=N_OVERLAY)
+    for rank, (score, cell) in enumerate(examples, 1):
+        render_cell_overlay(out_dir, rank, score, cell, tilesA, tilesB, mosaic_tf, rf2common,
+                            cls_cmap, cls_norm, names, colors, A_name, B_name)
 
     # cache the rendered patches (bounding boxes) so the zoom and overlay crops can be redrawn
     # from raw tiles without another streaming pass
@@ -622,6 +690,8 @@ def main():
             H, W = mosaic_dims(tilesA)
             mosaic_tf = tilesA[0][0].transform
             for row in df.itertuples():
+                if row.role == "overlay" and row.rank > N_OVERLAY:
+                    continue                            # keep only the top-N patch overlays
                 patch = dict(pid=row.pid, area_px=int(row.area_px), area_ha=row.area_ha,
                              r0=int(row.r0), r1=int(row.r1), c0=int(row.c0), c1=int(row.c1))
                 if row.role == "zoom":
@@ -630,9 +700,14 @@ def main():
                 else:
                     render_overlay(out_dir, row.rank, patch, tilesA, tilesB, H, W, cells, rf2common,
                                    cls_cmap, cls_norm, names, colors, A_name, B_name, mosaic_tf)
+            # cell-sized 3-panel examples (recomputed; the scoring is cheap windowed reads)
+            for rank, (score, cell) in enumerate(
+                    select_cell_examples(tilesA, tilesB, cells, mosaic_tf, n=N_OVERLAY), 1):
+                render_cell_overlay(out_dir, rank, score, cell, tilesA, tilesB, mosaic_tf, rf2common,
+                                    cls_cmap, cls_norm, names, colors, A_name, B_name)
             for ds, _, _ in tilesA + tilesB:
                 ds.close()
-            print(f"  re-rendered {out_dir} zoom/overlay crops")
+            print(f"  re-rendered {out_dir} zoom/overlay/cell crops")
         return
 
     cells = deduped_cells(seed=42)

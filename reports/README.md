@@ -513,8 +513,11 @@ row beneath the map), `category_stats.csv`
 from the render**), `cat5_change_pairs.csv` (change/change by directed change-class pair),
 `cat3_Achange_by_class.csv` / `cat4_Bchange_by_class.csv` (by the detecting variant's change
 class), `zoom_topNN_*.png` (the 10 largest change-involved disagreement patches), and
-`overlay_topNN_*.png` (the 10 largest such patches intersecting an interpreted cell, as
-variant A | variant B | interpreted reference). `pairs_summary.csv` collects all six.
+`overlay_topNN_*.png` (the 5 largest such patches intersecting an interpreted cell, as
+variant A | variant B | interpreted reference), and `overlay_cellNN_gridID.png` (5 cell-sized
+3-panel examples: the interpreted cells with the most in-cell A/B change-involved disagreement,
+cropped to the cell extent so the interpreted reference fills its panel rather than sitting as a
+speck inside a large patch crop). `pairs_summary.csv` collects all six.
 
 **Patch definition.** Change-involved disagreement (categories 3+4+5) is 8-connected-labeled on
 an **80 m grid** where each block carries its exact full-resolution cat-3/4/5 pixel count, so
