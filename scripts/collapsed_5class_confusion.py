@@ -28,7 +28,8 @@ a cell-level bootstrap (seed 42).
 
 Outputs -> reports/collapsed_5class_confusion/
   - confusion_<v>_counts.csv / _rownorm.csv     raw and row-normalized 5x5 matrices
-  - confusion_<v>_rownorm.png                    row-normalized heatmap (no gridlines)
+  - confusion_<v>_rownorm.png                    count heatmap (colour = row proportion) with a
+                                                 PA column + support, UA row, and OA/kappa corner
   - metrics_long.csv                             long format, every metric x variant x class + CIs
   - summary_by_variant.md / .tex                 per-variant headline table (booktabs LaTeX)
   - summary.txt                                  plain-text headline
@@ -228,29 +229,76 @@ def bootstrap_cis(cms, n, seed=SEED, B=BOOT):
 
 
 # ----------------------------------------------------------------------------- figure
-def plot_rownorm(M, version, oa, kappa, path):
+def plot_rownorm(M, version, mt, path):
+    """5x5 confusion in the transfer_confusion style: cells are raw counts, colour is the row
+    proportion (so the diagonal shade is producer's accuracy), with a PA column (producer's /
+    recall) and support on the right, a UA row (user's / precision) on the bottom, and OA and
+    kappa in the corner.
+    """
     import matplotlib
     matplotlib.use("Agg")
     import matplotlib.pyplot as plt
 
+    M = M.astype(float)
+    row = M.sum(1)
     with np.errstate(invalid="ignore"):
-        rn = M / M.sum(1, keepdims=True)
-    fig, ax = plt.subplots(figsize=(5.6, 5.0))
-    im = ax.imshow(rn, cmap="Blues", vmin=0, vmax=1)
-    ax.set_xticks(range(5)); ax.set_xticklabels(LABELS5, rotation=35, ha="right")
-    ax.set_yticks(range(5)); ax.set_yticklabels(LABELS5)
-    ax.set_xlabel("model (collapsed)"); ax.set_ylabel("reference (collapsed)")
-    ax.grid(False)
+        rn = M / np.where(row[:, None] > 0, row[:, None], np.nan)   # row proportion
+    pa = np.array([mt[f"recall[{c}]"] for c in range(1, 6)])        # producer's accuracy
+    ua = np.array([mt[f"precision[{c}]"] for c in range(1, 6)])     # user's accuracy
+    sup = np.array([mt[f"support[{c}]"] for c in range(1, 6)])
+    oa, kappa = mt["OA"], mt["kappa"]
+    blues, greens = plt.get_cmap("Blues"), plt.get_cmap("Greens")
+
+    # build a 6x6 rgba image: main block coloured by row proportion, margins by accuracy
+    img = np.ones((6, 6, 4))
     for i in range(5):
         for j in range(5):
-            v = rn[i, j]
-            if np.isfinite(v):
-                ax.text(j, i, f"{v:.2f}\n{int(M[i, j]):,}", ha="center", va="center",
-                        fontsize=7, color="white" if v > 0.55 else "black")
-    ax.set_title(f"{version} collapsed 5-class (row-normalized = producer's accuracy)\n"
-                 f"OA={oa:.3f}  kappa={kappa:.3f}", fontsize=9)
-    fig.colorbar(im, fraction=0.046, pad=0.04, label="P(model | reference)")
-    fig.tight_layout()
+            img[i, j] = blues(rn[i, j] if np.isfinite(rn[i, j]) else 0.0)
+    for i in range(5):
+        img[i, 5] = greens(pa[i] if np.isfinite(pa[i]) else 0.0)
+    for j in range(5):
+        img[5, j] = greens(ua[j] if np.isfinite(ua[j]) else 0.0)
+    img[5, 5] = greens(oa if np.isfinite(oa) else 0.0)
+
+    fig, ax = plt.subplots(figsize=(6.8, 6.2))
+    ax.imshow(img, aspect="auto")
+
+    def txtcolor(v):
+        return "white" if (np.isfinite(v) and v > 0.5) else "black"
+
+    for i in range(5):
+        for j in range(5):
+            c = int(M[i, j])
+            if c:
+                ax.text(j, i, f"{c:,}", ha="center", va="center", fontsize=7,
+                        color=txtcolor(rn[i, j]))
+    for i in range(5):                                   # producer's accuracy column + support
+        t = f"{pa[i]*100:.0f}%" if np.isfinite(pa[i]) else "-"
+        ax.text(5, i, f"{t}\nn={int(sup[i]):,}", ha="center", va="center", fontsize=6,
+                color=txtcolor(pa[i]))
+    for j in range(5):                                   # user's accuracy row
+        t = f"{ua[j]*100:.0f}%" if np.isfinite(ua[j]) else "-"
+        ax.text(j, 5, t, ha="center", va="center", fontsize=7, color=txtcolor(ua[j]))
+    ax.text(5, 5, f"OA {oa*100:.0f}%\nκ {kappa:.2f}", ha="center", va="center",
+            fontsize=7, color=txtcolor(oa))
+
+    # right column (x=5) holds producer's accuracy per reference row; bottom row (y=5) holds
+    # user's accuracy per prediction column
+    ax.set_xticks(range(6)); ax.set_xticklabels(LABELS5 + ["PA"], rotation=45, ha="left", fontsize=8)
+    ax.set_yticks(range(6)); ax.set_yticklabels(LABELS5 + ["UA"], fontsize=8)
+    ax.xaxis.tick_top(); ax.xaxis.set_label_position("top")
+    ax.set_xlabel("model (collapsed)", fontsize=9)
+    ax.set_ylabel("reference (collapsed)", fontsize=9)
+    # separators between the matrix and the accuracy margins
+    ax.axhline(4.5, color="0.4", lw=1.0); ax.axvline(4.5, color="0.4", lw=1.0)
+    ax.set_xticks(np.arange(-0.5, 6, 1), minor=True)
+    ax.set_yticks(np.arange(-0.5, 6, 1), minor=True)
+    ax.grid(which="minor", color="white", lw=0.6); ax.tick_params(which="minor", length=0)
+
+    ax.set_title(f"{version}  ·  collapsed 5-class\n"
+                 f"cells = raw counts; colour = row proportion (producer's). "
+                 f"PA = producer's accuracy (recall), UA = user's accuracy (precision), "
+                 f"n = reference support", fontsize=8, pad=26)
     fig.savefig(path, dpi=150, bbox_inches="tight")
     plt.close(fig)
 
@@ -377,7 +425,7 @@ def main():
             rn = census / census.sum(1, keepdims=True)
         pd.DataFrame(np.round(rn, 4), index=LABELS5, columns=LABELS5).to_csv(
             os.path.join(OUT, f"confusion_{v}_rownorm.csv"))
-        plot_rownorm(census, v, pt["OA"], pt["kappa"],
+        plot_rownorm(census, v, pt,
                      os.path.join(OUT, f"confusion_{v}_rownorm.png"))
 
         # long-format rows: overall metrics
