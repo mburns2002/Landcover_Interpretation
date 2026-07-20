@@ -11,6 +11,33 @@ The same text is also embedded in the PNG metadata (read with `exiftool <file>` 
 overwrites it without the caption; re-apply with `python scripts/annotate_figures.py`
 (idempotent — a `Captioned` flag prevents stacking).
 
+## Embedding variants (v2–v6)
+
+The model maps `v2`–`v6` are one Random Forest classified on different AlphaEarth embedding feature
+sets. From the Earth Engine definition below, **2018 is the base year**: read `img2018` as the
+base-year embedding and `img2020` as the paired-year embedding (here the 2018/2020 training window),
+`delta` as the change between them, and `dot` as the dot-product feature. In the temporally-matched
+runs the base and paired years shift per NAIP bracket, so "2018/2020" generalizes to
+"base/paired year".
+
+```js
+var variants = {
+  v2: { img: img2018.addBands(delta) },    // 2018 + delta
+  v3: { img: img2018.addBands(img2020) },  // 2018 + 2020
+  v4: { img: delta },                      // delta only
+  v5: { img: img2018.addBands(dot) },      // 2018 + dot
+  v6: { img: dot },                        // dot only
+};
+```
+
+| variant | embedding features (base = 2018, paired = 2020) | note |
+|---|---|---|
+| v2 | base + delta | smooth, most faithful to abundance |
+| v3 | base + paired | smooth |
+| v4 | delta only | mostly smooth, overfits the base/paired window (poor temporal transfer) |
+| v5 | base + dot | smooth |
+| v6 | dot only | speckly per-pixel (dot-product); low autocorrelation, weak abundance signal |
+
 ## interpreter_agreement/ — inter-interpreter agreement
 
 Same grid cell independently labeled by two reviewers (72 pairs; 69 pairs + a first
