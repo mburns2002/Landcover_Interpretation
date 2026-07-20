@@ -1,0 +1,2 @@
+reference points: adjudicated reviewer per location (truth_selections.csv)
+model field: temporally-matched per-bracket predictions (data/raw/transfer_predictions)

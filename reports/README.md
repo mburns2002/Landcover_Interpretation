@@ -296,7 +296,11 @@ per-pixel format, not only its accuracy.
 
 `neighbor_change` separates v6 but not v2/v3/v5. Two richer diagnostics, computed on
 both the model maps and the interpreted cells (measured within the same cell
-footprints, so the interpretations set the reference scale):
+footprints, so the interpretations set the reference scale). Regenerated on the current
+basis: the interpreted source is the **adjudicated** reviewer per location
+(`truth_selections.csv`) and the model source is each cell's **temporally-matched
+per-bracket prediction** (`--truth exports/truth_selections.csv --preds
+data/raw/transfer_predictions`; see `reference.txt`).
 
 - **mean patch size per class** — 8-connected component labeling on each class mask.
 - **Moran's I** — spatial autocorrelation of the class raster (queen contiguity).
@@ -310,17 +314,20 @@ Files: `spatial_structure_summary.csv`, `patch_size_by_class.csv`, and plots
 | source | mean patch (ha) | Moran's I |
 |--------|:---:|:---:|
 | **interpreted (ref)** | **0.79** | **0.75** |
-| v2 | 1.13 | 0.82 |
-| v3 | 1.18 | 0.82 |
-| v4 | 0.42 | 0.71 |
-| v5 | 0.97 | 0.81 |
-| v6 | 0.024 | 0.09 |
+| v2 | 1.10 | 0.82 |
+| v3 | 1.22 | 0.82 |
+| v4 | 0.37 | 0.67 |
+| v5 | 1.00 | 0.82 |
+| v6 | 0.022 | 0.08 |
 
 Patch size (unlike neighbor_change) discriminates the smooth variants: ordered by
 grain, v6 (speckle) < v4 (fragmented) < **interpreted** < v5 < v2 < v3 (over-smoothed).
-v5 is closest to the interpreted scale; v2/v3 over-smooth the large classes most
-(Water patches 6–8 ha vs. the interpreted 2.2 ha; Agriculture ~5 ha vs. ~1 ha). Moran's I
-mainly isolates v6 (0.09) and mildly v4 (0.71); v2/v3/v5 cluster near 0.82.
+v5 is closest to the interpreted scale; v2/v3 over-smooth the large classes most. Moran's I
+mainly isolates v6 (0.08) and now more clearly v4 (0.67, down from 0.71 on the static mosaic):
+v4's off-year matched predictions are more fragmented than its 2018/2020 map, consistent with its
+poor temporal transfer. v2/v3/v5 cluster near 0.82. The interpreted reference barely changes from
+the earlier static/random-dedup basis (0.79 ha, Moran's I 0.75), since only 72 of 180 cells switch
+reviewer; the structural ordering is unchanged.
 
 ## window_sampling_by_approach/ — per-approach window sampling (grouping)
 

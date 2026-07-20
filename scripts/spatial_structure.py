@@ -37,8 +37,10 @@ Requires: rasterio, numpy, pandas, matplotlib, scipy
 import argparse
 import glob
 import os
+import re
 import sys
 import warnings
+from collections import defaultdict
 
 import numpy as np
 import pandas as pd
@@ -53,6 +55,34 @@ warnings.filterwarnings("ignore")
 OUT = "reports/spatial_structure"
 PIX_HA = 0.01               # 10 m pixel = 100 m^2 = 0.01 ha
 STRUCT = np.ones((3, 3), int)  # 8-connectivity
+PRED_BAND = {"v2": 1, "v3": 2, "v4": 3, "v5": 4, "v6": 5}   # band order in pred_<bracket>_cell*.tif
+
+
+def _cell_bracket_gid(path):
+    m = re.search(r"grid_(\d+)_.*opt_(\d{4}_\d{4})", os.path.basename(path))
+    return str(int(m.group(1))).zfill(5), m.group(2)
+
+
+def select_by_truth(cells, truth_csv):
+    """Keep one raster per location using the adjudicated reviewer from the truth CSV."""
+    df = pd.read_csv(truth_csv, dtype=str, keep_default_na=False)
+    truth = {str(int(g)).zfill(5): rev.strip().lower() for g, rev in zip(df.grid_id, df.reviewer)}
+    rx = re.compile(r"reviewer_([A-Za-z]+)_grid_(\d+)_", re.I)
+    by_grid = defaultdict(list)
+    for c in cells:
+        m = rx.search(os.path.basename(c))
+        if m:
+            by_grid[str(int(m.group(2))).zfill(5)].append((m.group(1).lower(), c))
+    kept, missing, mismatch = [], [], []
+    for gid, revpaths in by_grid.items():
+        want = truth.get(gid)
+        if want is None:
+            missing.append(gid); continue
+        match = [c for r, c in revpaths if r == want]
+        if not match:
+            mismatch.append((gid, want)); continue
+        kept.append(match[0])
+    return sorted(kept), missing, mismatch
 
 
 def patch_sizes(arr_common, classes):
@@ -122,6 +152,11 @@ def main():
     ap.add_argument("--keep-duplicates", action="store_true",
                     help="use every raster (default: one interpretation per location)")
     ap.add_argument("--seed", type=int, default=0)
+    ap.add_argument("--truth", default=None,
+                    help="use the adjudicated reviewer per location from this CSV (overrides dedup)")
+    ap.add_argument("--preds", default=None,
+                    help="use the temporally-matched per-bracket prediction rasters in this dir as "
+                         "the model field instead of the static mosaics")
     args = ap.parse_args()
 
     rf2common, names, colors = C.load_mappings()
@@ -131,12 +166,25 @@ def main():
     if args.targets:
         keep = set(args.targets)
         cells = [c for c in cells if C.target_year(c) in keep]
-    if not args.keep_duplicates:
+    if args.truth:
+        cells, missing, mismatch = select_by_truth(cells, args.truth)
+        if mismatch:
+            print("STOP: truth reviewer with no matching raster:", mismatch); return
+        ref_src = f"adjudicated reviewer per location ({os.path.basename(args.truth)})"
+        print(f"adjudicated reference: {len(cells)} cells from {args.truth}")
+    elif not args.keep_duplicates:
         cells, n_dup = C.dedupe_cells(cells, args.seed)
+        ref_src = f"one interpretation per location, random dedup seed {args.seed}"
         print(f"de-duplicated: {n_dup} location(s); {len(cells)} unique cells")
+    else:
+        ref_src = "every raster (duplicates kept)"
+    map_src = (f"temporally-matched per-bracket predictions ({args.preds})" if args.preds
+               else "static v2-v6 mosaics (single 2018/2020 classification)")
     print(f"cells: {len(cells)}   sources: interpreted + {' '.join(args.versions)}")
 
     os.makedirs(OUT, exist_ok=True)
+    with open(os.path.join(OUT, "reference.txt"), "w") as fh:
+        fh.write(f"reference points: {ref_src}\nmodel field: {map_src}\n")
 
     # interpreted (remap RF codes -> common)
     def interp_arrays():
@@ -146,18 +194,27 @@ def main():
     print("  interpreted ...", flush=True)
     sources = [collect_source("interpreted", interp_arrays(), classes)]
 
-    # each model version (stitched to the same cell footprints; codes already common)
+    # each model version, measured on the same cell footprints; codes already common. with --preds
+    # the field is the cell's temporally-matched per-bracket prediction band, else the static mosaic
     for v in args.versions:
-        tiles = [rasterio.open(t) for t in C.model_tiles(v)]
+        tiles = None if args.preds else [rasterio.open(t) for t in C.model_tiles(v)]
 
-        def model_arrays(tiles=tiles):
+        def model_arrays(v=v, tiles=tiles):
+            band = PRED_BAND[v]
             for f in cells:
-                with rasterio.open(f) as ds:
-                    yield C.stitch_model_to_cell(ds, tiles)
+                if args.preds:
+                    gid, bracket = _cell_bracket_gid(f)
+                    pp = os.path.join(args.preds, bracket, f"pred_{bracket}_cell{gid}.tif")
+                    with rasterio.open(pp) as ds:
+                        yield ds.read(band)
+                else:
+                    with rasterio.open(f) as ds:
+                        yield C.stitch_model_to_cell(ds, tiles)
         print(f"  model {v} ...", flush=True)
         sources.append(collect_source(v, model_arrays(), classes))
-        for t in tiles:
-            t.close()
+        if tiles:
+            for t in tiles:
+                t.close()
 
     # ---- summary table ----
     rows = []
