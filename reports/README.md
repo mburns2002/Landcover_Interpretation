@@ -42,8 +42,8 @@ var variants = {
 
 The interpreted set is **180 locations** (108 single-reviewer, 72 multi-reviewer: 71 double plus
 one mina/peter/robert triple), 36 cells per NAIP bracket across 2017_2019–2021_2023. Inter-
-interpreter agreement uses the 72 multi-reviewer cells (as 72 pairs; the triple is scored as its
-first mina/peter pair, and 69 is the count of distinct reviewer pairings).
+interpreter agreement scores the 72 multi-reviewer cells as 72 pairs (the triple as its first
+mina-peter pair).
 Source: `scripts/compare_interpreters.py` + `scripts/disagreement_summary.py`.
 
 - `per_pair_metrics.csv` — one row per reviewer pair (agreement, F1, IoU, kappa)
