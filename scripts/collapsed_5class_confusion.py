@@ -7,9 +7,12 @@ the four change classes kept distinct (Harvest, Development, Insect/Disease, Bea
 unattributed disturbance, no model equivalent) is excluded; Fire (40) has zero pixels. The
 collapse is applied after the crosswalk, to both the reference and the model maps.
 
-Reference: interpreted cells de-duplicated to one interpretation per location (numpy default_rng
-seed 42), all target years. Variants v2-v6 (v6 included: the collapse is exactly the condition
-under which its per-pixel behaviour might change, so excluding it would beg the question).
+Reference: the adjudicated interpreted cell per location (--truth exports/truth_selections.csv,
+the reviewer chosen per grid_id), all target years. The map field is the temporally-matched
+per-bracket predictions (--preds data/raw/transfer_predictions, band per variant), so each cell is
+scored against the embedding classification for its own NAIP bracket rather than the single static
+2018/2020 mosaic. Variants v2-v6 (v6 included: the collapse is exactly the condition under which
+its per-pixel behaviour might change, so excluding it would beg the question).
 
 For each variant: the 5x5 confusion (reference on rows, so the row-normalized diagonal is
 producer's accuracy), OA / macro-F1 / mean IoU / Cohen's kappa, and per-class precision, recall,
@@ -33,6 +36,7 @@ Outputs -> reports/collapsed_5class_confusion/
 Requires: rasterio, numpy, pandas, matplotlib
 """
 
+import argparse
 import glob
 import os
 import re
@@ -84,6 +88,38 @@ def deduped_cells(seed=SEED):
         v = sorted(groups[k])
         kept.append(v[int(rng.integers(len(v)))] if len(v) > 1 else v[0])
     return sorted(kept)
+
+
+PRED_BAND = {"v2": 1, "v3": 2, "v4": 3, "v5": 4, "v6": 5}   # band order in pred_<bracket>_cell*.tif
+
+
+def _cell_bracket_gid(path):
+    m = re.search(r"grid_(\d+)_.*opt_(\d{4}_\d{4})", os.path.basename(path))
+    return str(int(m.group(1))).zfill(5), m.group(2)
+
+
+def select_by_truth(truth_csv):
+    """Keep one raster per location using the adjudicated reviewer from the truth CSV."""
+    paths = sorted(glob.glob(os.path.join(RF_DIR, "**", "rf_class*Sentinel-2*.tif"), recursive=True))
+    df = pd.read_csv(truth_csv, dtype=str, keep_default_na=False)
+    truth = {str(int(g)).zfill(5): rev.strip().lower() for g, rev in zip(df.grid_id, df.reviewer)}
+    rx = re.compile(r"reviewer_([A-Za-z]+)_grid_(\d+)_", re.I)
+    by_grid = defaultdict(list)
+    for p in paths:
+        m = rx.search(os.path.basename(p))
+        if m:
+            by_grid[str(int(m.group(2))).zfill(5)].append((m.group(1).lower(), p))
+    kept, mismatch = [], []
+    for gid, revpaths in by_grid.items():
+        want = truth.get(gid)
+        if want is None:
+            continue
+        match = [p for r, p in revpaths if r == want]
+        if match:
+            kept.append(match[0])
+        else:
+            mismatch.append((gid, want))
+    return sorted(kept), mismatch
 
 
 def model_tiles(version):
@@ -230,7 +266,8 @@ def write_tables(variant_rows, out_dir):
     # markdown per-variant summary
     md = ["# Collapsed 5-class census: per-variant summary", "",
           f"Census over {variant_rows[0]['n_cells']} interpreted cells "
-          f"(de-duplicated, seed 42) from the {N_FRAME:,}-cell frame. OA is dominated by the "
+          f"(adjudicated reference, temporally-matched per-bracket map field) from the "
+          f"{N_FRAME:,}-cell frame. OA is dominated by the "
           "~98.5% Stable class; the all-Stable baseline is shown alongside. macro-F1 averages 5 "
           "classes here versus 10 in the 10-class matrices, so the two are not comparable as "
           "levels. CIs are 95% (ratio estimator with FPC; bootstrap in parentheses in the CSV).",
@@ -272,24 +309,56 @@ def _texci(s):
 
 # ----------------------------------------------------------------------------- driver
 def main():
+    ap = argparse.ArgumentParser(description=__doc__,
+                                 formatter_class=argparse.RawDescriptionHelpFormatter)
+    ap.add_argument("--truth", default=None,
+                    help="use the adjudicated reviewer per location from this CSV (else default_rng dedup)")
+    ap.add_argument("--preds", default=None,
+                    help="use the temporally-matched per-bracket prediction rasters in this dir as the "
+                         "map field (else the static v2-v6 mosaics)")
+    args = ap.parse_args()
+
     os.makedirs(OUT, exist_ok=True)
-    cells = deduped_cells()
-    print(f"de-duplicated interpreted cells (seed {SEED}): {len(cells)}")
+    if args.truth:
+        cells, mismatch = select_by_truth(args.truth)
+        if mismatch:
+            print("STOP: truth reviewer with no matching raster:", mismatch); return
+        ref_src = f"adjudicated reviewer per location ({os.path.basename(args.truth)})"
+        print(f"adjudicated interpreted cells: {len(cells)}")
+    else:
+        cells = deduped_cells()
+        ref_src = f"one interpretation per location, default_rng dedup seed {SEED}"
+        print(f"de-duplicated interpreted cells (seed {SEED}): {len(cells)}")
+    map_src = (f"temporally-matched per-bracket predictions ({args.preds})" if args.preds
+               else "static v2-v6 mosaics (single 2018/2020 classification)")
+    with open(os.path.join(OUT, "reference.txt"), "w") as fh:
+        fh.write(f"reference points: {ref_src}\nmap field: {map_src}\n")
 
     long_rows, variant_rows = [], []
     baseline_note = None
     for v in VERSIONS:
-        tiles = [rasterio.open(t) for t in model_tiles(v)]
+        tiles = None if args.preds else [rasterio.open(t) for t in model_tiles(v)]
+        band = PRED_BAND[v]
         cms = []
         for cell in cells:
             with rasterio.open(cell) as ds:
                 rf = ds.read(1)
-                model = stitch_model_to_cell(ds, tiles)
+                if args.preds:
+                    gid, bracket = _cell_bracket_gid(cell)
+                    pp = os.path.join(args.preds, bracket, f"pred_{bracket}_cell{gid}.tif")
+                    with rasterio.open(pp) as pds:
+                        model = pds.read(band)
+                else:
+                    model = stitch_model_to_cell(ds, tiles)
+            if model.shape != rf.shape:
+                print(f"STOP: shape mismatch {os.path.basename(cell)}: {model.shape} vs {rf.shape}")
+                return
             cm = cell_confusion(rf, model)
             if cm.sum() > 0:
                 cms.append(cm)
-        for t in tiles:
-            t.close()
+        if tiles:
+            for t in tiles:
+                t.close()
         cms = np.array(cms)
         n = len(cms)
         census = cms.sum(0)
@@ -352,8 +421,8 @@ def main():
     # plain-text headline
     n_cells = variant_rows[0]["n_cells"]
     lines = ["collapsed 5-class census (model vs interpreted reference)",
-             f"cells: {n_cells} (de-duplicated, seed 42) from the "
-             f"{N_FRAME:,}-cell frame; FPC sqrt(1 - n/N) applied to ratio-estimator CIs",
+             f"cells: {n_cells} (adjudicated reference, temporally-matched per-bracket map field) "
+             f"from the {N_FRAME:,}-cell frame; FPC sqrt(1 - n/N) applied to ratio-estimator CIs",
              f"NOTE: the plan specified 154 cells; the current data holds {n_cells} interpreted "
              f"cells (36/year x 5 years, all overlapping the model), reflecting cells added since. "
              f"The FPC is unchanged to 3 dp (0.996 either way), so the CIs are unaffected.", "",

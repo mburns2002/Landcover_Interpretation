@@ -657,10 +657,13 @@ Full confusion matrix per variant under the 5-class collapsed scheme, as a **cen
 interpreted cells (every valid pixel counted), not a sampling experiment. Scheme: Stable (urban,
 agriculture, grass/shrub, forest, water, wetland, other) plus the four change classes kept
 distinct (Harvest, Development, Insect/Disease, Beaver). Unknown (10) is excluded; Fire (40) is
-empty. The collapse is applied after the crosswalk to both reference and model. Reference =
-interpreted cells de-duplicated to one per location (numpy `default_rng` seed 42), all target
-years. Variants **v2–v6 including v6** — the collapse is exactly the condition under which its
-per-pixel behaviour might change, so excluding it would beg the question.
+empty. The collapse is applied after the crosswalk to both reference and model. Reference = the
+**adjudicated** interpreted cell per location (`exports/truth_selections.csv`, the reviewer chosen
+per grid_id), all target years. The map field is the **temporally-matched per-bracket predictions**
+(`data/raw/transfer_predictions`, band per variant), so each cell is scored against the embedding
+classification for its own NAIP bracket rather than the single static 2018/2020 mosaic. Variants
+**v2–v6 including v6** — the collapse is exactly the condition under which its per-pixel behaviour
+might change, so excluding it would beg the question.
 Source: `scripts/collapsed_5class_confusion.py`.
 
 Files: `confusion_<v>_counts.csv` / `_rownorm.csv` (raw and row-normalized 5×5, reference on rows
@@ -679,13 +682,15 @@ bootstrap stays positive, which is why the cross-check is reported. **Cell count
 the model; the FPC is 0.996 either way, so the CIs are unaffected.
 
 Headline (stated plainly): **OA is dominated by the ~98.5% Stable class and every variant's OA is
-below the all-Stable baseline of 0.985** — labeling everything Stable beats every model — with
-**kappa ≈ 0** (v2 0.884 / κ 0.025, v3 0.807 / 0.009, v4 0.941 / 0.063, v5 0.767 / 0.007, v6 0.750
-/ 0.007). So under the collapse the maps carry almost no change-detection information; v4's higher
-OA is just closer agreement on Stable, not skill. The row-normalized matrices show why: change
-classes overwhelmingly map to Stable (Harvest 0.78→Stable, Development 0.89→Stable for v2), and
-Stable leaks to Beaver (1.35 M px for v2), so change-class precision is near zero (Beaver 0.002,
-Development 0.007). macro-F1 here (~0.18–0.22) averages 5 classes versus 10 in the 10-class
+below the all-Stable baseline of 0.984** — labeling everything Stable beats every model — with
+**kappa ≈ 0** (v2 0.872 / κ 0.043, v3 0.828 / 0.021, v4 0.894 / 0.074, v5 0.793 / 0.014, v6 0.596
+/ 0.005). Temporal matching lowers the two variants that overfit the 2018/2020 mosaic (v4 0.941 →
+0.894, v6 0.750 → 0.596) without moving the conclusion: kappa stays near zero across the board. So
+under the collapse the maps carry almost no change-detection information; v4's higher OA is just
+closer agreement on Stable, not skill. The row-normalized matrices show why: change
+classes overwhelmingly map to Stable (Harvest 0.60→Stable, Development 0.78→Stable for v2), and
+Stable leaks to Beaver (1.23 M px for v2), so change-class precision is near zero (Beaver 0.002,
+Development 0.010). macro-F1 here (~0.16–0.22) averages 5 classes versus 10 in the 10-class
 matrices and is **not comparable as a level**.
 
 ## model_comparison_2018_2020/ — interpreted vs model, temporally matched cells
