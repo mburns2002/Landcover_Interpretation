@@ -182,7 +182,7 @@ Reviewers agree strongly on unambiguous classes (Water 0.90, Forest 0.89,
 Agriculture 0.83 on the confusion diagonal) and diverge on transitional/disturbance
 classes (Grass/Shrub, Wetland, Development, Insect/Disease, Beaver) — e.g. one
 reviewer's Insect/Disease is called Forest by the other 71% of the time. Agreement
-also varies by reviewer pairing (mina-robert 0.87 highest; bekka-mina 0.72 lowest).
+also varies by reviewer pairing. 
 
 `scripts/disagreement_summary.py` post-processes those results into (a) the class
 boundaries driving the most disagreement and (b) the lowest-agreement pairs flagged
@@ -197,7 +197,7 @@ It writes `class_disagreement_ranked.csv`, `per_class_contested.csv`,
 `flagged_pairs_for_review.csv`. Just four boundaries account for ~68% of all
 disagreement: Forest↔Wetland (22%), Agriculture↔Grass/Shrub (17%),
 Grass/Shrub↔Forest (14%), and Grass/Shrub↔Wetland (14%). 17 pairs fall below 0.70
-overall agreement (worst: grid 10333 bekka-vs-mina, 0.48).
+overall agreement. 
 
 To browse every pair figure in VSCode, `scripts/pairs_contact_sheet.py` stacks them
 into paginated overview PNGs (sorted lowest-agreement first), or opens an arrow-key
