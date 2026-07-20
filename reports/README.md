@@ -288,7 +288,13 @@ v5 is closest to the interpreted scale; v2/v3 over-smooth the large classes most
 (Water patches 6–8 ha vs. the interpreted 2.2 ha; Agriculture ~5 ha vs. ~1 ha). Moran's I
 mainly isolates v6 (0.09) and mildly v4 (0.71); v2/v3/v5 cluster near 0.82.
 
-## Case_B_window_sampling/ — Approach B window sampling
+## window_sampling_by_approach/ — per-approach window sampling (grouping)
+
+The four per-approach folders below (`Case_A/B/C/D_window_sampling/`) are grouped here. They
+sweep window size W over the exhaustive tiling per approach and use the static v2-v6 mosaic
+reference; the unified sampling-design study is `Case_ABCD_sampling/`.
+
+## window_sampling_by_approach/Case_B_window_sampling/ — Approach B window sampling
 
 Implements Approach B (dominant pixel-pair per window) from Robert's window-sampling
 framework (`disturbance_uncertainty/docs/window_sampling_methods.md`), adapted from binary to
@@ -316,7 +322,7 @@ noise). This is a diagnostic of how within-window aggregation changes the assess
 better accuracy: the per-window design keeps inclusion probabilities exact but effective sample
 size falls as ~1/W² (windows per cell 113,576 → 1,369 from W=1 to W=9; edge discard ≤ 2.4%).
 
-## Case_C_window_sampling/ — Approach C window sampling
+## window_sampling_by_approach/Case_C_window_sampling/ — Approach C window sampling
 
 Implements Approach C (independent per-field label per window) from Robert's window-sampling
 framework, adapted to our 10-class scheme. Source: `scripts/window_sampling_approachC.py`. Same
@@ -345,7 +351,7 @@ v6 Approach-C label is a weak window summary and its v6 metrics must be read wit
 B≠C grows with W and isolates within-window heterogeneity: ~7% of windows at W=9 for the smooth
 versions, but **~15% for v6** (0.11 at W=3 → 0.15 at W=9), where B and C most often diverge.
 
-## Case_D_window_sampling/ — Approach D window sampling (per class)
+## window_sampling_by_approach/Case_D_window_sampling/ — Approach D window sampling (per class)
 
 Implements Approach D (proportional agreement scatter) from Robert's framework, **per class**
 rather than collapsed to binary. Source: `scripts/window_sampling_approachD.py`. Same setup as
@@ -372,7 +378,7 @@ for the rare disturbance classes: its Pearson corr is ≈0 there, i.e. its per-p
 diffuse, near-constant proportions that don't track the reference — the low RMSE reflects uniform
 smallness, not agreement, and should be read with the corr column, not on its own.
 
-## Case_A_window_sampling/ — Approach A as a design experiment
+## window_sampling_by_approach/Case_A_window_sampling/ — Approach A as a design experiment
 
 Approach A (pixel-level enumeration) from Robert's framework, run as a DESIGN EXPERIMENT, not
 another aggregation scheme. Source: `scripts/window_sampling_approachA.py`. Under the exhaustive
@@ -409,16 +415,26 @@ for v6.
 ## Case_ABCD_sampling/ — sampling experiment against known truth
 
 A/B/C/D under two sampling designs, measured against the exhaustive-tiling census (which is
-the known truth — we have every pixel). Source:
-`scripts/sampling_experiment_ABCD.py --truth exports/truth_selections.csv`. Separate from
-`Case_{A,B,C,D}_window_sampling/` (those are the census). **Draws from designs whose properties we
-characterize — NOT accuracy estimates.** Setup: interpreted reference vs. model v2–v6, one
-interpretation per location from the **adjudicated truth set** (`truth_selections.csv`,
-`notebooks/adjudicate_truth.ipynb`), all years, 180 cells; the sampling randomness stays seed 42
-(`reference.txt`). Switching from the earlier random seed-42 dedup barely moves anything: the
-census OA shifts by ≤0.002 per variant (v2 0.663, v3 0.612, v4 0.509, v5 0.572, v6 0.188) and the
-design conclusions are unchanged. cell = primary sampling unit, pixels within a cell = census.
-Population = the exhaustive
+the known truth — we have every pixel). Source: `scripts/sampling_experiment_ABCD.py --truth
+exports/truth_selections.csv --preds data/raw/transfer_predictions`. Separate from
+`window_sampling_by_approach/Case_{A,B,C,D}_window_sampling/` (those are the census). **Draws from
+designs whose properties we characterize — NOT accuracy estimates.** Setup: interpreted reference
+vs. model v2–v6, one interpretation per location from the **adjudicated truth set**
+(`truth_selections.csv`, `notebooks/adjudicate_truth.ipynb`), all years, 180 cells; the sampling
+randomness stays seed 42 (`reference.txt`). The map field is now the **temporally-matched
+per-bracket prediction** for each cell (`pred_<bracket>_cell*.tif`, the same maps used in
+`transfer_confusion/`), so every cell is compared against the classifier applied to its own NAIP
+bracket, not the single 2018/2020 mosaic. cell = primary sampling unit, pixels within a cell =
+census. Population = the exhaustive
+
+Effect of the temporal matching on the census (10-class, W=1): the sampling-design conclusions
+(design effect, stratification efficiency, class absence) are unchanged, but the census accuracy
+now reflects temporal transfer. **v4 drops sharply, OA 0.509 → 0.245 (kappa 0.32 → 0.12) and v6
+0.188 → 0.130**, since their 2018/2020 overfit does not carry to the other brackets and each cell
+is now scored against its own-bracket prediction; v2 (0.66), v3 (0.61 → 0.64), and v5 (0.57 →
+0.59) barely move. The static mosaic had masked v4's transfer failure by comparing its 2018/2020
+map against off-year references. The 5-class collapse shifts the same way (v4 OA 0.940 → 0.894,
+v6 0.749 → 0.596; kappa still ~0 for every variant, so no change-detection skill either way).
 non-overlapping W×W tiling windows with a jointly-valid center; sampling draws n distinct
 (non-overlapping) windows. W ∈ {1,3,5,7,9}; n ∈ {20,50,100,200,500,1000,2000,5000} total across
 the frame; 100 iterations per (n, W, design); seeds from base 42. **W=1 collapses A=B=C —
@@ -458,10 +474,12 @@ Development ~0.18, Insect/Disease ~0.27) and hurts the common classes (Forest ~1
 The sampling experiment (as `Case_ABCD_sampling/`) rerun under a **5-class collapse**: all stable
 classes merged into **Stable** (urban/agriculture/grass-shrub/forest/water/wetland/other), the
 four change classes kept distinct (Harvest, Development, Insect/Disease, Beaver). Source:
-`scripts/sampling_experiment_ABCD.py --collapse --truth exports/truth_selections.csv`. The
-reference points are now the **adjudicated interpretation per location** (`truth_selections.csv`,
-`notebooks/adjudicate_truth.ipynb`), not the earlier random seed-42 dedup; the sampling randomness
-stays seed 42 (`reference.txt` records this). **Unknown (unattributed change, no model equivalent)
+`scripts/sampling_experiment_ABCD.py --collapse --truth exports/truth_selections.csv --preds
+data/raw/transfer_predictions`. The reference points are the **adjudicated interpretation per
+location** (`truth_selections.csv`, `notebooks/adjudicate_truth.ipynb`) and the map field is the
+**temporally-matched per-bracket prediction** per cell (as in `Case_ABCD_sampling/`); the sampling
+randomness stays seed 42 (`reference.txt` records both). **Unknown (unattributed change, no model
+equivalent)
 is excluded** — a substantive exclusion, not a technicality: dropping observed-but-unattributed
 disturbance makes the Stable stratum marginally purer than the landscape. Excluded Unknown pixels
 under the adjudicated reference: **4,139 (0.020% of the frame)** — still marginal, though larger
@@ -471,12 +489,13 @@ comparisons are recomputed under the 5-class scheme (the 10-class census does no
 A=B=C verified. Files mirror the 10-class folder (`census.csv`, `stratum_ceiling.csv`,
 `metrics_by_n.csv`, …) plus the comparison below.
 
-Switching to the adjudicated reference barely moves the sampling results: the collapsed census is
-v2 OA 0.883 / kappa 0.027, v3 0.806 / 0.011, v4 0.940 / 0.062, v5 0.767 / 0.008, v6 0.749 / 0.006,
-all within a few thousandths of the random-reference version, and the design-effect and
-stratification findings are unchanged. Note the 10-class `Case_ABCD_sampling/` folder and the
-`sampling_collapse_comparison.py` outputs still use the random-reference reference; only this
-5-class folder was regenerated with the adjudicated set.
+Under the temporally-matched map field the collapsed census is v2 OA 0.872 / kappa 0.044, v3 0.828
+/ 0.021, v4 0.894 / 0.074, v5 0.793 / 0.014, v6 0.596 / 0.005 — **kappa is still ~0 for every
+variant, so no change-detection skill either way**, and the temporally-sensitive variants drop
+(v4 OA 0.940 → 0.894, v6 0.749 → 0.596) just as in the 10-class matrix. The design-effect and
+stratification findings are unchanged. Both this folder and `Case_ABCD_sampling/` now use the
+adjudicated reference and the matched per-bracket map field; the `sampling_collapse_comparison.py`
+outputs (which compare the two) will pick this up on their next run.
 
 Collapsed census (v2, W=1): OA 0.883 but kappa 0.03 — Stable dominance (**~98.5%** of center
 pixels) inflates OA while revealing little change skill. Stratum ceiling: Stable 98.5%, Harvest

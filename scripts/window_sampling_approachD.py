@@ -25,7 +25,7 @@ Reading the result
   in the right general area but misplaces pixels locally. Quantified by RMSE around the 1:1 line
   (also MAE, bias, Pearson r), reported per version x W x class.
 
-Outputs (reports/Case_D_window_sampling/)
+Outputs (reports/window_sampling_by_approach/Case_D_window_sampling/)
   - window_sampling_metrics.csv   version x W x class: n_retained, n_dropped, frac_dropped,
                                   rmse, mae, bias, corr
   - prop_scatter_<version>.png    10 classes (rows) x W (cols) proportional-agreement densities
@@ -45,7 +45,7 @@ import rasterio
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import compare_interpreted_vs_model as C
 
-OUT = "reports/Case_D_window_sampling"
+OUT = "reports/window_sampling_by_approach/Case_D_window_sampling"
 WS = [3, 5, 7, 9]
 N = 10
 VERSIONS = ["v2", "v3", "v4", "v5", "v6"]

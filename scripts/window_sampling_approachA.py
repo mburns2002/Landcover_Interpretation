@@ -34,7 +34,7 @@ Quantities:
 
 These are draws from a design whose properties we characterize -- NOT accuracy estimates.
 
-Outputs (reports/Case_A_window_sampling/)
+Outputs (reports/window_sampling_by_approach/Case_A_window_sampling/)
   - approachA_design.csv     per version x n x W: census, mean/SD/CI of each metric, bias,
                              mean pixels, binomial SD, design effect, SD ratio, eff. n
   - sd_vs_cost.png           SD(OA) vs pixels sampled (n*W^2), one line per W, per version
@@ -56,7 +56,7 @@ import rasterio
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import compare_interpreted_vs_model as C
 
-OUT = "reports/Case_A_window_sampling"
+OUT = "reports/window_sampling_by_approach/Case_A_window_sampling"
 NS = [1, 2, 5, 10, 25, 50]
 WS = [1, 3, 5, 7, 9]
 N = 10

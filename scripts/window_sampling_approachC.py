@@ -34,7 +34,7 @@ Verification
   W=1 must be identical to B at W=1 and to the per-pixel `compare_interpreted_vs_model.py`
   confusion. All three are asserted equal before proceeding.
 
-Outputs (reports/Case_C_window_sampling/)
+Outputs (reports/window_sampling_by_approach/Case_C_window_sampling/)
   - window_sampling_metrics.csv     version x W: OA, macro-F1, mean IoU, kappa, n_windows,
                                     frac_map_majority, frac_ref_majority, n_bne, frac_bne,
                                     windows_per_cell, edge-discard
@@ -55,8 +55,8 @@ import rasterio
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import compare_interpreted_vs_model as C
 
-OUT = "reports/Case_C_window_sampling"
-B_METRICS = "reports/Case_B_window_sampling/window_sampling_metrics.csv"
+OUT = "reports/window_sampling_by_approach/Case_C_window_sampling"
+B_METRICS = "reports/window_sampling_by_approach/Case_B_window_sampling/window_sampling_metrics.csv"
 WS = [1, 3, 5, 7, 9]
 N = 10
 VERSIONS = ["v2", "v3", "v4", "v5", "v6"]

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Sampling experiment against known truth: approaches A/B/C/D under two designs.
 
-Separate from the exhaustive-tiling runs in Case_{A,B,C,D}_window_sampling/ (those are the
+Separate from the exhaustive-tiling runs in window_sampling_by_approach/Case_{A,B,C,D}_window_sampling/ (those are the
 census); this measures how fast SAMPLED estimates approach that census, and whether they get
 there at all. Draws from designs whose properties we characterize -- NOT accuracy estimates.
 
@@ -136,7 +136,48 @@ def cm_metrics(cm):
     return oa, kappa, macro, f1, rec, prec
 
 
-def precompute_population(cells, ref_cache, tiles, W):
+PRED_BAND = {"v2": 1, "v3": 2, "v4": 3, "v5": 4, "v6": 5}   # band order in pred_<bracket>_cell*.tif
+
+
+def _cell_bracket_gid(path):
+    # the cell's NAIP bracket (opt_<y1>_<y2>) and zero-padded grid id, from the filename
+    m = re.search(r"grid_(\d+)_.*opt_(\d{4}_\d{4})", os.path.basename(path))
+    return str(int(m.group(1))).zfill(5), m.group(2)
+
+
+def build_model_cache(cells, version, preds_dir, tiles, ref_cache):
+    """Per-cell model field for one variant (common codes 1..10, collapsed to 1..5 if COLLAPSE).
+
+    With preds_dir, the map is the cell's temporally-matched per-bracket prediction band, aligned
+    pixel-for-pixel with the reference. Otherwise it is the static v2-v6 mosaic stitched to the cell.
+    """
+    band = PRED_BAND[version]
+    cache, bad = {}, []
+    for f in cells:
+        if preds_dir:
+            gid, bracket = _cell_bracket_gid(f)
+            pp = os.path.join(preds_dir, bracket, f"pred_{bracket}_cell{gid}.tif")
+            if not os.path.exists(pp):
+                bad.append((os.path.basename(f), f"no prediction: {pp}")); continue
+            with rasterio.open(pp) as ds:
+                mdl = ds.read(band)
+        else:
+            with rasterio.open(f) as ds:
+                mdl = C.stitch_model_to_cell(ds, tiles)
+        if COLLAPSE:                                  # common 1..10 -> collapsed 1..5
+            mdl = _MODEL_COLLAPSE[np.where(mdl <= 10, mdl, 0)]
+        if mdl.shape != ref_cache[f].shape:
+            bad.append((os.path.basename(f), f"shape {mdl.shape} vs ref {ref_cache[f].shape}")); continue
+        cache[f] = mdl
+    if bad:
+        print(f"STOP: {len(bad)} model/prediction problem(s):")
+        for b in bad[:10]:
+            print("  ", b)
+        raise SystemExit(1)
+    return cache
+
+
+def precompute_population(cells, ref_cache, model_cache, W):
     """Build per-window population arrays for one variant and window size W.
 
     Returns dict with, over windows whose center pixel is jointly valid:
@@ -148,10 +189,7 @@ def precompute_population(cells, ref_cache, tiles, W):
     half = W // 2
     for f in cells:
         ref = ref_cache[f]
-        with rasterio.open(f) as ds:
-            mdl = C.stitch_model_to_cell(ds, tiles)
-        if COLLAPSE:                                  # common 1..10 -> collapsed 1..5
-            mdl = _MODEL_COLLAPSE[mdl]
+        mdl = model_cache[f]                          # common 1..10 (or collapsed 1..5), per cell
         H, Wd = ref.shape
         nH, nW = H // W, Wd // W
         if nH == 0 or nW == 0:
@@ -246,6 +284,9 @@ def main():
     ap.add_argument("--truth", default=None,
                     help="use the adjudicated reviewer per location from this CSV instead of the "
                          "seed-42 random dedup (the sampling randomness stays seed 42)")
+    ap.add_argument("--preds", default=None,
+                    help="use the temporally-matched per-bracket prediction rasters in this dir "
+                         "(pred_<bracket>_cell<id>.tif) as the map field instead of the static mosaics")
     args = ap.parse_args()
 
     global N, OUT, COLLAPSE
@@ -271,9 +312,12 @@ def main():
         cells, ndup = C.dedupe_cells(cells, SEED)
         ref_src = f"one interpretation per location, random dedup, seed {SEED}"
         print(f"de-duplicated: {ndup} location(s); {len(cells)} cells (all target years, seed {SEED})")
+    map_src = (f"temporally-matched per-bracket predictions ({args.preds})" if args.preds
+               else "static v2-v6 mosaics (single 2018/2020 classification)")
     os.makedirs(OUT, exist_ok=True)
     with open(os.path.join(OUT, "reference.txt"), "w") as fh:
         fh.write(f"reference points: {ref_src}\n"
+                 f"map field: {map_src}\n"
                  f"sampling randomness: numpy.SeedSequence({SEED}) (unchanged)\n")
 
     ref_cache = {}
@@ -305,9 +349,10 @@ def main():
     absence_rows, realized_rows, deff_rows, dcorr_rows, effrows, pcm_rows = [], [], [], [], [], []
 
     for v in args.versions:
-        tiles = [rasterio.open(t) for t in C.model_tiles(v)]
+        tiles = None if args.preds else [rasterio.open(t) for t in C.model_tiles(v)]
+        model_cache = build_model_cache(cells, v, args.preds, tiles, ref_cache)
         for W in args.ws:
-            pop = precompute_population(cells, ref_cache, tiles, W)
+            pop = precompute_population(cells, ref_cache, model_cache, W)
             Npop = pop["cent"].size
             strata = {h: np.where(pop["cent"] == h + 1)[0] for h in range(N)}
             Nh = np.array([strata[h].size for h in range(N)])
@@ -366,8 +411,9 @@ def main():
                            metric_rows, absence_rows, realized_rows, deff_rows, dcorr_rows,
                            effrows, pcm_rows)
             print(f"  {v} W={W} done", flush=True)
-        for t in tiles:
-            t.close()
+        if tiles:
+            for t in tiles:
+                t.close()
 
     _write_and_plot(names, ceiling_rows, census_rows, metric_rows, absence_rows,
                     realized_rows, deff_rows, dcorr_rows, effrows, pcm_rows, args.versions)

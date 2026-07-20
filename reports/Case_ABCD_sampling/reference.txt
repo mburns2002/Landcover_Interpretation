@@ -1,2 +1,3 @@
 reference points: adjudicated reviewer per location (truth_selections.csv)
+map field: temporally-matched per-bracket predictions (data/raw/transfer_predictions)
 sampling randomness: numpy.SeedSequence(42) (unchanged)
