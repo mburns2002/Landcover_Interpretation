@@ -40,8 +40,10 @@ var variants = {
 
 ## interpreter_agreement/ — inter-interpreter agreement
 
-Same grid cell independently labeled by two reviewers (72 pairs; 69 pairs + a first
-mina/peter/robert triple scored as its mina-peter pair).
+The interpreted set is **180 locations** (108 single-reviewer, 72 multi-reviewer: 71 double plus
+one mina/peter/robert triple), 36 cells per NAIP bracket across 2017_2019–2021_2023. Inter-
+interpreter agreement uses the 72 multi-reviewer cells (as 72 pairs; the triple is scored as its
+first mina/peter pair, and 69 is the count of distinct reviewer pairings).
 Source: `scripts/compare_interpreters.py` + `scripts/disagreement_summary.py`.
 
 - `per_pair_metrics.csv` — one row per reviewer pair (agreement, F1, IoU, kappa)
@@ -221,11 +223,16 @@ stable classes.
 
 Some locations were interpreted by multiple reviewers. The comparison de-duplicates
 by default — keeping one randomly-chosen interpretation per location (grid + sample +
-target), seeded for reproducibility — so no location is double-counted. This trims the
-all-years set from 223 rasters to **154 locations** (and the 2019 subset from 41 to
-**30**). Pooled metrics barely change (v2 OA 0.651 → 0.657), so the earlier
-double-counting was not materially biasing the numbers. All figures below reflect the
-de-duplicated runs.
+target), seeded for reproducibility — so no location is double-counted. Pooled metrics
+barely change under de-duplication (v2 OA 0.651 → 0.657), so the earlier double-counting
+was not materially biasing the numbers.
+
+**These cached outputs reflect an earlier 154-location snapshot** (223 rasters, 30 with target
+year 2019). The current interpreted set is **180 locations** (253 rasters, 36 with target 2019).
+This all-years, static-mosaic arm is temporally mismatched for the off-2019 cells and is
+superseded by `model_comparison_2018_2020/` (date-aligned) and `transfer_confusion/` (per-bracket
+matched), so it has not been regenerated on the newer cells; treat its numbers as the original
+baseline, not the current reference.
 
 ### Selection sensitivity (`scripts/dedup_sensitivity.py`)
 
@@ -251,9 +258,9 @@ interpretation is used at each double-labeled location does not affect the concl
 
 The model maps are a 2018–2020 GEE composite (bracket year 2019). Only interpreted
 cells with **target year 2019** share that exact optical window (2018–2020); other
-target years use offset windows and are temporally misaligned. Restricting to the 30
-date-aligned, de-duplicated cells (`--targets 2019`) raises agreement for every smooth
-version:
+target years use offset windows and are temporally misaligned. Restricting to the
+date-aligned, de-duplicated cells (`--targets 2019`; 30 in this earlier snapshot, 36 in
+the current data) raises agreement for every smooth version:
 
 | version | OA (all years) | OA (2019) | ΔOA |
 |---------|:---:|:---:|:---:|
