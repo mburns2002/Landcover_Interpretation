@@ -1,0 +1,181 @@
+grid_id,sample_id,reviewer,bracket,source,note
+00122,300,bekka,2021_2023,adjudicated,"grass/shrub, not ag. and wetland, not farmland at top. "
+00180,210,peter,2021_2023,adjudicated,no beaver! 
+00193,478,bekka,2019_2021,single,
+00422,11,ash,2017_2019,adjudicated,"no waterbody present next to area, called it grass/shrub. "
+01072,495,bekka,2021_2023,single,
+01082,60,ash,2021_2023,adjudicated,"both are not ideal, left side has no wetland labeled even tho it is clearly present. On the right, harvest is mislabeled and not present on the landscape. i would prefer neither, but since we are focused on change classes, i will select left. "
+01290,105,ash,2021_2023,adjudicated,"the patch on the top right looks like ag, but the land by the river looks more like grass/shrub. the top right patch is bigger so will go with that one (left). "
+01411,433,bekka,2019_2021,single,
+01442,176,robert,2017_2019,adjudicated,"harvest agrees. right one missed small patches of insect/disease, but left one has lots of water labels in the forest, and grass and wetland labels for ag land. select right. doesnt seem to be development present, as the left has labeled "
+01481,75,bekka,2021_2023,single,
+01762,461,bekka,2017_2019,single,
+01873,146,mina,2017_2019,adjudicated,no beavers. no grass indicated. choose right. grass is present. 
+01941,253,bekka,2019_2021,adjudicated,"there is development, chose left. "
+01993,26,mina,2017_2019,adjudicated,similar. more wetland (true) on left. body of water was labeled as wetland on right. 
+02210,206,mina,2017_2019,adjudicated,similar. road expansion is better capture on right and insect/disease and not included with the harvest area. 
+02670,403,bekka,2019_2021,single,
+02770,161,mina,2017_2019,adjudicated,"similar. top area next to road is ag, not wetland. "
+03003,133,bekka,2019_2021,adjudicated,beaver present. 
+03682,356,bekka,2017_2019,single,
+03693,163,mina,2019_2021,adjudicated,big patch of wetland. 
+03900,343,bekka,2019_2021,single,
+04201,341,bekka,2017_2019,single,
+04281,240,bekka,2021_2023,single,
+04363,101,mina,2017_2019,adjudicated,more grassland than forest 
+04570,255,bekka,2021_2023,single,
+04602,476,bekka,2017_2019,single,
+04803,285,ash,2021_2023,adjudicated,"wetland next to the water, but the ag patches with no grass outlining them look more accurate. no beaver. "
+05810,523,bekka,2019_2021,single,
+06063,208,mina,2019_2021,adjudicated,harvest more accurate on the right. looks like wetland as well. no harvest in the middle 
+06143,58,mina,2019_2021,adjudicated,"no development, just ag. "
+06200,450,bekka,2021_2023,single,
+06240,313,bekka,2019_2021,single,
+06411,311,bekka,2017_2019,single,
+06553,386,bekka,2017_2019,single,
+06600,236,ash,2017_2019,adjudicated,harvest was present. 
+06711,90,bekka,2021_2023,single,
+06852,465,bekka,2021_2023,single,
+06923,330,bekka,2021_2023,single,
+07023,191,ash,2017_2019,adjudicated,wetland in top left section.  difficult one. 
+07373,73,peter,2019_2021,adjudicated,"similar. grass, and not harvest in bottom right "
+07630,238,peter,2019_2021,adjudicated,"unknown change, compared to development or harvest. "
+07690,148,mina,2019_2021,adjudicated,similar. water surrounded by wetland. 
+07870,131,mina,2017_2019,adjudicated,"water in the bottom right, surrounded by wetland "
+07921,448,bekka,2019_2021,single,
+08021,180,bekka,2021_2023,single,
+08063,506,bekka,2017_2019,single,
+08200,268,ash,2019_2021,adjudicated,"similar. i dont think the land cover is change per se, just unknown. in the end, left side more accurately labeled harvest. "
+08321,120,robert,2021_2023,adjudicated,similar ish. right one looks cleaner. 
+08382,373,bekka,2019_2021,single,
+09011,360,bekka,2021_2023,single,
+09482,135,bekka,2021_2023,single,
+09520,103,mina,2019_2021,adjudicated,left overestimates harvest. 
+09883,521,bekka,2017_2019,single,
+09920,420,bekka,2021_2023,single,
+10200,491,bekka,2017_2019,single,
+10333,41,bekka,2017_2019,adjudicated,there seems to be both insect/disease and beaver. chose left side. but neither is fully correct. 
+10542,416,bekka,2017_2019,single,
+10662,326,bekka,2017_2019,single,
+10960,446,bekka,2017_2019,single,
+11000,401,bekka,2017_2019,single,
+11160,251,mina,2017_2019,adjudicated,similar. 
+11442,405,bekka,2021_2023,single,
+11510,221,robert,2017_2019,adjudicated,"similar, more wetland on right "
+11521,371,bekka,2017_2019,single,
+11702,296,mina,2017_2019,adjudicated,
+11950,116,peter,2017_2019,adjudicated,
+11992,418,bekka,2019_2021,single,
+12123,536,bekka,2017_2019,single,
+12522,86,bekka,2017_2019,adjudicated,similar. 
+12532,390,bekka,2021_2023,single,
+12650,538,bekka,2019_2021,single,
+12763,118,ash,2019_2021,adjudicated,similar. true development is present. 
+12990,266,peter,2017_2019,adjudicated,similar. beaver present 
+12993,375,bekka,2021_2023,single,
+13120,15,bekka,2021_2023,single,
+13163,30,peter,2021_2023,adjudicated,"similar, "
+13381,59,bekka,2020_2022,single,
+13541,283,bekka,2019_2021,adjudicated,
+13691,43,mina,2019_2021,adjudicated,
+13732,28,mina,2019_2021,adjudicated,wetland in top left. 
+13843,88,peter,2019_2021,adjudicated,
+13870,150,robert,2021_2023,adjudicated,similar. grassland on top left
+13921,195,peter,2021_2023,adjudicated,
+14062,269,bekka,2020_2022,single,
+14441,435,bekka,2021_2023,single,
+14542,71,mina,2017_2019,adjudicated,similar. no development
+14620,508,bekka,2019_2021,single,
+14873,89,robert,2020_2022,adjudicated,
+14931,463,bekka,2019_2021,single,
+15022,345,bekka,2021_2023,single,
+15172,388,bekka,2019_2021,single,
+15193,328,bekka,2019_2021,single,
+15713,270,robert,2021_2023,adjudicated,
+15751,431,bekka,2017_2019,single,
+15851,525,bekka,2021_2023,single,
+16691,194,bekka,2020_2022,single,
+16793,494,bekka,2020_2022,single,
+16801,477,bekka,2018_2020,single,
+16920,374,bekka,2020_2022,single,
+17012,223,mina,2019_2021,adjudicated,
+17111,13,mina,2019_2021,adjudicated,marked unknown but it should be harvest 
+17331,209,ash,2020_2022,adjudicated,"regrowth should not be marked as unknown change, but stable. altho it is not urban either. neither of these are perfect "
+17602,492,bekka,2018_2020,single,
+17613,537,bekka,2018_2020,single,
+17731,165,bekka,2021_2023,single,
+17863,480,bekka,2021_2023,single,
+17943,193,robert,2019_2021,adjudicated,
+18400,315,bekka,2021_2023,single,
+18731,447,bekka,2018_2020,single,
+18930,522,bekka,2018_2020,single,
+19683,298,mina,2019_2021,adjudicated,
+19711,540,bekka,2021_2023,single,
+20941,281,bekka,2017_2019,adjudicated,
+21050,117,bekka,2018_2020,adjudicated,
+21102,312,bekka,2018_2020,single,
+22691,493,bekka,2019_2021,single,
+22823,464,bekka,2020_2022,single,
+23240,510,bekka,2021_2023,single,
+23753,372,bekka,2018_2020,single,
+24192,329,bekka,2020_2022,single,
+24360,72,bekka,2018_2020,adjudicated,
+24381,149,bekka,2020_2022,single,
+25072,45,bekka,2021_2023,single,
+25092,358,bekka,2019_2021,single,
+26752,178,bekka,2019_2021,adjudicated,
+26973,359,bekka,2020_2022,single,
+28412,56,robert,2017_2019,adjudicated,
+28522,282,bekka,2018_2020,single,
+29142,237,peter,2018_2020,adjudicated,
+29490,239,bekka,2020_2022,single,
+29513,419,bekka,2020_2022,single,
+29781,432,bekka,2018_2020,single,
+30292,225,bekka,2021_2023,single,
+30392,449,bekka,2020_2022,single,
+30591,387,bekka,2018_2020,single,
+31320,27,bekka,2018_2020,single,
+32460,357,bekka,2018_2020,single,
+32631,104,bekka,2020_2022,single,
+32780,344,bekka,2020_2022,single,
+34023,192,bekka,2018_2020,single,
+34240,389,bekka,2020_2022,single,
+35012,132,bekka,2018_2020,adjudicated,beaver
+35493,434,bekka,2020_2022,single,
+36361,327,bekka,2018_2020,single,
+36882,267,bekka,2018_2020,single,
+37243,552,bekka,2018_2020,single,
+39193,102,peter,2018_2020,adjudicated,
+39322,44,ash,2020_2022,adjudicated,
+39563,164,bekka,2020_2022,adjudicated,
+40091,14,bekka,2020_2022,adjudicated,
+40890,297,robert,2018_2020,adjudicated,
+41261,404,bekka,2020_2022,single,
+42180,252,bekka,2018_2020,adjudicated,insect/disease and harvest. 
+42291,134,robert,2020_2022,adjudicated,
+43442,12,peter,2018_2020,adjudicated,
+43520,42,bekka,2018_2020,single,
+44751,462,bekka,2018_2020,single,
+44811,207,bekka,2018_2020,single,
+45391,29,bekka,2020_2022,single,
+45833,222,bekka,2018_2020,adjudicated,insect/disease
+46291,179,bekka,2020_2022,adjudicated,
+46571,284,bekka,2020_2022,adjudicated,
+47523,87,ash,2018_2020,adjudicated,
+47893,57,peter,2018_2020,adjudicated,
+47961,402,bekka,2018_2020,single,
+48221,147,bekka,2018_2020,single,
+48422,314,bekka,2020_2022,single,
+48671,507,bekka,2018_2020,single,
+48680,479,bekka,2020_2022,single,
+48740,74,bekka,2020_2022,single,
+48800,162,bekka,2018_2020,adjudicated,
+49610,417,bekka,2018_2020,single,
+50520,177,bekka,2018_2020,single,
+50721,299,bekka,2020_2022,single,
+50981,539,bekka,2020_2022,single,
+51040,119,bekka,2020_2022,single,
+51183,224,robert,2020_2022,adjudicated,
+51391,509,bekka,2020_2022,single,
+52172,524,bekka,2020_2022,single,
+53151,254,robert,2020_2022,adjudicated,
