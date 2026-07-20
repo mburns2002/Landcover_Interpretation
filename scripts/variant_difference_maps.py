@@ -570,17 +570,19 @@ def render_cell_panel(out_dir, rank, score, cell, tiles, allv, mosaic_tf, rf2com
     gid = re.search(r"grid_(\d+)", cell["name"]).group(1)
     km = cell["width"] * 10 / 1000
 
-    fig, axes = plt.subplots(2, 3, figsize=(15, 10.4))
+    fig, axes = plt.subplots(2, 3, figsize=(15, 10.6))
     for ax, (label, arr) in zip(axes.ravel(), panels):
-        ax.imshow(arr, cmap=cls_cmap, norm=cls_norm, interpolation="nearest")
-        ax.set_title(label, fontsize=11); ax.set_xticks([]); ax.set_yticks([])
+        # aspect="auto" so each image fills its cell rather than overflowing into the row above's
+        # title; keeps the panel titles clear of the images
+        ax.imshow(arr, cmap=cls_cmap, norm=cls_norm, interpolation="nearest", aspect="auto")
+        ax.set_title(label, fontsize=11, pad=6); ax.set_xticks([]); ax.set_yticks([])
     handles = [Patch(facecolor=colors[c], edgecolor="k", label=f"{c} {names[c]}")
                for c in range(1, 11)]
     fig.legend(handles=handles, loc="lower center", ncol=10, fontsize=8)
     fig.suptitle(f"interpreted cell {gid}  ({km:.1f} x {km:.1f} km, same extent in every panel)  "
                  f"·  all five variants vs the interpreted reference  ·  ranked #{rank} by v2-v5 "
                  f"in-cell disagreement ({score * PIX_HA:.0f} ha)", fontsize=11)
-    fig.tight_layout(rect=[0, 0.05, 1, 0.95])
+    fig.tight_layout(rect=[0, 0.05, 1, 0.94], h_pad=2.5)
     fig.savefig(os.path.join(out_dir, f"cell{rank:02d}_grid{gid}.png"), dpi=140,
                 bbox_inches="tight")
     plt.close(fig)
