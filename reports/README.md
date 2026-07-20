@@ -173,7 +173,7 @@ max 16.4 ha). Symmetrized, the biggest confusions are **Forest↔Insect/Disease 
 Forest↔Harvest (241 ha)**, then Grass/Shrub↔Harvest (118 ha), Wetland↔Harvest (74 ha), and
 Agriculture↔Harvest (48 ha): the question of whether a stand is disturbed or stable forest, or
 whether cleared/senescing vegetation is harvest or stable. Unknown-vs-stable is a separate 4,557 px
-(45.6 ha).
+(45.6 ha). `examples/` renders the 10 largest disagreements (`scripts/plot_change_stable_examples.py`): the two reviewers' cells side by side in the RF interpreted colours with the disagreed area outlined, e.g. rank 1 is cell 20941 where bekka mapped 117 ha of Insect/Disease that mina mapped as Forest.
 
 ## model_comparison/ — interpreted vs. AlphaEarth model maps
 
