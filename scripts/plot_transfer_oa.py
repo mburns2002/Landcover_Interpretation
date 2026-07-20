@@ -11,12 +11,13 @@ Outputs -> reports/transfer_confusion/oa_by_bracket.png, oa_by_variant_bracket.c
 
 import os
 
+import argparse
+
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import pandas as pd
 
-DIR = "reports/transfer_confusion"
 BRACKETS = ["2017_2019", "2018_2020", "2019_2021", "2020_2022", "2021_2023"]
 CONTROL = "2018_2020"
 VARIANTS = ["v2", "v3", "v4", "v5", "v6"]
@@ -24,6 +25,10 @@ VPAL = {"v2": "#1f77b4", "v3": "#2ca02c", "v4": "#9467bd", "v5": "#ff7f0e", "v6"
 
 
 def main():
+    ap = argparse.ArgumentParser(description=__doc__)
+    ap.add_argument("--dir", default="reports/transfer_confusion",
+                    help="transfer confusion folder to read/write (default: reports/transfer_confusion)")
+    DIR = ap.parse_args().dir
     long = pd.read_csv(os.path.join(DIR, "transfer_metrics_long.csv"))
     # oa is repeated on every class row, so one value per (variant, bracket)
     oa = (long.groupby(["variant", "bracket"]).OA.first().unstack("bracket")

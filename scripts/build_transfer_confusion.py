@@ -19,6 +19,7 @@ Outputs -> reports/transfer_confusion/
 Requires: rasterio, numpy, pandas
 """
 
+import argparse
 import glob
 import os
 import re
@@ -60,17 +61,18 @@ def pad(gid):
 
 
 def build_reference_index():
-    """cell_id -> sorted list of reference raster paths (10 m Sentinel-2 rasters only)."""
+    """cell_id -> sorted list of (reviewer, path) for the 10 m Sentinel-2 reference rasters."""
     idx = defaultdict(list)
+    rx = re.compile(r"reviewer_([A-Za-z]+)_grid_(\d+)_sample_", re.I)
     for p in sorted(glob.glob(os.path.join(RF_DIR, "**", "rf_class*.tif"), recursive=True)):
-        m = re.search(r"grid_(\d+)_sample_", os.path.basename(p))
+        m = rx.search(os.path.basename(p))
         if not m:
             continue
         # skip non-10 m rasters (e.g. the out-of-scope 30 m landsat record) so they never match
         with rasterio.open(p) as ds:
             if not (ds.transform.a == 10 and ds.transform.e == -10):
                 continue
-        idx[pad(m.group(1))].append(p)
+        idx[pad(m.group(2))].append((m.group(1).lower(), p))
     return {k: sorted(v) for k, v in idx.items()}
 
 
@@ -83,13 +85,38 @@ def choose_references(ref_index):
     rng = np.random.default_rng(SEED)
     chosen, n_double = {}, 0
     for cid in sorted(ref_index):
-        paths = ref_index[cid]
-        if len(paths) > 1:
+        rp = ref_index[cid]
+        if len(rp) > 1:
             n_double += 1
-            chosen[cid] = paths[int(rng.integers(len(paths)))]
+            chosen[cid] = rp[int(rng.integers(len(rp)))][1]
         else:
-            chosen[cid] = paths[0]
+            chosen[cid] = rp[0][1]
     return chosen, n_double
+
+
+def load_truth(truth_csv):
+    """cell_id -> chosen reviewer, from the adjudicated truth selections."""
+    df = pd.read_csv(truth_csv, dtype=str, keep_default_na=False)
+    return {pad(r.grid_id): r.reviewer.strip().lower() for r in df.itertuples()}
+
+
+def choose_references_truth(ref_index, truth):
+    """Pick the adjudicated reviewer's reference per cell_id. Returns (chosen, n_multi, missing, mismatch)."""
+    chosen, n_multi, missing, mismatch = {}, 0, [], []
+    for cid in sorted(ref_index):
+        revpaths = ref_index[cid]
+        want = truth.get(cid)
+        if want is None:                                    # indexed cell absent from the truth set
+            missing.append(cid)
+            continue
+        match = [p for r, p in revpaths if r == want]
+        if not match:                                       # truth names a reviewer with no raster here
+            mismatch.append((cid, want, [r for r, _ in revpaths]))
+            continue
+        chosen[cid] = match[0]
+        if len(revpaths) > 1:
+            n_multi += 1
+    return chosen, n_multi, missing, mismatch
 
 
 def grids_match(a, b, atol=1e-6):
@@ -195,11 +222,39 @@ def metrics(M):
 
 
 def main():
-    os.makedirs(OUT, exist_ok=True)
+    ap = argparse.ArgumentParser(description=__doc__,
+                                 formatter_class=argparse.RawDescriptionHelpFormatter)
+    ap.add_argument("--truth", default=None,
+                    help="use the adjudicated reviewer per cell from this CSV instead of a random pick")
+    ap.add_argument("--out", default=None, help="output folder (default depends on --truth)")
+    args = ap.parse_args()
+
+    global OUT
     ref_index = build_reference_index()
-    chosen_ref, n_double = choose_references(ref_index)
-    print(f"reference cells indexed: {len(ref_index)}   double-interpreted (>=2 reviewers): "
-          f"{n_double}  -> one chosen at random per cell (default_rng seed {SEED})")
+    if args.truth:
+        truth = load_truth(args.truth)
+        chosen_ref, n_double, missing, mismatch = choose_references_truth(ref_index, truth)
+        ref_desc = (f"the adjudicated reviewer from {os.path.basename(args.truth)} "
+                    f"(notebooks/adjudicate_truth.ipynb)")
+        OUT = args.out or "reports/transfer_confusion_adjudicated"
+        os.makedirs(OUT, exist_ok=True)
+        print(f"reference cells indexed: {len(ref_index)}   multi-interpreted using the adjudicated "
+              f"choice: {n_double}  -> reference from {args.truth}")
+        if missing:
+            print(f"  note: {len(missing)} indexed cell(s) not in the truth set (not scored here): "
+                  f"{missing[:10]}")
+        if mismatch:
+            print(f"  STOP: {len(mismatch)} cell(s) whose truth reviewer has no matching raster:")
+            for cid, want, have in mismatch:
+                print(f"    {cid}: truth={want}, rasters={have}")
+            raise SystemExit(1)
+    else:
+        chosen_ref, n_double = choose_references(ref_index)
+        ref_desc = f"random with a fixed seed (numpy.default_rng({SEED}))"
+        OUT = args.out or OUT
+        os.makedirs(OUT, exist_ok=True)
+        print(f"reference cells indexed: {len(ref_index)}   double-interpreted (>=2 reviewers): "
+              f"{n_double}  -> one chosen at random per cell (default_rng seed {SEED})")
 
     # per (variant, bracket) accumulator
     cms = {(v, b): np.zeros((10, 10), np.int64) for v in BANDS.values() for b in BRACKETS}
@@ -313,7 +368,7 @@ def main():
     if bracket_mismatch:
         print(f"  reference/prediction bracket mismatch: {len(bracket_mismatch)} {bracket_mismatch[:5]}")
 
-    write_note(n_double, cells_used, skipped, unmapped, bracket_mismatch)
+    write_note(n_double, cells_used, skipped, unmapped, bracket_mismatch, ref_desc)
     print(f"\nwrote {OUT}/ (25 matrices, transfer_metrics_long.csv, note)")
 
 
@@ -321,7 +376,7 @@ def _r(x):
     return round(float(x), 5) if np.isfinite(x) else ""
 
 
-def write_note(n_double, cells_used, skipped, unmapped, bracket_mismatch):
+def write_note(n_double, cells_used, skipped, unmapped, bracket_mismatch, ref_desc):
     low = []
     # low-support classes are the same across variants within a bracket, so read one variant
     long = pd.read_csv(os.path.join(OUT, "transfer_metrics_long.csv"))
@@ -356,12 +411,11 @@ def write_note(n_double, cells_used, skipped, unmapped, bracket_mismatch):
         f"outside the crosswalk and the exclude set is treated as an encoding error, counted, and "
         f"reported.",
         "",
-        "## Double-interpreted cells",
+        "## Multi-interpreted cells",
         "",
-        f"Some cell ids have two CKIT reference rasters (two reviewers). One reference per cell is "
-        f"used. The choice is random with a fixed seed (`numpy.default_rng({SEED})`), drawn in "
-        f"sorted cell-id order so it is reproducible and independent of filesystem order. "
-        f"{n_double} cells were double-interpreted and had one reference dropped for this matrix.",
+        f"Some cell ids have two or three CKIT reference rasters (multiple reviewers). One reference "
+        f"per cell is used, selected as {ref_desc}. {n_double} multi-interpreted cell(s) contributed "
+        f"their selected reference to these matrices.",
         "",
         "## Disjoint-cell caveat",
         "",

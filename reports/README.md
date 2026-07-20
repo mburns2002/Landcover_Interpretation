@@ -680,3 +680,21 @@ metrics are weak and rest on thin support. Support is reported per class with a 
 autocorrelated. Beaver in 2019_2021 (613 px, 4 cells) is the one flagged case, and its 0.69 recall
 sits against a 0.0007 precision, so its number should not be trusted. macro-F1 here averages 10
 classes and is not comparable as a level with the collapsed matrices.
+
+## transfer_confusion_adjudicated/ — same analysis, adjudicated reference
+
+The transfer confusion rerun with the **adjudicated truth reference** instead of the random pick:
+for each multi-interpreted location the reviewer chosen in `exports/truth_selections.csv`
+(`notebooks/adjudicate_truth.ipynb`) is used, and the single-interpreted cells are unchanged.
+Built with `python scripts/build_transfer_confusion.py --truth exports/truth_selections.csv`;
+`scripts/plot_transfer_oa.py --dir reports/transfer_confusion_adjudicated` adds the OA figure.
+All 180 pairs matched (0 skipped, 0 unmapped, 0 truth/raster mismatches). Same file set as
+`transfer_confusion/`.
+
+Finding: **the adjudication barely moves the aggregate metrics.** Every OA shifts by at most
+0.007 versus the random-reference version (for example v2 2017_2019 0.645 -> 0.651, v4 2017_2019
+0.087 -> 0.084), and the story is unchanged: v2/v3/v5 transfer, v4 collapses out-of-sample, v6 is
+poor throughout. This is expected, since only 72 of 180 cells change reference and the two
+reviewers of a location agree on roughly three quarters of pixels, so which reviewer is chosen is
+a small perturbation on the pooled matrices. The adjudicated version is the one to cite going
+forward; the random-reference `transfer_confusion/` is kept for comparison.
