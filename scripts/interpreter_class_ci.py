@@ -40,6 +40,18 @@ import compare_interpreters as CI  # reuse find_pairs / load_legend / confusion
 OUT = "reports/interpreter_agreement"
 HIGH, MOD = 0.70, 0.50  # reliability tier thresholds on F1
 
+# ckit label_id -> 5-class collapse: stable = the six no-change classes, then the four change classes;
+# Unknown(10) and Other(13) map to 0 (excluded, dropped), consistent with the 10-class crosswalk
+_COLLAPSE5 = np.zeros(63, np.int64)
+for _c in (0, 1, 2, 3, 4, 5):
+    _COLLAPSE5[_c] = 1
+_COLLAPSE5[20] = 2; _COLLAPSE5[30] = 3; _COLLAPSE5[50] = 4; _COLLAPSE5[62] = 5
+NAMES5 = {1: "Stable", 2: "Harvest", 3: "Development", 4: "Insect/Disease", 5: "Beaver"}
+
+
+def collapse5(a):
+    return _COLLAPSE5[np.where((a >= 0) & (a <= 62), a, 0)]
+
 
 def per_class(cm):
     """Return (f1, iou) arrays over classes from a confusion matrix (rows=A, cols=B)."""
@@ -85,12 +97,21 @@ def main():
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--boot", type=int, default=2000, help="bootstrap replicates (default: 2000)")
     ap.add_argument("--seed", type=int, default=0)
+    ap.add_argument("--collapse", action="store_true",
+                    help="collapse to the 5-class scheme (Stable plus the four change classes) instead "
+                         "of the full CKIT legend; Unknown and Other are dropped")
     args = ap.parse_args()
 
     codes, names, colors = CI.load_legend()
-    order = sorted(codes)
+    if args.collapse:
+        order, names = [1, 2, 3, 4, 5], NAMES5
+        suffix = "_5class"
+    else:
+        order = sorted(codes)
+        suffix = ""
     pairs = CI.find_pairs()
-    print(f"double-interpreted pairs: {len(pairs)}   classes: {len(order)}   boot: {args.boot}")
+    print(f"double-interpreted pairs: {len(pairs)}   classes: {len(order)}   boot: {args.boot}"
+          f"   scheme: {'5-class collapsed' if args.collapse else 'CKIT legend'}")
 
     # per-pair confusion matrices
     cms = []
@@ -102,6 +123,8 @@ def main():
             b = s.read(1)
         if a.shape != b.shape:
             continue
+        if args.collapse:
+            a, b = collapse5(a), collapse5(b)
         cm, _ = CI.confusion(a, b, order)
         cms.append(cm)
     stack = np.stack(cms)                     # (n_pairs, C, C)
@@ -144,7 +167,7 @@ def main():
     df = pd.DataFrame(rows).sort_values("f1", ascending=False).reset_index(drop=True)
 
     os.makedirs(OUT, exist_ok=True)
-    df.to_csv(os.path.join(OUT, "per_class_agreement_ci.csv"), index=False)
+    df.to_csv(os.path.join(OUT, f"per_class_agreement_ci{suffix}.csv"), index=False)
 
     # overall summary (with CIs)
     summary = dict(
@@ -154,9 +177,9 @@ def main():
         mean_iou=(round(ov_pt["mean_iou"], 3), *[round(x, 3) for x in ci(bmiou)]),
     )
 
-    write_markdown(df, summary, n, B, os.path.join(OUT, "per_class_agreement_table.md"))
-    write_latex(df, summary, n, B, os.path.join(OUT, "per_class_agreement_table.tex"))
-    forest_plot(df, os.path.join(OUT, "per_class_agreement_forest.png"))
+    write_markdown(df, summary, n, B, os.path.join(OUT, f"per_class_agreement_table{suffix}.md"))
+    write_latex(df, summary, n, B, os.path.join(OUT, f"per_class_agreement_table{suffix}.tex"))
+    forest_plot(df, os.path.join(OUT, f"per_class_agreement_forest{suffix}.png"))
 
     print("\n" + "=" * 66)
     print(df.to_string(index=False))
@@ -253,13 +276,16 @@ def forest_plot(df, path):
     from matplotlib.patches import Patch
     ax.legend(handles=[Patch(color=color[t], label=t) for t in ["High", "Moderate", "Low"]],
               loc="lower right", fontsize=8)
+    # name a couple of the least-reliable classes so the caption fits either scheme
+    weak = [r.cls for r in df.sort_values("f1").itertuples() if r.reliability in ("Low", "Moderate")][:2]
+    weak_txt = (" such as " + " and ".join(weak)) if len(weak) == 2 else ""
     _caption(fig, "Forest plot of per-class inter-interpreter agreement F1 for each land-cover "
                   "class, where each dot is the pooled point estimate and its horizontal bar is "
                   "the 95% cluster (pair) bootstrap confidence interval. F1 is the balanced "
                   "probability that the two interpreters concur given one assigned the class, and "
                   "the dashed vertical lines mark the Low, Moderate, and High reliability "
-                  "thresholds at 0.50 and 0.70. Dots colored orange or red identify classes such "
-                  "as Grass/Shrub and Wetland where the human reference itself is unreliable.")
+                  "thresholds at 0.50 and 0.70. Dots colored orange or red identify classes"
+                  f"{weak_txt} where the human reference itself is unreliable.")
     fig.savefig(path, dpi=150, bbox_inches="tight")
     plt.close(fig)
 
