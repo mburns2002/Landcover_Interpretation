@@ -356,6 +356,46 @@ def fig_change_ua(combined, path):
     plt.close(fig)
 
 
+def fig_change_classes_pooled(combined, path):
+    """Focused pooled comparison of the four change classes: UA (commission) and PA (omission),
+    spec_all vs each embedding variant."""
+    import matplotlib
+    matplotlib.use("Agg")
+    import matplotlib.pyplot as plt
+    sub = combined[combined.bracket == "pooled"]
+    sources = ["spectral_specall"] + [f"embedding_{v}" for v in EMB_VARIANTS]
+    codes = CHANGE_CLASSES
+    # reference support is the same across sources, read it from spec_all for the axis labels
+    spec_sub = sub[sub.source == "spectral_specall"].set_index("class_code")
+    sup = {c: int(spec_sub.loc[c, "support"]) for c in codes}
+    x = np.arange(len(codes))
+    w = 0.13
+    fig, axes = plt.subplots(1, 2, figsize=(15, 5.2), sharey=True)
+    panels = [(axes[0], "precision", "user's accuracy (UA), low means commission"),
+              (axes[1], "recall", "producer's accuracy (PA), low means omission")]
+    for ax, metric, title in panels:
+        for i, src in enumerate(sources):
+            s = sub[sub.source == src].set_index("class_code")
+            vals = [pd.to_numeric(s.loc[c, metric], errors="coerce") if c in s.index else np.nan
+                    for c in codes]
+            spec = src == "spectral_specall"
+            ax.bar(x + (i - 2.5) * w, vals, w, color=src_color(src), edgecolor="white",
+                   linewidth=0.3, zorder=3 if spec else 2,
+                   label="spec_all" if spec else src.replace("embedding_", ""))
+        ax.set_xticks(x)
+        ax.set_xticklabels([f"{NAMES[c]}\n(n={sup[c]:,} px)" for c in codes], fontsize=9)
+        ax.set_title(title, fontsize=10)
+        ax.set_ylim(0, 1)
+        _style(ax)
+    axes[0].set_ylabel("accuracy")
+    axes[1].legend(fontsize=8, frameon=False, ncol=6, loc="upper center", bbox_to_anchor=(0.5, -0.13))
+    fig.suptitle("pooled change-class accuracy (10-class scheme, 168 cells): spectral spec_all vs "
+                 "embedding variants", fontsize=11)
+    fig.tight_layout(rect=[0, 0, 1, 0.95])
+    fig.savefig(path, dpi=150, bbox_inches="tight")
+    plt.close(fig)
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
@@ -455,9 +495,10 @@ def main():
     fig_perclass(combined, "precision", "user's accuracy (UA)",
                  os.path.join(CMP, "compare_perclass_ua_pooled.png"))
     fig_change_ua(combined, os.path.join(CMP, "compare_change_class_ua_by_bracket.png"))
+    fig_change_classes_pooled(combined, os.path.join(CMP, "compare_change_classes_pooled.png"))
 
     print(f"\nwrote {OUT}/ (6 matrices, spectral_metrics_long.csv, note.md) and "
-          f"{CMP}/ (combined table, overall table, 4 figures)")
+          f"{CMP}/ (combined table, overall table, 5 figures)")
 
 
 if __name__ == "__main__":
