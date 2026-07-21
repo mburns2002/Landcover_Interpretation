@@ -46,11 +46,55 @@ CAPS = scs.CAPS
 LABELS5 = cc.LABELS5
 NAMES5 = cc.NAMES5
 CHANGE5 = [2, 3, 4, 5]                                    # harvest, development, insect_disease, beaver
+# per-change-class colours, matching the Case_ABCD 5-class figures (harvest orange, development green,
+# insect/disease red, beaver purple)
+CHANGE5_COLOR = {2: "#ff7f0e", 3: "#2ca02c", 4: "#d62728", 5: "#9467bd"}
 OUT = "reports/sensitivity_changecap_5class"
 
 
 def _r(x):
     return round(float(x), 5) if np.isfinite(x) else ""
+
+
+def _caption(fig, text, width=110):
+    """Add a wrapped descriptive caption below the figure, reserving space for it."""
+    import textwrap
+    wrapped = "\n".join(textwrap.wrap(text, width))
+    nlines = wrapped.count("\n") + 1
+    fig.tight_layout(rect=[0, 0.02 + 0.045 * nlines, 1, 1])
+    fig.text(0.5, 0.01, wrapped, ha="center", va="bottom", fontsize=8, color="0.35")
+
+
+def fig_change_pa_vs_cap(res, path):
+    """PA (recall) of each collapsed change class as a function of the training cap."""
+    import matplotlib
+    matplotlib.use("Agg")
+    import matplotlib.pyplot as plt
+    fig, ax = plt.subplots(figsize=(8, 5))
+    ymax = 0.0
+    for c in CHANGE5:
+        pa = [res[cap]["recall"][c - 1] for cap in CAPS]
+        ymax = max(ymax, max(pa))
+        ax.plot(CAPS, pa, "o-", lw=2.2, color=CHANGE5_COLOR[c], label=NAMES5[c])
+    ax.set_xticks(CAPS)
+    ax.set_xlabel("change-class training cap (training points)")
+    ax.set_ylabel("producer's accuracy (recall / PA)")
+    ax.set_ylim(0, ymax * 1.15)
+    ax.set_title("Collapsed change-class recall (PA) vs training cap (pooled, 180 cells)")
+    ax.legend(fontsize=8, frameon=False, title="change class")
+    ax.grid(False)
+    for s in ("top", "right"):
+        ax.spines[s].set_visible(False)
+    _caption(fig, "Producer's accuracy (recall) of each collapsed change class as a function of the "
+                  "change-class training cap, pooled over the common 180 cells (v2). PA generally "
+                  "rises with more training points for beaver, development, and harvest, since the "
+                  "classifier recovers more of the true change pixels, and it stays low and flat for "
+                  "insect/disease. The cap=200 point comes from a separate training run rather than "
+                  "the 50/100/150 sweep, which is why harvest and development dip there. Higher is "
+                  "better recall; commission (user's accuracy) stays near zero for all four classes "
+                  "regardless of cap, so improved recall does not come with improved precision.")
+    fig.savefig(path, dpi=150, bbox_inches="tight")
+    plt.close(fig)
 
 
 def build_matrix(cap, chosen_ref, common, cell_bracket):
@@ -147,6 +191,8 @@ def write_note(common, res, path):
         "- `overall_metrics_vs_cap.png`: secondary, collapsed OA, macro-F1, and kappa vs cap with the "
         "all-Stable baseline. This differs from the 10-class overall figure: the collapse raises OA "
         "(within-stable error removed) but lowers kappa, so it is a distinct view, not a duplicate.",
+        "- `change_classes_pa_vs_cap.png`: producer's accuracy (recall) of each collapsed change class "
+        "as a function of the training cap, one line per class.",
     ]
     with open(path, "w") as fh:
         fh.write("\n".join(lines) + "\n")
@@ -208,9 +254,10 @@ def main():
 
     pd.DataFrame(long_rows).to_csv(os.path.join(OUT, "sensitivity_metrics_long_5class.csv"), index=False)
     fig_overall(res, os.path.join(OUT, "overall_metrics_vs_cap.png"))
+    fig_change_pa_vs_cap(res, os.path.join(OUT, "change_classes_pa_vs_cap.png"))
     write_note(common, res, os.path.join(OUT, "note.md"))
     print(f"\nwrote {OUT}/ (4 collapsed matrices x 3 csv + png, sensitivity_metrics_long_5class.csv, "
-          f"overall_metrics_vs_cap.png, note.md)")
+          f"overall_metrics_vs_cap.png, change_classes_pa_vs_cap.png, note.md)")
 
 
 if __name__ == "__main__":
