@@ -126,7 +126,7 @@ def _plot_area(cap_M, spec_M, ref_prev, n):
         spec_frac = spec_M.sum(0)[k] / spec_total * 100
         ax.plot(CAPS, cap_frac, "o-", lw=2.3, color=CAP_COLOR, label="v2 cap sweep", zorder=3)
         ax.axhline(spec_frac, ls="--", lw=1.8, color=SPEC_COLOR, label=f"spec_all ({spec_frac:.2f}%)")
-        ax.axhline(ref_prev[c] * 100, ls="--", lw=1.8, color=REF_COLOR,
+        ax.axhline(ref_prev[c] * 100, ls="-", lw=1.8, color=REF_COLOR,
                    label=f"interpreted ({ref_prev[c] * 100:.2f}%)")
         ax.set_xticks(CAPS)
         ax.set_xlabel("training cap")
