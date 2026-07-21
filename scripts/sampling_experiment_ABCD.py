@@ -557,6 +557,16 @@ def _logscale(ax, axes="x"):
 LABELED_N = (20, 100, 500, 2000, 5000)   # label a readable subset; rest are unlabeled ticks
 
 
+def _caption(fig, text, width=120):
+    """Add a wrapped descriptive caption below the figure, reserving space for it. Call this in place
+    of fig.tight_layout(); the caption is captured by bbox_inches='tight' at save time."""
+    import textwrap
+    wrapped = "\n".join(textwrap.wrap(text, width))
+    nlines = wrapped.count("\n") + 1
+    fig.tight_layout(rect=[0, 0.02 + 0.035 * nlines, 1, 1])   # reserve bottom room for the caption
+    fig.text(0.5, 0.01, wrapped, ha="center", va="bottom", fontsize=8, color="0.35")
+
+
 def _nticks(ax, n_values, label_all=False):
     """Put ticks at the actual n values. Label only a subset by default (no sci-notation / minor
     clutter); pass label_all=True to label every n value."""
@@ -661,7 +671,13 @@ def _make_plots(names, versions):
     ax.set_ylabel("SD_stratified / SD_simple  (<1 = stratification helps)")
     ax.set_title(f"Stratification efficiency by class (v2, W=1, n={nmax}): helps rare, hurts common")
     ax.set_xticks(range(len(order))); ax.set_xticklabels(order.cls, rotation=45, ha="right"); _classic(ax)
-    fig.tight_layout(); fig.savefig(os.path.join(OUT, "strat_efficiency.png"), dpi=140, bbox_inches="tight")
+    _caption(fig, f"Ratio of the stratified to simple-random sampling standard deviation per class "
+                  f"(v2, W=1, n={nmax}). Bars below the dashed line at 1 (green) mean stratification "
+                  "reduces sampling variance for that class, above 1 (red) mean it increases it. "
+                  "Stratification helps the rare change classes, on the left, and hurts the common "
+                  "stable classes, on the right, since allocating samples to the rare strata trades "
+                  "precision on the abundant classes for precision on the scarce ones.")
+    fig.savefig(os.path.join(OUT, "strat_efficiency.png"), dpi=140, bbox_inches="tight")
     plt.close(fig)
 
     # 5) class absence vs n (simple, v2, W=1), line per class
