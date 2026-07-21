@@ -134,22 +134,44 @@ def main():
         spec = read_band(r["spec_path"], 1)
         emb = {v: read_band(os.path.join(EMB_DIR, bracket, f"pred_{bracket}_cell{gid}.tif"), VBAND[v])
                for v in EMB_VARIANTS}
-        valid = (ref >= 1) & (ref <= 10) & (spec >= 1) & (spec <= 10)
-        ad = np.zeros_like(spec, dtype=np.uint8)
-        ad[valid & (ref == spec)] = 1
-        ad[valid & (ref != spec)] = 2
-
         fig, axes = plt.subplots(2, 4, figsize=(15, 8))
-        # top row: interpreted, spec_all, agree/disagree, class legend
+        # top row: interpreted, spec_all, disagreement panel, class legend
         for ax, (arr, title) in zip(
                 [axes[0, 0], axes[0, 1]],
                 [(ref, "interpreted reference"), (spec, "spec_all (spectral)")]):
             ax.imshow(arr, cmap=class_cmap, vmin=-0.5, vmax=10.5, interpolation="nearest")
             ax.set_title(title, fontsize=11); ax.set_xticks([]); ax.set_yticks([])
-        axes[0, 2].imshow(ad, cmap=ad_cmap, vmin=-0.5, vmax=2.5, interpolation="nearest")
-        axes[0, 2].set_title("agree / disagree\n(spec_all vs interpreted)", fontsize=11)
-        axes[0, 2].set_xticks([]); axes[0, 2].set_yticks([])
-        axes[0, 2].legend(handles=ad_handles, loc="lower right", fontsize=8, framealpha=0.9)
+        adax = axes[0, 2]
+        adax.set_xticks([]); adax.set_yticks([])
+        if rank_by == "embedding":
+            # count how many of v2-v5 differ from the reference per pixel (0..4); this is the ranked
+            # quantity, so the panel visualizes the embedding disagreement rather than spec_all
+            ref_valid = (ref >= 1) & (ref <= 10)
+            count = np.zeros(ref.shape, np.int16)
+            any_valid = np.zeros(ref.shape, bool)
+            for v in EMB_VARIANTS:
+                ev = emb[v]
+                vv = ref_valid & (ev >= 1) & (ev <= 10)
+                count[vv & (ev != ref)] += 1
+                any_valid |= vv
+            disp = np.where(any_valid, count + 1, 0)       # 0 = nodata, 1..5 = 0..4 disagreeing
+            ecmap = ListedColormap(["#cccccc", "#eff3ff", "#bdd7e7", "#6baed6", "#3182bd", "#08519c"])
+            adax.imshow(disp, cmap=ecmap, vmin=-0.5, vmax=5.5, interpolation="nearest")
+            adax.set_title("embedding disagreement\n(# of v2-v5 differing from reference)", fontsize=11)
+            ecolors = ["#eff3ff", "#bdd7e7", "#6baed6", "#3182bd", "#08519c"]
+            ec_handles = [Patch(facecolor=ecolors[k],
+                                label=f"{k}" + (" (all agree)" if k == 0 else
+                                                " (all disagree)" if k == 4 else "")) for k in range(5)]
+            adax.legend(handles=ec_handles, loc="lower right", fontsize=6.5, framealpha=0.9,
+                        title="# disagreeing", title_fontsize=6.5)
+        else:
+            valid = (ref >= 1) & (ref <= 10) & (spec >= 1) & (spec <= 10)
+            ad = np.zeros(spec.shape, np.uint8)
+            ad[valid & (ref == spec)] = 1
+            ad[valid & (ref != spec)] = 2
+            adax.imshow(ad, cmap=ad_cmap, vmin=-0.5, vmax=2.5, interpolation="nearest")
+            adax.set_title("agree / disagree\n(spec_all vs interpreted)", fontsize=11)
+            adax.legend(handles=ad_handles, loc="lower right", fontsize=8, framealpha=0.9)
         axes[0, 3].axis("off")
         axes[0, 3].legend(handles=class_handles, loc="center left", fontsize=9,
                           frameon=False, title="10-class scheme")
@@ -163,19 +185,24 @@ def main():
         fig.suptitle(f"cell {gid}  ·  bracket {bracket.replace('_', '-')}  ·  rank {i} of {TOP_N} by "
                      f"{rank_desc} disagreement ({r['disagree'] * 100:.0f}% of "
                      f"{r['n_valid']:,} valid px)", fontsize=13)
-        rank_caption = (
-            "This cell is among the ten with the most spec_all-vs-interpreted disagreement, so it "
-            "shows where the spectral classifier departs most from the human interpretation."
-            if rank_by == "spectral" else
-            "This cell is among the ten where the embedding variants v2-v5 disagree most with the "
-            "interpreted reference, on average, so the panels show whether the spectral spec_all map "
-            "recovers the reference where the embeddings do not (the agree/disagree panel).")
+        if rank_by == "spectral":
+            panel_desc = ("The agree/disagree panel marks where spec_all matches the reference (blue) "
+                          "or differs (vermillion), in colorblind-friendly colors. ")
+            rank_caption = ("This cell is among the ten with the most spec_all-vs-interpreted "
+                            "disagreement, so it shows where the spectral classifier departs most from "
+                            "the human interpretation.")
+        else:
+            panel_desc = ("The disagreement panel shades each pixel by how many of the embedding "
+                          "variants v2-v5 differ from the reference there (light = agreement, dark = "
+                          "all four disagree). ")
+            rank_caption = ("This cell is among the ten where the embedding variants v2-v5 disagree "
+                            "most with the interpreted reference, on average, so the panels let you "
+                            "see whether the spectral spec_all map tracks the reference where the "
+                            "embeddings do not.")
         fig.text(0.5, 0.01,
                  "Classified maps (common 10-class scheme) for one interpreted cell: the interpreted "
                  "reference, the spectral spec_all map, and the embedding variants v2, v3, v4, and v5 "
-                 "(v6, the dot-only variant, is omitted). The agree/disagree panel marks where spec_all "
-                 "matches the reference (blue) or differs (vermillion), in colorblind-friendly colors. "
-                 + rank_caption,
+                 "(v6, the dot-only variant, is omitted). " + panel_desc + rank_caption,
                  ha="center", va="bottom", fontsize=8, color="0.35", wrap=True)
         fig.tight_layout(rect=[0, 0.06, 1, 0.95])
         fig.savefig(os.path.join(OUT, f"rank{i:02d}_cell{gid}_{bracket}.png"), dpi=140,
