@@ -28,8 +28,9 @@ a cell-level bootstrap (seed 42).
 
 Outputs -> reports/collapsed_5class_confusion/
   - confusion_<v>_counts.csv / _rownorm.csv     raw and row-normalized 5x5 matrices
-  - confusion_<v>_rownorm.png                    count heatmap (colour = row proportion) with a
-                                                 PA column + support, UA row, and OA/kappa corner
+  - confusion_<v>.png                            count heatmap (cells = raw counts, colour = row
+                                                 proportion) with PA and UA margins and support
+                                                 (n) on both, and OA/kappa in the corner
   - metrics_long.csv                             long format, every metric x variant x class + CIs
   - summary_by_variant.md / .tex                 per-variant headline table (booktabs LaTeX)
   - summary.txt                                  plain-text headline
@@ -241,6 +242,7 @@ def plot_rownorm(M, version, mt, path):
 
     M = M.astype(float)
     row = M.sum(1)
+    col = M.sum(0)                                                  # predicted support for UA
     with np.errstate(invalid="ignore"):
         rn = M / np.where(row[:, None] > 0, row[:, None], np.nan)   # row proportion
     pa = np.array([mt[f"recall[{c}]"] for c in range(1, 6)])        # producer's accuracy
@@ -276,9 +278,10 @@ def plot_rownorm(M, version, mt, path):
         t = f"{pa[i]*100:.0f}%" if np.isfinite(pa[i]) else "-"
         ax.text(5, i, f"{t}\nn={int(sup[i]):,}", ha="center", va="center", fontsize=6,
                 color=txtcolor(pa[i]))
-    for j in range(5):                                   # user's accuracy row
+    for j in range(5):                                   # user's accuracy row + predicted support
         t = f"{ua[j]*100:.0f}%" if np.isfinite(ua[j]) else "-"
-        ax.text(j, 5, t, ha="center", va="center", fontsize=7, color=txtcolor(ua[j]))
+        ax.text(j, 5, f"{t}\nn={int(col[j]):,}", ha="center", va="center", fontsize=6,
+                color=txtcolor(ua[j]))
     ax.text(5, 5, f"OA {oa*100:.0f}%\nκ {kappa:.2f}", ha="center", va="center",
             fontsize=7, color=txtcolor(oa))
 
@@ -297,8 +300,9 @@ def plot_rownorm(M, version, mt, path):
 
     ax.set_title(f"{version}  ·  collapsed 5-class\n"
                  f"cells = raw counts; colour = row proportion (producer's). "
-                 f"PA = producer's accuracy (recall), UA = user's accuracy (precision), "
-                 f"n = reference support", fontsize=8, pad=26)
+                 f"PA = producer's accuracy (recall), UA = user's accuracy (precision); "
+                 f"n = reference support on PA (row totals), predicted support on UA (column totals)",
+                 fontsize=8, pad=26)
     fig.savefig(path, dpi=150, bbox_inches="tight")
     plt.close(fig)
 
@@ -426,7 +430,7 @@ def main():
         pd.DataFrame(np.round(rn, 4), index=LABELS5, columns=LABELS5).to_csv(
             os.path.join(OUT, f"confusion_{v}_rownorm.csv"))
         plot_rownorm(census, v, pt,
-                     os.path.join(OUT, f"confusion_{v}_rownorm.png"))
+                     os.path.join(OUT, f"confusion_{v}.png"))
 
         # long-format rows: overall metrics
         for mk, label in [("OA", "OA"), ("kappa", "kappa"), ("macro_F1", "macro_F1"),

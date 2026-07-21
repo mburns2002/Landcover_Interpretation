@@ -15,7 +15,7 @@ baseline OA is reported alongside.
 
 Outputs -> reports/spectral_composite_classified_maps/collapsed_5class/
   - confusion_specall_counts.csv / _rownorm.csv          raw and row-normalized 5x5
-  - confusion_specall_rownorm.png                        count heatmap, PA/UA margins, OA/kappa corner
+  - confusion_specall.png                                count heatmap, PA/UA margins with support, OA/kappa
   - metrics_long.csv                                     every metric x class with CIs
   - summary_by_variant.md / .tex / summary.txt           headline table
   - reference.txt                                        provenance
@@ -230,7 +230,7 @@ def main():
         rn = census / census.sum(1, keepdims=True)
     pd.DataFrame(np.round(rn, 4), index=LABELS5, columns=LABELS5).to_csv(
         os.path.join(OUT, "confusion_specall_rownorm.csv"))
-    cc.plot_rownorm(census, "spec_all", pt, os.path.join(OUT, "confusion_specall_rownorm.png"))
+    cc.plot_rownorm(census, "spec_all", pt, os.path.join(OUT, "confusion_specall.png"))
 
     write_metrics_long(pt, rci, bci, os.path.join(OUT, "metrics_long.csv"))
     write_summary_txt(pt, n, len(blank), os.path.join(OUT, "summary.txt"))

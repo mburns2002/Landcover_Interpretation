@@ -129,6 +129,7 @@ def render_cm(B, mt, source, path):
     import matplotlib.pyplot as plt
     B = B.astype(float)
     row = B.sum(1)
+    col = B.sum(0)                                          # predicted support for UA
     with np.errstate(invalid="ignore"):
         rn = B / np.where(row[:, None] > 0, row[:, None], np.nan)
     pa = np.array([mt["nochange_recall"][0], mt["change_recall"][0]])
@@ -157,7 +158,7 @@ def render_cm(B, mt, source, path):
         ax.text(2, i, f"{t}\nn={int(sup[i]):,}", ha="center", va="center", fontsize=7.5, color=tc(pa[i]))
     for j in range(2):
         t = f"{ua[j] * 100:.0f}%" if np.isfinite(ua[j]) else "-"
-        ax.text(j, 2, t, ha="center", va="center", fontsize=8, color=tc(ua[j]))
+        ax.text(j, 2, f"{t}\nn={int(col[j]):,}", ha="center", va="center", fontsize=7.5, color=tc(ua[j]))
     ax.text(2, 2, f"OA {oa * 100:.0f}%\nκ {kappa:.2f}", ha="center", va="center", fontsize=8, color=tc(oa))
     ax.set_xticks(range(3)); ax.set_xticklabels(BIN_LABELS + ["PA"], fontsize=9)
     ax.set_yticks(range(3)); ax.set_yticklabels(BIN_LABELS + ["UA"], fontsize=9)
@@ -168,7 +169,8 @@ def render_cm(B, mt, source, path):
     ax.set_yticks(np.arange(-0.5, 3, 1), minor=True)
     ax.grid(which="minor", color="white", lw=0.8); ax.tick_params(which="minor", length=0)
     ax.set_title(f"{source}  ·  binary change / no-change\ncells = counts; PA = recall, UA = precision, "
-                 "Change is the positive class", fontsize=9, pad=22)
+                 "Change is the positive class; n = reference support on PA, predicted support on UA",
+                 fontsize=9, pad=22)
     fig.savefig(path, dpi=150, bbox_inches="tight")
     plt.close(fig)
 

@@ -671,9 +671,11 @@ might change, so excluding it would beg the question.
 Source: `scripts/collapsed_5class_confusion.py`.
 
 Files: `confusion_<v>_counts.csv` / `_rownorm.csv` (raw and row-normalized 5×5, reference on rows
-so the row-normalized diagonal is producer's accuracy), `confusion_<v>_rownorm.png` (same style as
+so the row-normalized diagonal is producer's accuracy), `confusion_<v>.png` (same style as
 `transfer_confusion_adjudicated`: cells are raw counts coloured by row proportion, with a PA column
-plus reference support on the right, a UA row on the bottom, and OA/κ in the corner),
+plus reference support on the right, a UA row plus predicted support on the bottom, and OA/κ in the
+corner; the earlier `_rownorm.png` name is retired since the figure shows counts, not normalized
+values),
 `metrics_long.csv` (every metric × variant × class with ratio-estimator and bootstrap
 CIs and support), `summary_by_variant.md` / `.tex` (per-variant headline table, booktabs),
 `summary.txt`.

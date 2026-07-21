@@ -142,6 +142,7 @@ def render_cm_png(M, mt, variant, bracket, path):
 
     M = M.astype(float)
     row = M.sum(1)
+    col = M.sum(0)                                          # predicted support (column totals) for UA
     with np.errstate(invalid="ignore"):
         rn = M / np.where(row[:, None] > 0, row[:, None], np.nan)   # row proportion
     pa, ua, sup = mt["recall"], mt["precision"], mt["support"]
@@ -175,9 +176,10 @@ def render_cm_png(M, mt, variant, bracket, path):
         t = f"{pa[i]*100:.0f}%" if np.isfinite(pa[i]) else "-"
         ax.text(10, i, f"{t}\nn={int(sup[i]):,}", ha="center", va="center", fontsize=5.5,
                 color=txtcolor(pa[i]))
-    for j in range(10):                                  # user's accuracy row
+    for j in range(10):                                  # user's accuracy row + predicted support
         t = f"{ua[j]*100:.0f}%" if np.isfinite(ua[j]) else "-"
-        ax.text(j, 10, t, ha="center", va="center", fontsize=6, color=txtcolor(ua[j]))
+        ax.text(j, 10, f"{t}\nn={int(col[j]):,}", ha="center", va="center", fontsize=5.5,
+                color=txtcolor(ua[j]))
     ax.text(10, 10, f"OA {oa*100:.0f}%\nκ {kappa:.2f}", ha="center", va="center",
             fontsize=6.5, color=txtcolor(oa))
 
@@ -197,8 +199,9 @@ def render_cm_png(M, mt, variant, bracket, path):
     ctrl = "  [in-sample control]" if bracket == CONTROL else ""
     ax.set_title(f"{variant}  ·  {bracket}{ctrl}\n"
                  f"cells = raw counts; colour = row proportion (producer's). "
-                 f"PA = producer's accuracy (recall), UA = user's accuracy (precision), "
-                 f"n = reference support", fontsize=9, pad=28)
+                 f"PA = producer's accuracy (recall), UA = user's accuracy (precision); "
+                 f"n = reference support on PA (row totals), predicted support on UA (column totals)",
+                 fontsize=9, pad=28)
     fig.savefig(path, dpi=150, bbox_inches="tight")
     plt.close(fig)
 
