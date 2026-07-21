@@ -1,0 +1,3 @@
+reference points: adjudicated reviewer per location (truth_selections.csv)
+model field: temporally-matched per-bracket predictions (data/raw/transfer_predictions)
+spec_all: data/raw/spectral_transferability_10class_percell (single-band pred_specall per bracket); 12 of 180 cells are entirely nodata and contribute no patches

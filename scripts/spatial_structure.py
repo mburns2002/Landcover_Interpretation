@@ -177,7 +177,14 @@ def main():
     ap.add_argument("--preds", default=None,
                     help="use the temporally-matched per-bracket prediction rasters in this dir as "
                          "the model field instead of the static mosaics")
+    ap.add_argument("--spec", default=None,
+                    help="also include spec_all from this dir of single-band pred_specall rasters")
+    ap.add_argument("--out", default=None, help="output folder (default reports/spatial_structure)")
     args = ap.parse_args()
+
+    global OUT
+    if args.out:
+        OUT = args.out
 
     rf2common, names, colors = C.load_mappings()
     classes = sorted(names)  # common codes 1..10
@@ -236,6 +243,29 @@ def main():
             for t in tiles:
                 t.close()
 
+    # optional spec_all source: single-band per-bracket predictions on the same cell footprints
+    model_names = list(args.versions)
+    if args.spec:
+        model_names.append("spec_all")
+        blank = []
+
+        def spec_arrays():
+            for f in cells:
+                gid, bracket = _cell_bracket_gid(f)
+                pp = os.path.join(args.spec, bracket, f"pred_specall_{bracket}_cell{gid}.tif")
+                with rasterio.open(pp) as ds:
+                    a = ds.read(1)
+                if not (a >= 1).any():                    # entirely nodata: contributes no patches
+                    blank.append((bracket, gid))
+                yield a
+        print("  model spec_all ...", flush=True)
+        sources.append(collect_source("spec_all", spec_arrays(), classes))
+        print(f"    spec_all: {len(blank)} blank cells contributed no patches")
+        with open(os.path.join(OUT, "reference.txt"), "a") as fh:
+            fh.write(f"spec_all: {args.spec} (single-band pred_specall per bracket); "
+                     f"{len(blank)} of {len(cells)} cells are entirely nodata and contribute no "
+                     f"patches\n")
+
     # ---- summary table ----
     rows = []
     for s in sources:
@@ -261,7 +291,7 @@ def main():
                                   median_patch_px=float(np.median(v))))
     pd.DataFrame(crows).to_csv(os.path.join(OUT, "patch_size_by_class.csv"), index=False)
 
-    make_plots(sources, classes, names, colors, args.versions)
+    make_plots(sources, classes, names, colors, model_names)
 
     print("\n" + "=" * 60)
     print(summ.to_string(index=False))
@@ -280,7 +310,7 @@ def make_plots(sources, classes, names, colors, versions):
     by_name = {s["name"]: s for s in sources}
     order = ["interpreted"] + list(versions)
     palette = {"interpreted": "black", "v2": "#1f77b4", "v3": "#2ca02c",
-               "v4": "#9467bd", "v5": "#ff7f0e", "v6": "#d62728"}
+               "v4": "#9467bd", "v5": "#ff7f0e", "v6": "#d62728", "spec_all": "#8c564b"}
 
     def ecdf(a):
         a = np.sort(a)
