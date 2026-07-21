@@ -557,11 +557,12 @@ def _logscale(ax, axes="x"):
 LABELED_N = (20, 100, 500, 2000, 5000)   # label a readable subset; rest are unlabeled ticks
 
 
-def _nticks(ax, n_values):
-    """Put ticks at the actual n values and label only a subset (no sci-notation / minor clutter)."""
+def _nticks(ax, n_values, label_all=False):
+    """Put ticks at the actual n values. Label only a subset by default (no sci-notation / minor
+    clutter); pass label_all=True to label every n value."""
     nv = sorted(n_values)
     ax.set_xticks(nv)
-    ax.set_xticklabels([str(n) if n in LABELED_N else "" for n in nv])
+    ax.set_xticklabels([str(n) if (label_all or n in LABELED_N) else "" for n in nv])
     ax.minorticks_off()
 
 
@@ -685,7 +686,7 @@ def _make_plots(names, versions):
         ax.plot(sc.n, sc.mean_corr, "o-", label=cls, ms=4)
     ax.set_xlabel("n (windows)")
     ax.set_ylabel("mean per-class corr(prop_map, prop_ref)"); _logscale(ax, "x")
-    _nticks(ax, n_values)
+    _nticks(ax, n_values, label_all=True)
     ax.set_title("Approach D: per-class proportion correlation vs n (v2, W=5, simple)")
     ax.legend(fontsize=7, frameon=False, ncol=2); _classic(ax)
     fig.tight_layout(); fig.savefig(os.path.join(OUT, "d_corr_vs_n.png"), dpi=140, bbox_inches="tight")
