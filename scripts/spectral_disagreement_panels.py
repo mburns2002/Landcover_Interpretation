@@ -38,8 +38,10 @@ bmc = _load("bmc", "build_transfer_confusion.py")          # adjudicated referen
 C = _load("C", "compare_interpreted_vs_model.py")           # class names, colors, RF crosswalk
 cc = _load("cc", "collapsed_5class_confusion.py")           # 5-class collapse maps and names
 
-# collapsed 5-class colours: Stable neutral grey, the four change classes in the shared 5-class palette
-COLLAPSE_COLORS = {1: "#cccccc", 2: "#ff7f0e", 3: "#2ca02c", 4: "#d62728", 5: "#9467bd"}
+# collapsed 5-class -> 10-class code for the four change classes, so they reuse the 10-class legend
+# colours (Stable has no single 10-class colour, so it gets a neutral grey)
+COLLAPSE_TO_10 = {2: 1, 3: 2, 4: 10, 5: 9}    # Harvest, Development, Insect/Disease, Beaver
+STABLE_COLOR = "#cccccc"
 
 TRUTH = "exports/truth_selections.csv"
 SPEC_DIR = "data/raw/spectral_transferability_10class_percell"
@@ -91,7 +93,10 @@ def main():
     # class scheme: 10-class common codes, or the 5-class collapse (Stable plus four change classes)
     if collapse:
         N = 5
-        class_names, class_colors = cc.NAMES5, COLLAPSE_COLORS
+        class_names = cc.NAMES5
+        # change classes reuse the 10-class legend colours; Stable is a neutral grey
+        class_colors = {1: STABLE_COLOR}
+        class_colors.update({c: colors[t] for c, t in COLLAPSE_TO_10.items()})
         scheme_label = "collapsed 5-class"
 
         def to_ref(raw):
