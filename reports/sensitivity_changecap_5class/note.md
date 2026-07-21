@@ -27,3 +27,4 @@ OA is dominated by the ~98.5% Stable class, so read the all-Stable baseline and 
 - `sensitivity_metrics_long_5class.csv`: one row per (cap, collapsed class) with per-class UA, PA, F1, IoU, support, and predicted pixels, plus the aggregate OA, all-Stable baseline, macro-F1, mean IoU, and kappa.
 - `overall_metrics_vs_cap.png`: secondary, collapsed OA, macro-F1, and kappa vs cap with the all-Stable baseline. This differs from the 10-class overall figure: the collapse raises OA (within-stable error removed) but lowers kappa, so it is a distinct view, not a duplicate.
 - `change_classes_pa_vs_cap.png`: producer's accuracy (recall) of each collapsed change class as a function of the training cap, one line per class.
+- `change_classes_predicted_pixels_vs_cap.png`: predicted pixel count of each collapsed change class as a function of the training cap, one panel per class, with the interpreted reference count.

@@ -56,12 +56,13 @@ def _r(x):
     return round(float(x), 5) if np.isfinite(x) else ""
 
 
-def _caption(fig, text, width=110):
-    """Add a wrapped descriptive caption below the figure, reserving space for it."""
+def _caption(fig, text, top=1.0, width=110):
+    """Add a wrapped descriptive caption below the figure, reserving space for it (and leaving room
+    above for a suptitle when top < 1)."""
     import textwrap
     wrapped = "\n".join(textwrap.wrap(text, width))
     nlines = wrapped.count("\n") + 1
-    fig.tight_layout(rect=[0, 0.02 + 0.045 * nlines, 1, 1])
+    fig.tight_layout(rect=[0, 0.02 + 0.045 * nlines, 1, top])
     fig.text(0.5, 0.01, wrapped, ha="center", va="bottom", fontsize=8, color="0.35")
 
 
@@ -93,6 +94,43 @@ def fig_change_pa_vs_cap(res, path):
                   "the 50/100/150 sweep, which is why harvest and development dip there. Higher is "
                   "better recall; commission (user's accuracy) stays near zero for all four classes "
                   "regardless of cap, so improved recall does not come with improved precision.")
+    fig.savefig(path, dpi=150, bbox_inches="tight")
+    plt.close(fig)
+
+
+def fig_predicted_pixels_vs_cap(res, path):
+    """Predicted pixel count of each collapsed change class as a function of the training cap, one
+    panel per change class, with the interpreted reference count as a horizontal line."""
+    import matplotlib
+    matplotlib.use("Agg")
+    import matplotlib.pyplot as plt
+    fig, axes = plt.subplots(1, 4, figsize=(17, 4.4))
+    for ax, c in zip(axes, CHANGE5):
+        k = c - 1
+        pred = [int(res[cap]["pred_count"][k]) for cap in CAPS]
+        ref = res[CAPS[-1]]["support"][k]                  # interpreted reference count (fixed cells)
+        ax.plot(CAPS, pred, "o-", lw=2.4, color=CHANGE5_COLOR[c], label="predicted", zorder=3)
+        ax.axhline(ref, ls="--", lw=1.5, color="black", zorder=4, label=f"interpreted ({ref:,} px)")
+        ax.set_xticks(CAPS)
+        ax.set_xlabel("change-class training cap (training points)")
+        ax.set_title(NAMES5[c], fontsize=10)
+        ax.set_ylim(0, max(max(pred), ref) * 1.15)
+        ax.ticklabel_format(axis="y", style="plain")
+        ax.legend(fontsize=8, frameon=False)
+        ax.grid(False)
+        for s in ("top", "right"):
+            ax.spines[s].set_visible(False)
+    axes[0].set_ylabel("predicted pixels (pooled)")
+    fig.suptitle(f"predicted change-class pixel count vs training cap (pooled, {res['n_cells']} cells)",
+                 fontsize=11)
+    _caption(fig, "Number of pixels the model assigns to each collapsed change class as a function of "
+                  "the change-class training cap, one panel per class, with the interpreted reference "
+                  "count as a dashed black line. The predicted count grows with the cap for beaver, "
+                  "development, and harvest, since a larger cap trains the classifier to call those "
+                  "classes more often, and every cap over-predicts each class by one to two orders of "
+                  "magnitude relative to the interpreted reference. The cap=200 point comes from a "
+                  "separate training run, so it does not always continue the 50/100/150 trend.",
+                  top=0.9)
     fig.savefig(path, dpi=150, bbox_inches="tight")
     plt.close(fig)
 
@@ -193,6 +231,9 @@ def write_note(common, res, path):
         "(within-stable error removed) but lowers kappa, so it is a distinct view, not a duplicate.",
         "- `change_classes_pa_vs_cap.png`: producer's accuracy (recall) of each collapsed change class "
         "as a function of the training cap, one line per class.",
+        "- `change_classes_predicted_pixels_vs_cap.png`: predicted pixel count of each collapsed "
+        "change class as a function of the training cap, one panel per class, with the interpreted "
+        "reference count.",
     ]
     with open(path, "w") as fh:
         fh.write("\n".join(lines) + "\n")
@@ -227,6 +268,7 @@ def main():
         total = int(M.sum())
         res[cap] = dict(precision=[mt[f"precision[{c}]"] for c in range(1, 6)],
                         recall=[mt[f"recall[{c}]"] for c in range(1, 6)],
+                        pred_count=M.sum(0), support=[int(mt[f"support[{c}]"]) for c in range(1, 6)],
                         OA=mt["OA"], baseline_OA=mt["baseline_OA"], kappa=mt["kappa"],
                         macro_F1=mt["macro_F1"], mean_IoU=mt["mean_IoU"])
         pd.DataFrame(M, index=LABELS5, columns=LABELS5).to_csv(os.path.join(OUT, f"cm_cap{cap}_counts.csv"))
@@ -252,12 +294,15 @@ def main():
               f"{mt['kappa']:>8.3f}   {mt['precision[5]']:>13.3f}{mt['recall[5]']:>7.3f}"
               f"{int(M.sum(0)[4]):>10,}")
 
+    res["n_cells"] = len(common)
     pd.DataFrame(long_rows).to_csv(os.path.join(OUT, "sensitivity_metrics_long_5class.csv"), index=False)
     fig_overall(res, os.path.join(OUT, "overall_metrics_vs_cap.png"))
     fig_change_pa_vs_cap(res, os.path.join(OUT, "change_classes_pa_vs_cap.png"))
+    fig_predicted_pixels_vs_cap(res, os.path.join(OUT, "change_classes_predicted_pixels_vs_cap.png"))
     write_note(common, res, os.path.join(OUT, "note.md"))
     print(f"\nwrote {OUT}/ (4 collapsed matrices x 3 csv + png, sensitivity_metrics_long_5class.csv, "
-          f"overall_metrics_vs_cap.png, change_classes_pa_vs_cap.png, note.md)")
+          f"overall_metrics_vs_cap.png, change_classes_pa_vs_cap.png, "
+          f"change_classes_predicted_pixels_vs_cap.png, note.md)")
 
 
 if __name__ == "__main__":
