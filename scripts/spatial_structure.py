@@ -302,6 +302,16 @@ def main():
     print(f"\noutputs -> {OUT}/")
 
 
+def _caption(fig, text, top=1.0, width=125):
+    """Add a wrapped descriptive caption below the figure, reserving space for it (and leaving room
+    above for a suptitle when top < 1)."""
+    import textwrap
+    wrapped = "\n".join(textwrap.wrap(text, width))
+    nlines = wrapped.count("\n") + 1
+    fig.tight_layout(rect=[0, 0.02 + 0.035 * nlines, 1, top])
+    fig.text(0.5, 0.01, wrapped, ha="center", va="bottom", fontsize=8, color="0.35")
+
+
 def make_plots(sources, classes, names, colors, versions):
     import matplotlib
     matplotlib.use("Agg")
@@ -330,7 +340,12 @@ def make_plots(sources, classes, names, colors, versions):
     ax.set_title("Patch-size distribution: model variants vs. interpreted (reference)")
     ax.legend(); ax.grid(alpha=0.3)
     xlim = ax.get_xlim()                               # reuse the same log x-range for the area ECDF
-    fig.tight_layout(); fig.savefig(os.path.join(OUT, "patch_size_ecdf.png"), dpi=140, bbox_inches="tight")
+    _caption(fig, "Cumulative fraction of patches at or below a given size (hectares, log scale), "
+                  "pooled over all cells and classes, one line per source. Each patch is one "
+                  "8-connected same-class region and counts once regardless of its area, so a curve "
+                  "shifted left means more small patches, a count-based fragmentation ranking. The "
+                  "interpreted reference is the solid black line.")
+    fig.savefig(os.path.join(OUT, "patch_size_ecdf.png"), dpi=140, bbox_inches="tight")
     plt.close(fig)
 
     # 1b) AREA-WEIGHTED ECDF: cumulative fraction of class AREA in patches of size <= x. same pooling,
@@ -356,7 +371,12 @@ def make_plots(sources, classes, names, colors, versions):
     ax.set_title("Area-weighted patch-size distribution: model variants vs. interpreted (reference)")
     ax.legend()
     ax.grid(False)
-    fig.tight_layout()
+    _caption(fig, "Cumulative fraction of class area held in patches at or below a given size "
+                  "(hectares, log scale), the same patches as the count ECDF but weighted by pixel "
+                  "area, so single-pixel specks collapse to the left and the grain of the landscape "
+                  "shows. The dot marks each source's median-by-area patch size, where half of its "
+                  "class area sits in smaller patches. Sources further right hold their area in larger, "
+                  "more contiguous patches; the interpreted reference (solid black) is the coarsest.")
     fig.savefig(os.path.join(OUT, "patch_size_ecdf_area_weighted.png"), dpi=140, bbox_inches="tight")
     plt.close(fig)
 
@@ -374,7 +394,10 @@ def make_plots(sources, classes, names, colors, versions):
         ax.legend(fontsize=7)
     axes[0].set_ylabel("density")
     fig.suptitle("Per-variant patch-size distribution vs. interpreted", fontsize=11)
-    fig.tight_layout(rect=[0, 0, 1, 0.94])
+    _caption(fig, "Patch-size histograms (density, hectares on a log axis) for each classified map "
+                  "(filled) overlaid on the interpreted reference (black outline), one panel per "
+                  "source. Mass shifted toward smaller patches, relative to the reference outline, "
+                  "indicates a more fragmented map.", top=0.93)
     fig.savefig(os.path.join(OUT, "patch_size_hist_smallmultiples.png"), dpi=140, bbox_inches="tight")
     plt.close(fig)
 
@@ -390,7 +413,11 @@ def make_plots(sources, classes, names, colors, versions):
     ax.set_ylabel("mean patch size (ha)")
     ax.set_title("Mean patch size per class, by source")
     ax.legend(ncol=len(order), fontsize=8)
-    fig.tight_layout(); fig.savefig(os.path.join(OUT, "mean_patch_size_by_class.png"), dpi=140, bbox_inches="tight")
+    _caption(fig, "Mean patch size (hectares) per class, grouped bars by source. A larger bar means "
+                  "more contiguous patches of that class. The change classes and the speckly v6 have "
+                  "very small mean patches, while the interpreted reference and the smoother variants "
+                  "reach larger sizes on the abundant classes.")
+    fig.savefig(os.path.join(OUT, "mean_patch_size_by_class.png"), dpi=140, bbox_inches="tight")
     plt.close(fig)
 
     # 4) Moran's I by source
@@ -404,7 +431,12 @@ def make_plots(sources, classes, names, colors, versions):
     ax.set_ylabel("Moran's I (mean per cell)")
     ax.set_title("Spatial autocorrelation of the class raster")
     ax.legend(); ax.grid(alpha=0.3, axis="y")
-    fig.tight_layout(); fig.savefig(os.path.join(OUT, "morans_i_by_source.png"), dpi=140, bbox_inches="tight")
+    _caption(fig, "Mean per-cell Moran's I (queen contiguity over the class raster) for each source, "
+                  "with error bars for the between-cell standard deviation and the interpreted "
+                  "reference value marked (dashed). Higher Moran's I means more spatial autocorrelation "
+                  "(smoother maps); v6 is near zero (salt-and-pepper speckle), while the smoother "
+                  "classifiers sit close to the interpreted reference.")
+    fig.savefig(os.path.join(OUT, "morans_i_by_source.png"), dpi=140, bbox_inches="tight")
     plt.close(fig)
 
 
