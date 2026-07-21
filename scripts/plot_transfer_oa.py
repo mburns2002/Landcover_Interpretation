@@ -13,6 +13,7 @@ import os
 
 import argparse
 
+import numpy as np
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
@@ -51,7 +52,8 @@ def main():
                         ha="center", fontsize=6.5, color=VPAL[v])
 
     ax.set_xticks(list(x)); ax.set_xticklabels(xlabels)
-    ax.set_ylim(0, 0.8)
+    # fit the y-axis to the data with headroom, so the collapsed run (OA near 1) is not clipped
+    ax.set_ylim(0, min(1.0, np.ceil(float(np.nanmax(oa.to_numpy())) * 10) / 10 + 0.05))
     ax.set_xlabel("NAIP bracket (time period)")
     ax.set_ylabel("overall accuracy (OA)")
     ax.set_title("Classifier temporal transferability: OA by variant and bracket\n"
