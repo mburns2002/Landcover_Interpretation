@@ -68,6 +68,17 @@ CMP = os.path.join(OUT, "comparison")
 EMB_VARIANTS = ["v2", "v3", "v4", "v5", "v6"]
 CHANGE_CLASSES = [1, 2, 9, 10]   # harvest, development, beaver, insect_disease
 
+# canonical variant palette, shared across the repo's figures; spec_all is the distinguished
+# reference in black
+VPAL = {"v2": "#1f77b4", "v3": "#2ca02c", "v4": "#9467bd", "v5": "#ff7f0e", "v6": "#d62728"}
+SPEC_COLOR = "black"
+
+
+def src_color(src):
+    if src in ("spectral_specall", "spec_all"):
+        return SPEC_COLOR
+    return VPAL[src.replace("embedding_", "")]
+
 
 def _r(x):
     return round(float(x), 5) if np.isfinite(x) else ""
@@ -271,7 +282,7 @@ def fig_overall(overall, path):
             y = [overall[(src, b)][mk] for b in order]
             spec = src == "spectral_specall"
             ax.plot(range(len(order)), y, marker="o",
-                    lw=2.8 if spec else 1.6, color="black" if spec else None,
+                    lw=2.8 if spec else 1.6, color=src_color(src),
                     zorder=3 if spec else 2, label="spec_all" if spec else src.replace("embedding_", ""))
         ax.set_xticks(range(len(order)))
         ax.set_xticklabels([b.replace("_", "-") for b in order], rotation=45, ha="right", fontsize=8)
@@ -300,7 +311,7 @@ def fig_perclass(combined, metric, title, path):
         vals = pd.to_numeric(s[metric], errors="coerce").values
         spec = src == "spectral_specall"
         ax.bar(x + (i - 2.5) * w, vals, w, label="spec_all" if spec else src.replace("embedding_", ""),
-               color="black" if spec else None, edgecolor="white", linewidth=0.3,
+               color=src_color(src), edgecolor="white", linewidth=0.3,
                zorder=3 if spec else 2)
     ax.set_xticks(x)
     ax.set_xticklabels(LABELS, rotation=40, ha="right", fontsize=8)
@@ -329,7 +340,7 @@ def fig_change_ua(combined, path):
             y = pd.to_numeric(s["precision"], errors="coerce").values
             spec = src == "spectral_specall"
             ax.plot(range(len(order)), y, marker="o",
-                    lw=2.8 if spec else 1.6, color="black" if spec else None,
+                    lw=2.8 if spec else 1.6, color=src_color(src),
                     zorder=3 if spec else 2, label="spec_all" if spec else src.replace("embedding_", ""))
         ax.set_title(f"{NAMES[cc]} UA (commission)", fontsize=9)
         ax.set_xticks(range(len(order)))

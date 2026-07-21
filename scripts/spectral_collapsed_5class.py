@@ -48,6 +48,9 @@ EMB_COLLAPSED_LONG = "reports/collapsed_5class_confusion/metrics_long.csv"
 OUT = "reports/spectral_composite_classified_maps/collapsed_5class"
 EMB_VARIANTS = ["v2", "v3", "v4", "v5", "v6"]
 
+# canonical variant palette, shared across the repo's figures; spec_all is the reference in black
+VPAL = {"v2": "#1f77b4", "v3": "#2ca02c", "v4": "#9467bd", "v5": "#ff7f0e", "v6": "#d62728"}
+
 
 EMB_PRED_DIR = "data/raw/transfer_predictions"
 
@@ -154,7 +157,7 @@ def compare_figure(comp, n_cells, path):
     fig, axes = plt.subplots(1, 3, figsize=(14, 4.4))
     for ax, (mk, title) in zip(axes, metrics_):
         vals = [comp[s][mk] for s in sources]
-        colors = ["black"] + ["0.6"] * len(EMB_VARIANTS)
+        colors = ["black"] + [VPAL[v] for v in EMB_VARIANTS]
         ax.bar(range(len(sources)), vals, color=colors, edgecolor="white", zorder=3)
         if mk == "OA":
             base = comp["spec_all"]["baseline_OA"]
