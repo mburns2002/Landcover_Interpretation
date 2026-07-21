@@ -55,6 +55,17 @@ def read_band(path, band):
 
 
 def main():
+    global OUT
+    import argparse
+    ap = argparse.ArgumentParser(description=__doc__,
+                                 formatter_class=argparse.RawDescriptionHelpFormatter)
+    ap.add_argument("--rank-by", choices=["spectral", "embedding"], default="spectral",
+                    help="rank cells by spec_all-vs-reference (default) or by the mean "
+                         "embedding(v2-v5)-vs-reference disagreement")
+    ap.add_argument("--out", default=OUT, help="output folder")
+    args = ap.parse_args()
+    OUT = args.out
+    rank_by = args.rank_by
     os.makedirs(OUT, exist_ok=True)
     import matplotlib
     matplotlib.use("Agg")
@@ -73,7 +84,9 @@ def main():
     class_cmap = ListedColormap(["#ffffff"] + [colors[c] for c in range(1, 11)])
     ad_cmap = ListedColormap(["#ffffff", AGREE_COLOR, DISAGREE_COLOR])   # 0 nodata, 1 agree, 2 disagree
 
-    # rank every cell with a spec_all prediction by spec-vs-interpreted disagreement
+    # rank cells by disagreement vs the interpreted reference. rank_by=spectral uses spec_all;
+    # rank_by=embedding uses the mean per-pixel disagreement of v2-v5. spec_all must be non-blank
+    # either way so there is a spectral map to view at each location.
     records = []
     for bracket in bmc.BRACKETS:
         for sp in sorted(glob.glob(os.path.join(SPEC_DIR, bracket, "pred_specall_*.tif"))):
@@ -89,7 +102,19 @@ def main():
             nvalid = int(valid.sum())
             if nvalid == 0:
                 continue
-            disagree = float((ref[valid] != spec[valid]).mean())
+            if rank_by == "spectral":
+                disagree = float((ref[valid] != spec[valid]).mean())
+            else:                                            # mean embedding disagreement over v2-v5
+                ds = []
+                for v in EMB_VARIANTS:
+                    ev = read_band(os.path.join(EMB_DIR, bracket, f"pred_{bracket}_cell{gid}.tif"),
+                                   VBAND[v])
+                    vv = (ref >= 1) & (ref <= 10) & (ev >= 1) & (ev <= 10)
+                    if vv.any():
+                        ds.append(float((ref[vv] != ev[vv]).mean()))
+                if not ds:
+                    continue
+                disagree = float(np.mean(ds))
             records.append(dict(disagree=disagree, gid=gid, bracket=bracket,
                                 ref_path=chosen_ref[gid], spec_path=sp, n_valid=nvalid))
 
@@ -133,16 +158,24 @@ def main():
             ax.imshow(emb[v], cmap=class_cmap, vmin=-0.5, vmax=10.5, interpolation="nearest")
             ax.set_title(f"embedding {v}", fontsize=11); ax.set_xticks([]); ax.set_yticks([])
 
+        rank_desc = ("spec_all-vs-interpreted" if rank_by == "spectral"
+                     else "mean embedding(v2-v5)-vs-interpreted")
         fig.suptitle(f"cell {gid}  ·  bracket {bracket.replace('_', '-')}  ·  rank {i} of {TOP_N} by "
-                     f"spec_all-vs-interpreted disagreement ({r['disagree'] * 100:.0f}% of "
+                     f"{rank_desc} disagreement ({r['disagree'] * 100:.0f}% of "
                      f"{r['n_valid']:,} valid px)", fontsize=13)
+        rank_caption = (
+            "This cell is among the ten with the most spec_all-vs-interpreted disagreement, so it "
+            "shows where the spectral classifier departs most from the human interpretation."
+            if rank_by == "spectral" else
+            "This cell is among the ten where the embedding variants v2-v5 disagree most with the "
+            "interpreted reference, on average, so the panels show whether the spectral spec_all map "
+            "recovers the reference where the embeddings do not (the agree/disagree panel).")
         fig.text(0.5, 0.01,
                  "Classified maps (common 10-class scheme) for one interpreted cell: the interpreted "
                  "reference, the spectral spec_all map, and the embedding variants v2, v3, v4, and v5 "
                  "(v6, the dot-only variant, is omitted). The agree/disagree panel marks where spec_all "
                  "matches the reference (blue) or differs (vermillion), in colorblind-friendly colors. "
-                 "This cell is among the ten with the most spec_all-vs-interpreted disagreement, so it "
-                 "shows where the spectral classifier departs most from the human interpretation.",
+                 + rank_caption,
                  ha="center", va="bottom", fontsize=8, color="0.35", wrap=True)
         fig.tight_layout(rect=[0, 0.06, 1, 0.95])
         fig.savefig(os.path.join(OUT, f"rank{i:02d}_cell{gid}_{bracket}.png"), dpi=140,
