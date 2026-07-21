@@ -36,6 +36,10 @@ def _load(name, path):
 
 bmc = _load("bmc", "build_transfer_confusion.py")          # adjudicated reference selection
 C = _load("C", "compare_interpreted_vs_model.py")           # class names, colors, RF crosswalk
+cc = _load("cc", "collapsed_5class_confusion.py")           # 5-class collapse maps and names
+
+# collapsed 5-class colours: Stable neutral grey, the four change classes in the shared 5-class palette
+COLLAPSE_COLORS = {1: "#cccccc", 2: "#ff7f0e", 3: "#2ca02c", 4: "#d62728", 5: "#9467bd"}
 
 TRUTH = "exports/truth_selections.csv"
 SPEC_DIR = "data/raw/spectral_transferability_10class_percell"
@@ -63,9 +67,13 @@ def main():
                     help="rank cells by spec_all-vs-reference (default) or by the mean "
                          "embedding(v2-v5)-vs-reference disagreement")
     ap.add_argument("--out", default=OUT, help="output folder")
+    ap.add_argument("--collapse", action="store_true",
+                    help="collapse reference and predictions to the 5-class scheme (Stable plus the "
+                         "four change classes) instead of the 10-class scheme")
     args = ap.parse_args()
     OUT = args.out
     rank_by = args.rank_by
+    collapse = args.collapse
     os.makedirs(OUT, exist_ok=True)
     import matplotlib
     matplotlib.use("Agg")
@@ -80,8 +88,30 @@ def main():
     if mismatch:
         print("STOP: truth reviewer with no matching raster:", mismatch[:10]); raise SystemExit(1)
 
-    # classified-map colormap: index 0 = nodata (white), 1..10 = class colors
-    class_cmap = ListedColormap(["#ffffff"] + [colors[c] for c in range(1, 11)])
+    # class scheme: 10-class common codes, or the 5-class collapse (Stable plus four change classes)
+    if collapse:
+        N = 5
+        class_names, class_colors = cc.NAMES5, COLLAPSE_COLORS
+        scheme_label = "collapsed 5-class"
+
+        def to_ref(raw):
+            return cc._REF_COLLAPSE[np.where((raw >= 0) & (raw <= 62), raw, 0)]
+
+        def to_pred(raw):
+            return cc._MODEL_COLLAPSE[np.where(raw <= 10, raw, 0)]
+    else:
+        N = 10
+        class_names, class_colors = names, colors
+        scheme_label = "common 10-class"
+
+        def to_ref(raw):
+            return C.to_common_rf(raw, rf2common)
+
+        def to_pred(raw):
+            return raw
+
+    # classified-map colormap: index 0 = nodata (white), 1..N = class colors
+    class_cmap = ListedColormap(["#ffffff"] + [class_colors[c] for c in range(1, N + 1)])
     ad_cmap = ListedColormap(["#ffffff", AGREE_COLOR, DISAGREE_COLOR])   # 0 nodata, 1 agree, 2 disagree
 
     # rank cells by disagreement vs the interpreted reference. rank_by=spectral uses spec_all;
@@ -93,12 +123,13 @@ def main():
             gid = bmc.pad(re.search(r"cell(\d+)\.tif$", os.path.basename(sp)).group(1))
             if gid not in chosen_ref:
                 continue
-            spec = read_band(sp, 1)
-            if not (spec >= 1).any():                       # entirely nodata
+            spec_raw = read_band(sp, 1)
+            if not (spec_raw >= 1).any():                   # entirely nodata
                 continue
+            spec = to_pred(spec_raw)
             with rasterio.open(chosen_ref[gid]) as rds:
-                ref = C.to_common_rf(rds.read(1), rf2common)
-            valid = (ref >= 1) & (ref <= 10) & (spec >= 1) & (spec <= 10)
+                ref = to_ref(rds.read(1))
+            valid = (ref >= 1) & (ref <= N) & (spec >= 1) & (spec <= N)
             nvalid = int(valid.sum())
             if nvalid == 0:
                 continue
@@ -107,9 +138,9 @@ def main():
             else:                                            # mean embedding disagreement over v2-v5
                 ds = []
                 for v in EMB_VARIANTS:
-                    ev = read_band(os.path.join(EMB_DIR, bracket, f"pred_{bracket}_cell{gid}.tif"),
-                                   VBAND[v])
-                    vv = (ref >= 1) & (ref <= 10) & (ev >= 1) & (ev <= 10)
+                    ev = to_pred(read_band(os.path.join(EMB_DIR, bracket,
+                                                        f"pred_{bracket}_cell{gid}.tif"), VBAND[v]))
+                    vv = (ref >= 1) & (ref <= N) & (ev >= 1) & (ev <= N)
                     if vv.any():
                         ds.append(float((ref[vv] != ev[vv]).mean()))
                 if not ds:
@@ -124,34 +155,35 @@ def main():
                  for r in top]).assign(rank=range(1, len(top) + 1)).to_csv(
         os.path.join(OUT, "top_disagreement_summary.csv"), index=False)
 
-    class_handles = [Patch(facecolor=colors[c], edgecolor="0.4", label=names[c]) for c in range(1, 11)]
+    class_handles = [Patch(facecolor=class_colors[c], edgecolor="0.4", label=class_names[c])
+                     for c in range(1, N + 1)]
     ad_handles = [Patch(facecolor=AGREE_COLOR, label="agree"),
                   Patch(facecolor=DISAGREE_COLOR, label="disagree")]
 
     for i, r in enumerate(top, 1):
         gid, bracket = r["gid"], r["bracket"]
-        ref = C.to_common_rf(read_band(r["ref_path"], 1), rf2common)
-        spec = read_band(r["spec_path"], 1)
-        emb = {v: read_band(os.path.join(EMB_DIR, bracket, f"pred_{bracket}_cell{gid}.tif"), VBAND[v])
-               for v in EMB_VARIANTS}
+        ref = to_ref(read_band(r["ref_path"], 1))
+        spec = to_pred(read_band(r["spec_path"], 1))
+        emb = {v: to_pred(read_band(os.path.join(EMB_DIR, bracket, f"pred_{bracket}_cell{gid}.tif"),
+                                    VBAND[v])) for v in EMB_VARIANTS}
         fig, axes = plt.subplots(2, 4, figsize=(15, 8))
         # top row: interpreted, spec_all, disagreement panel, class legend
         for ax, (arr, title) in zip(
                 [axes[0, 0], axes[0, 1]],
                 [(ref, "interpreted reference"), (spec, "spec_all (spectral)")]):
-            ax.imshow(arr, cmap=class_cmap, vmin=-0.5, vmax=10.5, interpolation="nearest")
+            ax.imshow(arr, cmap=class_cmap, vmin=-0.5, vmax=N + 0.5, interpolation="nearest")
             ax.set_title(title, fontsize=11); ax.set_xticks([]); ax.set_yticks([])
         adax = axes[0, 2]
         adax.set_xticks([]); adax.set_yticks([])
         if rank_by == "embedding":
             # count how many of v2-v5 differ from the reference per pixel (0..4); this is the ranked
             # quantity, so the panel visualizes the embedding disagreement rather than spec_all
-            ref_valid = (ref >= 1) & (ref <= 10)
+            ref_valid = (ref >= 1) & (ref <= N)
             count = np.zeros(ref.shape, np.int16)
             any_valid = np.zeros(ref.shape, bool)
             for v in EMB_VARIANTS:
                 ev = emb[v]
-                vv = ref_valid & (ev >= 1) & (ev <= 10)
+                vv = ref_valid & (ev >= 1) & (ev <= N)
                 count[vv & (ev != ref)] += 1
                 any_valid |= vv
             disp = np.where(any_valid, count + 1, 0)       # 0 = nodata, 1..5 = 0..4 disagreeing
@@ -165,7 +197,7 @@ def main():
             adax.legend(handles=ec_handles, loc="lower right", fontsize=6.5, framealpha=0.9,
                         title="# disagreeing", title_fontsize=6.5)
         else:
-            valid = (ref >= 1) & (ref <= 10) & (spec >= 1) & (spec <= 10)
+            valid = (ref >= 1) & (ref <= N) & (spec >= 1) & (spec <= N)
             ad = np.zeros(spec.shape, np.uint8)
             ad[valid & (ref == spec)] = 1
             ad[valid & (ref != spec)] = 2
@@ -174,10 +206,10 @@ def main():
             adax.legend(handles=ad_handles, loc="lower right", fontsize=8, framealpha=0.9)
         axes[0, 3].axis("off")
         axes[0, 3].legend(handles=class_handles, loc="center left", fontsize=9,
-                          frameon=False, title="10-class scheme")
+                          frameon=False, title=f"{scheme_label} scheme")
         # bottom row: the four embedding variants
         for ax, v in zip(axes[1], EMB_VARIANTS):
-            ax.imshow(emb[v], cmap=class_cmap, vmin=-0.5, vmax=10.5, interpolation="nearest")
+            ax.imshow(emb[v], cmap=class_cmap, vmin=-0.5, vmax=N + 0.5, interpolation="nearest")
             ax.set_title(f"embedding {v}", fontsize=11); ax.set_xticks([]); ax.set_yticks([])
 
         rank_desc = ("spec_all-vs-interpreted" if rank_by == "spectral"
@@ -200,7 +232,7 @@ def main():
                             "see whether the spectral spec_all map tracks the reference where the "
                             "embeddings do not.")
         fig.text(0.5, 0.01,
-                 "Classified maps (common 10-class scheme) for one interpreted cell: the interpreted "
+                 f"Classified maps ({scheme_label} scheme) for one interpreted cell: the interpreted "
                  "reference, the spectral spec_all map, and the embedding variants v2, v3, v4, and v5 "
                  "(v6, the dot-only variant, is omitted). " + panel_desc + rank_caption,
                  ha="center", va="bottom", fontsize=8, color="0.35", wrap=True)
