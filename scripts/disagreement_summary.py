@@ -55,6 +55,14 @@ def class_disagreement(cm_csv):
     return pair_df, class_df, int(disagree_total), int(total)
 
 
+def _caption(fig, text, top=1.0, width=125):
+    import textwrap
+    wrapped = "\n".join(textwrap.wrap(text, width))
+    nlines = wrapped.count("\n") + 1
+    fig.tight_layout(rect=[0, 0.02 + 0.035 * nlines, 1, top])
+    fig.text(0.5, 0.01, wrapped, ha="center", va="bottom", fontsize=8, color="0.35")
+
+
 def plot_top_pairs(pair_df, out_path, top=12):
     import matplotlib
     matplotlib.use("Agg")
@@ -67,7 +75,12 @@ def plot_top_pairs(pair_df, out_path, top=12):
     ax.set_title(f"Top {top} class boundaries driving reviewer disagreement")
     for y, v in enumerate(d.pct_of_all_disagreement):
         ax.text(v + 0.2, y, f"{v:.1f}%", va="center", fontsize=8)
-    fig.tight_layout()
+    _caption(fig, "Horizontal bars rank the unordered class-boundary pairs that drive the most "
+                  "disagreement between reviewers, pooled over all reviewer pairs. Each bar's "
+                  "length is that boundary's share of all reviewer-disagreement pixels, with the "
+                  "percentage annotated at the bar tip and the longest bars at the top. Read it to "
+                  "see which pairs of land-cover classes, such as Grass/Shrub versus Wetland, "
+                  "account for the bulk of inter-interpreter disagreement.")
     fig.savefig(out_path, dpi=140, bbox_inches="tight")
     plt.close(fig)
 

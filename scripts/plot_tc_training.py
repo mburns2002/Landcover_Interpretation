@@ -33,6 +33,14 @@ DLAB = {"d_brightness": "Δ brightness", "d_greenness": "Δ greenness",
         "d_wetness": "Δ wetness"}
 
 
+def _caption(fig, text, top=1.0, width=125):
+    import textwrap
+    wrapped = "\n".join(textwrap.wrap(text, width))
+    nlines = wrapped.count("\n") + 1
+    fig.tight_layout(rect=[0, 0.02 + 0.035 * nlines, 1, top])
+    fig.text(0.5, 0.01, wrapped, ha="center", va="bottom", fontsize=8, color="0.35")
+
+
 def _classic(ax):
     ax.grid(False)
     for s in ("top", "right"):
@@ -57,7 +65,12 @@ def scatter_deltas(df):
     fig.suptitle("Tasseled Cap change space (2018→2020): where the disturbance classes live\n"
                  "grey = the six stable land-cover classes; harvest/development brighten and dry, "
                  "insect-disease loses greenness", fontsize=12)
-    fig.tight_layout(rect=[0, 0, 1, 0.93])
+    _caption(fig, "Pairwise scatter of the three Tasseled Cap deltas (2018 to 2020), showing "
+             "brightness against greenness, brightness against wetness, and greenness against "
+             "wetness. Grey points are the six stable land-cover classes, and each colored series "
+             "is one of the four change classes named in the legend. Read the panels to see where "
+             "disturbance separates from the stable cloud: harvest and development shift toward "
+             "brighter and drier, and insect or disease loses greenness.", top=0.93)
     _save(fig, "tc_delta_scatter.png")
 
 
@@ -78,7 +91,12 @@ def boxplots_deltas(df):
     fig.suptitle("Per-class Tasseled Cap deltas (2018→2020) — spread, not just the mean\n"
                  "filled = the four change classes; faint = stable classes (deltas near zero)",
                  fontsize=12)
-    fig.tight_layout(rect=[0, 0, 1, 0.95])
+    _caption(fig, "Per-class distribution of each Tasseled Cap delta (2018 to 2020), with one "
+             "stacked panel for the brightness, greenness, and wetness deltas and the ten classes "
+             "along the shared x axis. Each box shows the median and interquartile spread, filled "
+             "boxes are the four change classes, and faint boxes are the stable classes whose "
+             "deltas sit near zero. Read the vertical offset of a box from the zero line to see the "
+             "direction and size of the typical spectral change for that class.", top=0.93)
     _save(fig, "tc_delta_boxplots.png")
 
 
@@ -98,7 +116,12 @@ def mean_delta_heatmap(df):
     ax.set_title("Mean TC delta per class (2018→2020)\nthe spectral-change signature the "
                  "classifier keys on", fontsize=11)
     fig.colorbar(im, ax=ax, fraction=0.046, pad=0.04, label="mean Δ (reflectance units)")
-    fig.tight_layout()
+    _caption(fig, "Compact signature of each class as its mean Tasseled Cap delta (2018 to 2020), "
+             "with the ten classes down the rows and the brightness, greenness, and wetness deltas "
+             "across the three columns. Cell color runs on a diverging red-blue scale centered at "
+             "zero, so red marks an increase and blue a decrease, and the printed number gives the "
+             "mean delta in reflectance units. Read each row to see the spectral-change fingerprint "
+             "the classifier keys on for that class.")
     _save(fig, "tc_mean_delta_heatmap.png")
 
 
@@ -163,7 +186,12 @@ def trajectory(df):
     ax.set_title("Class centroids move in brightness–greenness space, 2018→2020\n"
                  "dot = 2018, arrowhead = 2020; bold arrows = the four change classes", fontsize=12)
     _classic(ax)
-    fig.tight_layout()
+    _caption(fig, "Movement of each class centroid in brightness-greenness space from 2018 to "
+             "2020, with brightness on the x axis and greenness on the y axis. Each arrow starts at "
+             "the 2018 dot and ends at the 2020 arrowhead, and bold arrows are the four change "
+             "classes while thin arrows are the stable classes. Read the length and direction of "
+             "each arrow to see how far and which way a class shifted spectrally over the two "
+             "years.")
     _save(fig, "tc_trajectory.png")
 
 
@@ -208,7 +236,12 @@ def lda_projection(df):
                  "how separable the 10 classes are in the space the classifier sees", fontsize=12)
     ax.legend(fontsize=8, frameon=False, ncol=2, markerscale=1.5)
     _classic(ax)
-    fig.tight_layout()
+    _caption(fig, "Two-component linear discriminant projection of the training points from the "
+             "six independent Tasseled Cap features, with the first discriminant on the x axis and "
+             "the second on the y axis. Each point is one training point colored by its class, and "
+             "the change classes are drawn larger and more opaque than the stable classes. Read how "
+             "tightly each colored cloud clusters and how much the clouds overlap to judge how "
+             "separable the ten classes are in the space the classifier sees.")
     _save(fig, "tc_lda_projection.png")
 
 

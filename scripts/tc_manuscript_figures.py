@@ -71,6 +71,14 @@ def _style():
     })
 
 
+def _caption(fig, text, top=1.0, width=125):
+    import textwrap
+    wrapped = "\n".join(textwrap.wrap(text, width))
+    nlines = wrapped.count("\n") + 1
+    fig.tight_layout(rect=[0, 0.02 + 0.035 * nlines, 1, top])
+    fig.text(0.5, 0.01, wrapped, ha="center", va="bottom", fontsize=8, color="0.35")
+
+
 def _save(fig, stem):
     for ext in ("pdf", "png"):
         fig.savefig(os.path.join(OUT, f"{stem}.{ext}"), bbox_inches="tight")
@@ -124,7 +132,11 @@ def scatter_single_date(df, ycol, xcol, ylabel, xlabel, stem):
         ax.set_xlabel(xlabel)
     for ax in axes[0::5]:
         ax.set_ylabel(ylabel)
-    fig.tight_layout(pad=0.4, w_pad=0.3, h_pad=0.4)
+    _caption(fig, f"Single-date Tasseled Cap position of the training points, plotting {ylabel} "
+             f"against {xlabel} in a two-by-five grid of small multiples, one panel per class. In "
+             f"each panel the full pooled point cloud is drawn in grey and the panel's own class is "
+             f"overlaid in its color, with change-class labels in bold. The shared axes let you "
+             f"compare panels directly and see where each class sits within the overall cloud.")
     _save(fig, stem)
 
 
@@ -170,7 +182,12 @@ def delta_vectors(df, stem):
         ax.set_xlabel("TC brightness")
     for ax in axes[0::5]:
         ax.set_ylabel("TC greenness")
-    fig.tight_layout(pad=0.4, w_pad=0.3, h_pad=0.4)
+    _caption(fig, "Tasseled Cap delta vectors from 2018 to 2020 in TC brightness-greenness space, "
+             "shown as a two-by-five grid of small multiples with one panel per class over a grey "
+             "2018 reference cloud. Each faint headless segment is one point's displacement, so the "
+             "fan width shows within-class spread, and the single bold arrow gives the class-mean "
+             "displacement, so its direction and length show the coherent change. Read the bold "
+             "arrows to compare how strongly and which way each class moved.")
     _save(fig, stem)
 
 
@@ -224,7 +241,12 @@ def jm_heatmap(JM, stem):
     cb = fig.colorbar(im, ax=ax, fraction=0.046, pad=0.04)
     cb.set_label("Jeffries-Matusita distance (0 = identical, 2 = separable)")
     cb.outline.set_visible(False)
-    fig.tight_layout(pad=0.4)
+    _caption(fig, "Class separability in the full six-dimensional Tasseled Cap space, shown as a "
+             "symmetric heatmap of the Jeffries-Matusita distance between every pair of the ten "
+             "classes. Color and the printed value run from 0, where two classes are "
+             "indistinguishable, to 2, where they are fully separable, so darker off-diagonal cells "
+             "mark pairs the classifier will most easily confuse. Read a row or column to see how "
+             "distinct one class is from all the others.")
     _save(fig, stem)
 
 

@@ -46,6 +46,14 @@ GS, WET = 2, 5
 rng = np.random.default_rng(42)
 
 
+def _caption(fig, text, top=1.0, width=125):
+    import textwrap
+    wrapped = "\n".join(textwrap.wrap(text, width))
+    nlines = wrapped.count("\n") + 1
+    fig.tight_layout(rect=[0, 0.02 + 0.035 * nlines, 1, top])
+    fig.text(0.5, 0.01, wrapped, ha="center", va="bottom", fontsize=8, color="0.35")
+
+
 def wmedian(values, weights):
     """Weighted median of `values` weighted by `weights`."""
     v = np.asarray(values, float); w = np.asarray(weights, float)
@@ -169,7 +177,14 @@ def aw_ecdf_plot(df, path):
         ax.set_xlim(1.0, 3.5); ax.legend(fontsize=7, frameon=False); DG.classic(ax)
     fig.suptitle("Shape index: area-weighted vs. count-weighted "
                  "(dashed = 1x1-pixel value 1.128)", fontsize=12)
-    fig.tight_layout(rect=[0, 0, 1, 0.96])
+    _caption(fig, "Each panel compares two cumulative distributions of the disagreement-patch "
+                  "shape index for one high-disagreement class boundary, the area-weighted curve "
+                  "in blue and the count-weighted curve as a dotted gray line. The area-weighted "
+                  "curve reflects the patches that actually hold the disagreement area rather than "
+                  "the many single-pixel specks, and the dashed vertical line at 1.128 marks the "
+                  "shape index of a single pixel. A large gap between the two curves shows that "
+                  "single-pixel specks dominate patch counts while larger, more complex patches "
+                  "hold most of the disagreement area.", top=0.93)
     fig.savefig(path, dpi=140, bbox_inches="tight"); plt.close(fig)
 
 
@@ -248,7 +263,13 @@ def render_top10(pairs, names, colors, csv_path, png_path):
     fig.legend(handles=handles, loc="lower center", ncol=4, fontsize=8)
     fig.suptitle("Grass/Shrub <-> Wetland: 10 largest disagreement patches\n"
                  "(two interpretations side by side, patch outlined in red)", fontsize=11)
-    fig.tight_layout(rect=[0, 0.03, 1, 0.985])
+    _caption(fig, "The ten largest Grass/Shrub versus Wetland disagreement patches, one per row, "
+                  "each showing the two reviewers' interpretations side by side with the "
+                  "disagreement patch outlined in red and the RF class colors keyed by the bottom "
+                  "legend. Row labels give the patch area in hectares along with its pixel width, "
+                  "shape index, and extent (area over bounding-box area). Read it to tell a wide "
+                  "solid interior block of genuine class disagreement from a thin margin ribbon "
+                  "hugging the edge of an otherwise agreed patch.", top=0.93)
     fig.savefig(png_path, dpi=130, bbox_inches="tight"); plt.close(fig)
 
 

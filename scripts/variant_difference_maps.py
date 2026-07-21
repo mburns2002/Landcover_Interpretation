@@ -79,6 +79,14 @@ CAT_LABEL = {
 }
 
 
+def _caption(fig, text, top=1.0, width=125):
+    import textwrap
+    wrapped = "\n".join(textwrap.wrap(text, width))
+    nlines = wrapped.count("\n") + 1
+    fig.tight_layout(rect=[0, 0.02 + 0.035 * nlines, 1, top])
+    fig.text(0.5, 0.01, wrapped, ha="center", va="bottom", fontsize=8, color="0.35")
+
+
 # ----------------------------------------------------------------------------- reference data
 def load_legend():
     leg = pd.read_csv(LEGEND)
@@ -347,12 +355,19 @@ def render_full_map(out_dir, render, diff_cmap, diff_norm, names, colors, A_name
     agree_handles = [Patch(facecolor=_mute(colors[c]), edgecolor="0.5", label=names[c])
                      for c in range(1, 11)]
     fig.legend(handles=agree_handles, loc="lower center", ncol=10, fontsize=7.5, frameon=False,
-               bbox_to_anchor=(0.5, 0.005),
+               bbox_to_anchor=(0.5, 0.09),
                title="agree (muted): both variants assign this land-cover class")
     ax.set_title(f"{A_name} vs {B_name}  difference map  (each {RENDER_DS*10} m block coloured by "
                  f"its majority: agree vs disagreement, then the leading category; no priority bias. "
                  f"stats at full 10 m resolution)", fontsize=9)
-    fig.tight_layout(rect=[0, 0.06, 1, 1])
+    _caption(fig, f"Full-mosaic overview comparing the {A_name} and {B_name} classified maps, with "
+             f"each {RENDER_DS*10} m block coloured by its dominant content: muted land-cover colours "
+             f"where the two variants agree on the class, and saturated colours where they disagree. "
+             f"The saturated categories separate {A_name}-calls-change / {B_name}-stable, "
+             f"{B_name}-calls-change / {A_name}-stable, change / change mismatch, and stable / stable "
+             f"mismatch, as listed in the legends. Scan for saturated regions to find where the two "
+             f"variants diverge on disturbance, keeping in mind the map is decimated while the "
+             f"category statistics are computed at full 10 m resolution.", top=1.0)
     fig.savefig(os.path.join(out_dir, "difference_map.png"), dpi=150, bbox_inches="tight")
     plt.close(fig)
 
@@ -385,12 +400,18 @@ def render_change_map(out_dir, render, names, colors, A_name, B_name):
     # the agreed change classes keep their own colour; give each a swatch below
     agree_handles = [Patch(facecolor=colors[c], edgecolor="0.4", label=names[c]) for c in CHANGE_CODES]
     fig.legend(handles=agree_handles, loc="lower center", ncol=len(CHANGE_CODES), fontsize=8,
-               frameon=False, bbox_to_anchor=(0.5, 0.005),
+               frameon=False, bbox_to_anchor=(0.5, 0.09),
                title="agreed change class (both variants assign the same change class)")
     ax.set_title(f"{A_name} vs {B_name}  change-focused difference map  (stable in gray, water "
                  f"darker; colour only for agreed change and change disagreement; {RENDER_DS*10} m "
                  f"blocks)", fontsize=9)
-    fig.tight_layout(rect=[0, 0.05, 1, 1])
+    _caption(fig, f"Change-focused recolour of the same {A_name} versus {B_name} block render: all "
+             f"stable land cover is drawn in gray, with water a darker gray, so only the agreed change "
+             f"classes and the change-involved disagreement categories carry saturated colour. The "
+             f"legend separates {A_name}-change / {B_name}-stable, {B_name}-change / {A_name}-stable, "
+             f"and change / change mismatch from the agreed change classes. Use this view to isolate "
+             f"where the two variants disagree about disturbance against a muted stable background, at "
+             f"{RENDER_DS*10} m block resolution.", top=1.0)
     fig.savefig(os.path.join(out_dir, "difference_map_change.png"), dpi=150, bbox_inches="tight")
     plt.close(fig)
 
@@ -461,11 +482,16 @@ def render_zoom(out_dir, rank, patch, tilesA, tilesB, H, W, diff_cmap, diff_norm
     ]
     agree_handles = [Patch(facecolor=_mute(colors[c]), edgecolor="0.5", label=names[c])
                      for c in range(1, 11)]
-    fig.legend(handles=dis_handles, loc="lower center", bbox_to_anchor=(0.5, 0.08), ncol=2,
+    fig.legend(handles=dis_handles, loc="lower center", bbox_to_anchor=(0.5, 0.15), ncol=2,
                fontsize=7.5, frameon=False, title="disagreement (saturated)")
-    fig.legend(handles=agree_handles, loc="lower center", bbox_to_anchor=(0.5, 0.0), ncol=5,
+    fig.legend(handles=agree_handles, loc="lower center", bbox_to_anchor=(0.5, 0.07), ncol=5,
                fontsize=7, frameon=False, title="agree (muted): both variants assign this class")
-    fig.tight_layout(rect=[0, 0.15, 1, 0.95])
+    _caption(fig, f"Full 10 m resolution crop of one of the ten largest patches where the {A_name} "
+             f"and {B_name} maps disagree and at least one calls change, ranked #{rank} at "
+             f"{patch['area_ha']:,} ha. Pixels are coloured with the same scheme as the overview: "
+             f"muted where the two variants agree on the class, and saturated for the four "
+             f"disagreement categories in the legend. Read the saturated colours to see which variant "
+             f"is calling disturbance and which is calling stable inside this patch.", top=0.95)
     fig.savefig(os.path.join(out_dir, f"zoom_top{rank:02d}_{patch['area_px']}px.png"),
                 dpi=150, bbox_inches="tight")
     plt.close(fig)
@@ -510,10 +536,16 @@ def render_overlay(out_dir, rank, patch, tilesA, tilesB, H, W, cells, rf2common,
         ax.set_title(t, fontsize=10); ax.set_xticks([]); ax.set_yticks([])
     handles = [Patch(facecolor=colors[c], edgecolor="k", label=f"{c} {names[c]}")
                for c in range(1, 11)]
-    fig.legend(handles=handles, loc="lower center", ncol=10, fontsize=7)
+    fig.legend(handles=handles, loc="lower center", ncol=10, fontsize=7, bbox_to_anchor=(0.5, 0.09))
     fig.suptitle(f"#{rank}  {patch['area_ha']} ha change-involved disagreement intersecting an "
                  f"interpreted cell", fontsize=10)
-    fig.tight_layout(rect=[0, 0.06, 1, 0.95])
+    _caption(fig, f"Three panels show the same crop for variant {A_name}, variant {B_name}, and the "
+             f"interpreted reference, all in the shared 10-class colour scheme, for a "
+             f"{patch['area_ha']} ha change-involved disagreement patch that overlaps an interpreted "
+             f"cell. The interpreted panel is only populated where an interpreted cell falls in the "
+             f"crop, so the surrounding area is blank. Compare the two variant panels against the "
+             f"interpreted reference to judge which variant is closer to the human interpretation "
+             f"where they disagree.", top=0.93)
     fig.savefig(os.path.join(out_dir, f"overlay_top{rank:02d}_{patch['area_px']}px.png"),
                 dpi=140, bbox_inches="tight")
     plt.close(fig)
@@ -570,11 +602,17 @@ def render_cell_overlay(out_dir, rank, score, cell, tilesA, tilesB, mosaic_tf, r
         ax.set_title(t, fontsize=10); ax.set_xticks([]); ax.set_yticks([])
     handles = [Patch(facecolor=colors[c], edgecolor="k", label=f"{c} {names[c]}")
                for c in range(1, 11)]
-    fig.legend(handles=handles, loc="lower center", ncol=10, fontsize=7)
+    fig.legend(handles=handles, loc="lower center", ncol=10, fontsize=7, bbox_to_anchor=(0.5, 0.09))
     fig.suptitle(f"interpreted cell {gid}  ({km:.1f} x {km:.1f} km, same extent in all three "
                  f"panels)  ·  {score * PIX_HA:.0f} ha change-involved {A_name}/{B_name} "
                  f"disagreement in the cell", fontsize=10)
-    fig.tight_layout(rect=[0, 0.06, 1, 0.95])
+    _caption(fig, f"Three panels show one whole interpreted cell at the same extent for variant "
+             f"{A_name}, variant {B_name}, and the interpreted reference, in the shared 10-class "
+             f"colour scheme. This cell was selected for holding a large amount of change-involved "
+             f"{A_name} versus {B_name} disagreement, so the interpreted reference fills its panel "
+             f"rather than sitting as a speck in a larger crop. Compare the two variant panels to the "
+             f"interpreted panel to see which variant matches the human interpretation where the two "
+             f"variants disagree on disturbance.", top=0.93)
     fig.savefig(os.path.join(out_dir, f"overlay_cell{rank:02d}_grid{gid}.png"),
                 dpi=140, bbox_inches="tight")
     plt.close(fig)
@@ -640,11 +678,17 @@ def render_cell_panel(out_dir, rank, score, cell, tiles, allv, mosaic_tf, rf2com
         ax.set_title(label, fontsize=11, pad=6); ax.set_xticks([]); ax.set_yticks([])
     handles = [Patch(facecolor=colors[c], edgecolor="k", label=f"{c} {names[c]}")
                for c in range(1, 11)]
-    fig.legend(handles=handles, loc="lower center", ncol=10, fontsize=8)
+    fig.legend(handles=handles, loc="lower center", ncol=10, fontsize=8, bbox_to_anchor=(0.5, 0.08))
     fig.suptitle(f"interpreted cell {gid}  ({km:.1f} x {km:.1f} km, same extent in every panel)  "
                  f"·  all five variants vs the interpreted reference  ·  ranked #{rank} by v2-v5 "
                  f"in-cell disagreement ({score * PIX_HA:.0f} ha)", fontsize=11)
-    fig.tight_layout(rect=[0, 0.05, 1, 0.94], h_pad=2.5)
+    _caption(fig, "Six panels show one interpreted cell at the same extent: the five embedding "
+             "variants v2 through v6 and the interpreted reference, all in the shared 10-class colour "
+             "scheme. The cell is ranked by how much the four smooth variants v2 to v5 disagree "
+             "inside it, and v6 is shown but excluded from the ranking since its per-pixel speckle "
+             "disagrees almost everywhere. Compare each variant panel against the interpreted "
+             "reference to see which variants match the human interpretation and how the v6 speckle "
+             "differs from the smoother variants.", top=0.94)
     fig.savefig(os.path.join(out_dir, f"cell{rank:02d}_grid{gid}.png"), dpi=140,
                 bbox_inches="tight")
     plt.close(fig)

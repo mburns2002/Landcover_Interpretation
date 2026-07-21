@@ -24,6 +24,14 @@ VERS = ["v2", "v3", "v4", "v5", "v6"]
 VPAL = {"v2": "#1f77b4", "v3": "#2ca02c", "v4": "#9467bd", "v5": "#ff7f0e", "v6": "#d62728"}
 
 
+def _caption(fig, text, top=1.0, width=125):
+    import textwrap
+    wrapped = "\n".join(textwrap.wrap(text, width))
+    nlines = wrapped.count("\n") + 1
+    fig.tight_layout(rect=[0, 0.02 + 0.035 * nlines, 1, top])
+    fig.text(0.5, 0.01, wrapped, ha="center", va="bottom", fontsize=8, color="0.35")
+
+
 def _classic(ax):
     ax.grid(False)
     for s in ("top", "right"):
@@ -83,7 +91,13 @@ def main():
 
     fig.suptitle("Embedding classifier variants under the sampling strategies: what the designs reveal",
                  fontsize=13)
-    fig.tight_layout(rect=[0, 0, 1, 0.93])
+    _caption(fig, "Three panels contrast the embedding classifier variants v2 through v6. The left panel plots design "
+                  "effect against window size W, one line per variant, where higher means more spatial "
+                  "autocorrelation and the dot-product variant v6 sits roughly four times lower. The middle panel is a "
+                  "heatmap of Approach D proportion correlation to the reference by class and variant at W of 5, where "
+                  "red is positive tracking of class abundance and blue is negative. The right panel gives the "
+                  "fraction of samples in which four rare change classes are absent under a simple design at n of 20 "
+                  "and W of 1, where v6 speckle scatters classes and leaves fewer samples empty.", top=0.93)
     fig.savefig(os.path.join(D, "variant_comparison.png"), dpi=140, bbox_inches="tight")
     plt.close(fig)
     print(f"wrote {D}/variant_comparison.png")
@@ -114,7 +128,12 @@ def separation_scatter(de, dc):
     ax.annotate("v6: per-pixel, no abundance signal", (x["v6"], y["v6"]),
                 textcoords="offset points", xytext=(12, 10), fontsize=8, color="0.3")
     _classic(ax)
-    fig.tight_layout()
+    _caption(fig, "Each point is one embedding classifier variant, placed by its abundance-weighted Approach D "
+                  "proportion correlation to the reference on the horizontal axis, where further right means better "
+                  "class abundance tracking, and by its design effect at W of 9 on the vertical axis, where higher "
+                  "means more spatial autocorrelation. The layout separates the variants into a smooth and faithful "
+                  "group v2, v3, and v5 that tracks abundance, an intermediate variant v4, and the per-pixel "
+                  "dot-product variant v6, which carries no abundance signal.")
     fig.savefig(os.path.join(D, "variant_separation_scatter.png"), dpi=140, bbox_inches="tight")
     plt.close(fig)
     print(f"wrote {D}/variant_separation_scatter.png")

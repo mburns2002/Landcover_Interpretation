@@ -226,6 +226,14 @@ def write_latex(df, summary, n, B, path):
         fh.write("\n".join(L))
 
 
+def _caption(fig, text, top=1.0, width=125):
+    import textwrap
+    wrapped = "\n".join(textwrap.wrap(text, width))
+    nlines = wrapped.count("\n") + 1
+    fig.tight_layout(rect=[0, 0.02 + 0.035 * nlines, 1, top])
+    fig.text(0.5, 0.01, wrapped, ha="center", va="bottom", fontsize=8, color="0.35")
+
+
 def forest_plot(df, path):
     import matplotlib
     matplotlib.use("Agg")
@@ -245,7 +253,14 @@ def forest_plot(df, path):
     from matplotlib.patches import Patch
     ax.legend(handles=[Patch(color=color[t], label=t) for t in ["High", "Moderate", "Low"]],
               loc="lower right", fontsize=8)
-    fig.tight_layout(); fig.savefig(path, dpi=150, bbox_inches="tight")
+    _caption(fig, "Forest plot of per-class inter-interpreter agreement F1 for each land-cover "
+                  "class, where each dot is the pooled point estimate and its horizontal bar is "
+                  "the 95% cluster (pair) bootstrap confidence interval. F1 is the balanced "
+                  "probability that the two interpreters concur given one assigned the class, and "
+                  "the dashed vertical lines mark the Low, Moderate, and High reliability "
+                  "thresholds at 0.50 and 0.70. Dots colored orange or red identify classes such "
+                  "as Grass/Shrub and Wetland where the human reference itself is unreliable.")
+    fig.savefig(path, dpi=150, bbox_inches="tight")
     plt.close(fig)
 
 

@@ -102,6 +102,14 @@ def metrics_from_cm(cm):
                 kappa=kappa, f1=f1, iou=iou, support=row + col, n_valid=int(total))
 
 
+def _caption(fig, text, top=1.0, width=125):
+    import textwrap
+    wrapped = "\n".join(textwrap.wrap(text, width))
+    nlines = wrapped.count("\n") + 1
+    fig.tight_layout(rect=[0, 0.02 + 0.035 * nlines, 1, top])
+    fig.text(0.5, 0.01, wrapped, ha="center", va="bottom", fontsize=8, color="0.35")
+
+
 def plot_pair(gid, revA, revB, arrA, arrB, codes, names, colors, m, out_path):
     import matplotlib.pyplot as plt
     from matplotlib.colors import ListedColormap, BoundaryNorm
@@ -139,11 +147,17 @@ def plot_pair(gid, revA, revB, arrA, arrB, codes, names, colors, m, out_path):
     agree_handles = [Patch(facecolor="#2ca02c", edgecolor="k", label="agree"),
                      Patch(facecolor="#d62728", edgecolor="k", label="disagree")]
     axes[2].legend(handles=agree_handles, loc="upper left", bbox_to_anchor=(1.02, 1), fontsize=8)
-    fig.legend(handles=class_handles, loc="lower center", ncol=min(8, len(present)), fontsize=8)
+    fig.legend(handles=class_handles, loc="lower center", bbox_to_anchor=(0.5, 0.11),
+               ncol=min(8, len(present)), fontsize=8)
     fig.suptitle(f"grid {gid}   {revA} vs {revB}\n"
                  f"agreement={m['overall_agreement']:.2f}  macroF1={m['macro_f1']:.2f}  "
                  f"mIoU={m['mean_iou']:.2f}  kappa={m['kappa']:.2f}", fontsize=9)
-    fig.tight_layout(rect=[0, 0.08, 1, 0.93])
+    _caption(fig, "Two reviewers' land-cover interpretations of the same CKIT-RF cell shown "
+                  "side by side, with the rightmost panel marking where they agree in green and "
+                  "disagree in red. The left and center panels share the class color legend at "
+                  "the bottom, and the header reports overall agreement, macro F1, mean IoU, and "
+                  "Cohen's kappa for this pair. Read it to see which classes and locations drive "
+                  "the disagreement between the two interpreters.", top=0.93)
     fig.savefig(out_path, dpi=130, bbox_inches="tight")
     plt.close(fig)
 
@@ -168,7 +182,12 @@ def plot_confusion(cm, codes, names, out_path):
                 ax.text(j, i, f"{norm[i,j]:.2f}", ha="center", va="center",
                         fontsize=7, color="black" if norm[i, j] < 0.6 else "white")
     fig.colorbar(im, fraction=0.046, pad=0.04)
-    fig.tight_layout()
+    _caption(fig, "Row-normalized confusion matrix pooled over all reviewer pairs, with rows "
+                  "showing the class assigned by Reviewer A and columns the class assigned by "
+                  "Reviewer B. Each cell gives the fraction of Reviewer A's pixels of that class "
+                  "that Reviewer B placed in the column class, so the diagonal is inter-reviewer "
+                  "agreement and bright off-diagonal cells mark the class confusions where the two "
+                  "interpreters most often diverge.")
     fig.savefig(out_path, dpi=140, bbox_inches="tight")
     plt.close(fig)
 

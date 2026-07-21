@@ -179,6 +179,14 @@ def main(boot=2000):
     print(f"\noutputs -> {OUT}/spatial_tolerance_delta.csv/png  (no relaxed OA reported by design)")
 
 
+def _caption(fig, text, top=1.0, width=125):
+    import textwrap
+    wrapped = "\n".join(textwrap.wrap(text, width))
+    nlines = wrapped.count("\n") + 1
+    fig.tight_layout(rect=[0, 0.02 + 0.035 * nlines, 1, top])
+    fig.text(0.5, 0.01, wrapped, ha="center", va="bottom", fontsize=8, color="0.35")
+
+
 def plot(df, path):
     import matplotlib
     matplotlib.use("Agg")
@@ -203,7 +211,15 @@ def plot(df, path):
                  "matching, above the heterogeneity null\n"
                  "(high = boundary-misregistration; ~0 = conceptual; still rising at 5x5 = "
                  "misregistered > 1 px). NOT a corrected accuracy.", fontsize=11)
-    fig.tight_layout(rect=[0, 0, 1, 0.93])
+    _caption(fig, "For each land-cover class, the bars show how much inter-interpreter agreement is "
+             "recovered when a pixel is allowed to match any occurrence of its class within a 3x3 "
+             "(blue) or 5x5 (orange) neighborhood, above a heterogeneity null estimated by shifting "
+             "the dilated masks, with 95 percent cluster-bootstrap error bars. The left panel dilates "
+             "reviewer B (A to B) and the right dilates reviewer A (B to A), and classes are sorted "
+             "by the 3x3 recovery. A tall bar means the disagreement is boundary misregistration, a "
+             "bar near zero means conceptual disagreement, and a 5x5 bar much taller than the 3x3 "
+             "means misregistration beyond one pixel; this is a diagnostic, not a corrected "
+             "accuracy.", top=0.9)
     fig.savefig(path, dpi=140, bbox_inches="tight"); plt.close(fig)
 
 

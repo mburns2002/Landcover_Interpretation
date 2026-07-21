@@ -25,6 +25,14 @@ VARIANTS = ["v2", "v3", "v4", "v5", "v6"]
 VPAL = {"v2": "#1f77b4", "v3": "#2ca02c", "v4": "#9467bd", "v5": "#ff7f0e", "v6": "#d62728"}
 
 
+def _caption(fig, text, top=1.0, width=125):
+    import textwrap
+    wrapped = "\n".join(textwrap.wrap(text, width))
+    nlines = wrapped.count("\n") + 1
+    fig.tight_layout(rect=[0, 0.02 + 0.035 * nlines, 1, top])
+    fig.text(0.5, 0.01, wrapped, ha="center", va="bottom", fontsize=8, color="0.35")
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--dir", default="reports/transfer_confusion",
@@ -64,7 +72,12 @@ def main():
     ax.grid(False)
     for s in ("top", "right"):
         ax.spines[s].set_visible(False)
-    fig.tight_layout()
+    _caption(fig, "Overall accuracy of each RF variant (v2 to v6) when the single classifier "
+             "trained on the 2018/2020 embeddings is applied to five NAIP brackets, with the time "
+             "period on the x axis and OA on the y axis. Each colored line is one variant, dots "
+             "carry the OA value, and the shaded 2018-2020 column marks the in-sample control. The "
+             "five brackets use disjoint cell sets of 36 cells each, so read the points as five "
+             "independent assessments, and not as a controlled transfer curve.")
     fig.savefig(os.path.join(DIR, "oa_by_bracket.png"), dpi=150, bbox_inches="tight")
     plt.close(fig)
 

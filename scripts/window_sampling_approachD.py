@@ -152,6 +152,14 @@ def main():
     print(f"\noutputs -> {OUT}/  (no confusion matrix / no OA by design)")
 
 
+def _caption(fig, text, top=1.0, width=125):
+    import textwrap
+    wrapped = "\n".join(textwrap.wrap(text, width))
+    nlines = wrapped.count("\n") + 1
+    fig.tight_layout(rect=[0, 0.02 + 0.035 * nlines, 1, top])
+    fig.text(0.5, 0.01, wrapped, ha="center", va="bottom", fontsize=8, color="0.35")
+
+
 def scatter_grid(acc_v, mdf_v, names, path, version):
     import matplotlib
     matplotlib.use("Agg")
@@ -183,7 +191,13 @@ def scatter_grid(acc_v, mdf_v, names, path, version):
                 ax.set_xlabel("prop_map", fontsize=7)
     fig.suptitle(f"Approach D per class — model {version}: prop_map vs prop_ref density "
                  f"(red = 1:1); both-zero windows dropped", fontsize=12)
-    fig.tight_layout(rect=[0, 0, 1, 0.985])
+    _caption(fig, "For one model version, this grid places the ten land cover classes down the rows and window sizes "
+                  "W of 3, 5, 7, and 9 across the columns. Each cell is a log-scaled density of windows in the "
+                  "proportion plane, where the horizontal axis is the fraction of a window's jointly valid pixels that "
+                  "are the class in the map and the vertical axis is the same fraction in the reference, with the red "
+                  "1:1 line marking perfect agreement and both-zero windows dropped. Panel annotations give the "
+                  "retained window count and the RMSE to the 1:1 line, so density collapsing onto the red line as W "
+                  "grows means the version carries the right class abundance in the right area.", top=0.985)
     fig.savefig(path, dpi=115, bbox_inches="tight"); plt.close(fig)
 
 
@@ -203,7 +217,12 @@ def tightness_plot(mdf, names, path):
     axes[0, 0].legend(fontsize=7, frameon=False)
     fig.suptitle("Approach D: scatter tightness (RMSE to 1:1) vs window size, per class per variant\n"
                  "(falling = tightens with W: right abundance, locally misplaced pixels)", fontsize=12)
-    fig.tight_layout(rect=[0, 0, 1, 0.94])
+    _caption(fig, "Each of the ten panels is one land cover class and plots the RMSE of the window proportions to the "
+                  "1:1 line against window size W, with one colored line per model version v2 through v6. Lower RMSE "
+                  "means the map and reference class proportions agree more tightly within windows. A line that falls "
+                  "as W increases marks a version that has the right class abundance over a general area but "
+                  "misplaces pixels locally, so aggregating into larger windows brings the proportions into "
+                  "agreement.", top=0.94)
     fig.savefig(path, dpi=140, bbox_inches="tight"); plt.close(fig)
 
 

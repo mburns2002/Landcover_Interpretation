@@ -148,6 +148,14 @@ def write_summary_txt(pt, n, n_blank, path):
         fh.write("\n".join(lines) + "\n")
 
 
+def _caption(fig, text, top=1.0, width=125):
+    import textwrap
+    wrapped = "\n".join(textwrap.wrap(text, width))
+    nlines = wrapped.count("\n") + 1
+    fig.tight_layout(rect=[0, 0.02 + 0.035 * nlines, 1, top])
+    fig.text(0.5, 0.01, wrapped, ha="center", va="bottom", fontsize=8, color="0.35")
+
+
 def compare_figure(comp, n_cells, path):
     import matplotlib
     matplotlib.use("Agg")
@@ -172,7 +180,11 @@ def compare_figure(comp, n_cells, path):
             ax.spines[s].set_visible(False)
     fig.suptitle(f"collapsed 5-class census: spectral spec_all vs embedding variants "
                  f"(temporally matched, adjudicated reference, same {n_cells} cells)", fontsize=11)
-    fig.tight_layout(rect=[0, 0, 1, 0.94])
+    _caption(fig, "Overall accuracy, Cohen's kappa, and macro-F1 of the collapsed 5-class census for "
+                  f"the spectral spec_all classifier and each embedding variant, on the same {n_cells} "
+                  "cells. OA is dominated by the ~98.5% Stable class and stays below the all-Stable "
+                  "baseline (dashed) for every source, so kappa is the honest read of change-detection "
+                  "skill, and it stays near zero throughout.", top=0.92)
     fig.savefig(path, dpi=150, bbox_inches="tight")
     plt.close(fig)
 

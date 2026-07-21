@@ -168,6 +168,14 @@ def _style(ax):
         ax.spines[s].set_visible(False)
 
 
+def _caption(fig, text, top=1.0, width=125):
+    import textwrap
+    wrapped = "\n".join(textwrap.wrap(text, width))
+    nlines = wrapped.count("\n") + 1
+    fig.tight_layout(rect=[0, 0.02 + 0.035 * nlines, 1, top])
+    fig.text(0.5, 0.01, wrapped, ha="center", va="bottom", fontsize=8, color="0.35")
+
+
 def fig_beaver_headline(res, path):
     """Headline: beaver UA and PA vs cap, plus total predicted-beaver-pixel count vs cap."""
     import matplotlib
@@ -200,7 +208,13 @@ def fig_beaver_headline(res, path):
     _style(ax)
     fig.suptitle(f"beaver commission sensitivity to training cap (pooled, {res['n_cells']} cells; "
                  f"beaver training ceiling ~{TRAIN_CEILING[9]:,} px)", fontsize=11)
-    fig.tight_layout(rect=[0, 0, 1, 0.95])
+    _caption(fig, "The left panel plots beaver user's accuracy (commission) and producer's accuracy "
+             "(recall) against the change-class training cap of 50, 100, 150, and 200 points, and the "
+             "right panel plots the total pooled count of pixels predicted as beaver at each cap with "
+             "the dashed interpreted-reference count for scale. All caps are scored on the same pooled "
+             "cell set. Read the left panel to see whether a lower cap trades commission for lost "
+             "recall, and the right panel to see whether predicted beaver area shrinks toward the "
+             "interpreted count as the cap drops.", top=0.93)
     fig.savefig(path, dpi=150, bbox_inches="tight")
     plt.close(fig)
 
@@ -233,7 +247,13 @@ def fig_change_small_multiples(res, path):
     axes[-1].legend(fontsize=8, frameon=False)
     fig.suptitle(f"change-class UA and PA vs training cap (pooled, {res['n_cells']} cells); "
                  "small-pool classes (beaver, insect) are the informative ones", fontsize=11)
-    fig.tight_layout(rect=[0, 0, 1, 0.93])
+    _caption(fig, "One panel per change class plots user's accuracy (commission) and producer's "
+             "accuracy (recall) against the training cap of 50, 100, 150, and 200 points, on a shared "
+             "y-axis so the classes are comparable. Each panel title lists the class training ceiling "
+             "and its interpreted-reference pixel count, and the small-pool classes beaver and insect "
+             "are the informative ones since the cap is a large fraction of their pool. Read each "
+             "panel for how commission and recall move as the cap changes, and compare panels to see "
+             "that the cap barely affects the large-pool harvest and development classes.", top=0.93)
     fig.savefig(path, dpi=150, bbox_inches="tight")
     plt.close(fig)
 
@@ -261,7 +281,13 @@ def fig_predicted_area(res, path):
     axes[0].set_ylabel("percent of pooled pixels predicted as class")
     fig.suptitle(f"predicted change-class area vs training cap (pooled, {res['n_cells']} cells); "
                  "bar above the dashed reference line is over-mapping / commission", fontsize=11)
-    fig.tight_layout(rect=[0, 0, 1, 0.93])
+    _caption(fig, "One panel per change class plots the percent of pooled pixels predicted as that "
+             "class against the training cap of 50, 100, 150, and 200 points, with the dashed line "
+             "marking the interpreted-reference prevalence. A predicted point above the dashed line "
+             "is over-mapping, which is a commission tendency, and a point below it is under-mapping. "
+             "Read each panel for whether predicted area moves toward the interpreted line as the cap "
+             "drops, and compare panels to see the effect is largest for the small-pool classes.",
+             top=0.93)
     fig.savefig(path, dpi=150, bbox_inches="tight")
     plt.close(fig)
 
@@ -283,7 +309,12 @@ def fig_overall_secondary(res, path):
                  "change-class subject of this analysis)", fontsize=10)
     ax.legend(fontsize=8, frameon=False)
     _style(ax)
-    fig.tight_layout()
+    _caption(fig, "Overall accuracy, macro-F1, and Cohen's kappa are plotted against the change-class "
+             "training cap of 50, 100, 150, and 200 points on the same pooled cell set. These "
+             "aggregate metrics are dominated by the abundant stable classes rather than the rare "
+             "change classes that this analysis targets, so they are shown only as a secondary check. "
+             "Read the near-flat lines as evidence that capping change-class training does not move "
+             "overall performance, which is why the change-class panels are the primary result.")
     fig.savefig(path, dpi=150, bbox_inches="tight")
     plt.close(fig)
 

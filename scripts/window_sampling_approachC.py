@@ -199,6 +199,14 @@ def main():
     print(f"\noutputs -> {OUT}/  (majority->plurality deviation; tie rule lowest class code)")
 
 
+def _caption(fig, text, top=1.0, width=125):
+    import textwrap
+    wrapped = "\n".join(textwrap.wrap(text, width))
+    nlines = wrapped.count("\n") + 1
+    fig.tight_layout(rect=[0, 0.02 + 0.035 * nlines, 1, top])
+    fig.text(0.5, 0.01, wrapped, ha="center", va="bottom", fontsize=8, color="0.35")
+
+
 def plot(mdf, path):
     import matplotlib
     matplotlib.use("Agg")
@@ -233,7 +241,14 @@ def plot(mdf, path):
     ax.set_title("Effective sample size ~1/W²"); ax.grid(alpha=0.3)
     fig.suptitle("Approach C (independent per-field plurality per window): metrics, majority "
                  "share, and B≠C vs. window size", fontsize=12)
-    fig.tight_layout(rect=[0, 0, 1, 0.96])
+    _caption(fig, "The top row plots overall accuracy, macro F1, and Cohen's kappa against window size W, one line "
+                  "per version, under Approach C in which each window is labeled by the independent plurality class of "
+                  "the map field and of the reference field. The bottom left panel shows the fraction of windows whose "
+                  "plurality was an actual strict majority above 50 percent for each version's map and for the shared "
+                  "reference, falling as W grows so that pluralities become weak summaries. The bottom middle panel "
+                  "gives the fraction of windows where Approach B and Approach C disagree, isolating within-window "
+                  "heterogeneity, and the bottom right panel shows windows per cell falling as roughly one over W "
+                  "squared.", top=0.96)
     fig.savefig(path, dpi=140, bbox_inches="tight"); plt.close(fig)
 
 

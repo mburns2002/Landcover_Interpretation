@@ -90,6 +90,14 @@ def load_legend():
     return codes, colors, names
 
 
+def _caption(fig, text, top=1.0, width=80):
+    import textwrap
+    wrapped = "\n".join(textwrap.wrap(text, width))
+    nlines = wrapped.count("\n") + 1
+    fig.tight_layout(rect=[0, 0.02 + 0.05 * nlines, 1, top])
+    fig.text(0.5, 0.01, wrapped, ha="center", va="bottom", fontsize=8, color="0.35")
+
+
 def plot_bar(df, out_path):
     import matplotlib.pyplot as plt
     fig, ax = plt.subplots(figsize=(7, 4))
@@ -102,7 +110,12 @@ def plot_bar(df, out_path):
     for x, v in enumerate(df.neighbor_change_full):
         ax.text(x, v + 0.01, f"{v:.2f}", ha="center", fontsize=9)
     ax.set_ylim(0, 1)
-    fig.tight_layout()
+    _caption(fig, "Each bar is one model version's whole-raster neighbor-change, the fraction of "
+             "horizontally adjacent valid pixel pairs whose class differs. Low values near the green "
+             "end mean spatially smooth maps with coherent patches, and high values near the red end "
+             "mean speckly per-pixel maps such as the v6 dot-product classifier, with the dashed line "
+             "at 0.5 separating the two regimes. Read the bar heights to rank the versions from "
+             "smoothest to noisiest.")
     fig.savefig(out_path, dpi=140, bbox_inches="tight")
     plt.close(fig)
 
@@ -126,7 +139,11 @@ def plot_vs_accuracy(df, out_path):
     ax.set_ylabel("pooled overall accuracy vs. interpreted")
     ax.set_title("Speckle vs. agreement with interpretations")
     ax.grid(alpha=0.3)
-    fig.tight_layout()
+    _caption(fig, "Each point is one model version, plotting its whole-raster neighbor-change "
+             "(speckle) on the x-axis against its pooled overall accuracy versus the interpreted "
+             "reference on the y-axis, labelled by version. This shows whether spatially noisier maps "
+             "agree more or less with the human interpretations. Read left to right to see how "
+             "accuracy changes as speckle increases across the versions.")
     fig.savefig(out_path, dpi=140, bbox_inches="tight")
     plt.close(fig)
 
@@ -155,7 +172,11 @@ def plot_crops(versions, out_path):
         ax.set_title(f"{v}\nneighbor-change {nc:.2f}", fontsize=9)
         ax.set_xticks([]); ax.set_yticks([])
     fig.suptitle("Same location across model versions (smooth vs. speckly)", fontsize=11)
-    fig.tight_layout(rect=[0, 0, 1, 0.95])
+    _caption(fig, "Each panel is the same ground location classified by a different model version, "
+             "drawn in the 10-class land-cover colour scheme, with its local neighbor-change value "
+             "printed above. Smooth versions render the scene as coherent patches, while speckly "
+             "versions such as v6 break it into per-pixel noise. Compare the panels side by side to "
+             "see the same landscape grow noisier as neighbor-change rises.", top=0.95, width=110)
     fig.savefig(out_path, dpi=140, bbox_inches="tight")
     plt.close(fig)
 

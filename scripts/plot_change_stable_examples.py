@@ -34,6 +34,14 @@ N_TOP = 10
 NAME_RE = re.compile(r"reviewer_([a-z]+)_grid_(\d+)_sample_(\d+)_sensor_Sentinel-2_target_(\d+)", re.I)
 
 
+def _caption(fig, text, top=1.0, width=125):
+    import textwrap
+    wrapped = "\n".join(textwrap.wrap(text, width))
+    nlines = wrapped.count("\n") + 1
+    fig.tight_layout(rect=[0, 0.02 + 0.035 * nlines, 1, top])
+    fig.text(0.5, 0.01, wrapped, ha="center", va="bottom", fontsize=8, color="0.35")
+
+
 def load_legend():
     df = pd.read_csv(RF_LEGEND)
     code2name = {int(r.code): r.display_name for r in df.itertuples()}
@@ -95,13 +103,20 @@ def main():
         present = sorted(set(np.unique(a)).union(np.unique(b)) & set(code2name))
         handles = [Patch(facecolor=code2rgb[c], edgecolor="0.4", label=code2name[c]) for c in present]
         handles.append(Patch(facecolor="none", edgecolor="black", label="disagreed area (outlined)"))
-        fig.legend(handles=handles, loc="lower center", ncol=min(7, len(handles)), fontsize=8)
+        fig.legend(handles=handles, loc="lower center", ncol=min(7, len(handles)), fontsize=8,
+                   bbox_to_anchor=(0.5, 0.20))
         km = a.shape[1] * 10 / 1000
         fig.suptitle(f"#{rank + 1}  cell {row.grid} ({km:.1f} km, target {row.target})  ·  "
                      f"{row.revA} vs {row.revB}  ·  outlined: {row.stable_class} vs "
                      f"{row.change_class}  ({row.area_ha:.0f} ha, one called stable, one called "
                      f"change)", fontsize=10)
-        fig.tight_layout(rect=[0, 0.08, 1, 0.95])
+        _caption(fig, "One of the largest change-versus-stable interpreter disagreements, showing "
+                 "the two reviewers' interpreted maps for the same cell side by side in the RF land "
+                 "cover colors. The black outline marks the pixels where one reviewer assigned the "
+                 "stable class and the other assigned the paired change class, drawn identically on "
+                 "both panels. Compare the two panels within the outlined area to see how the "
+                 "reviewers split on that class pair, with the cell, class pair, and disagreed area "
+                 "in hectares given in the header.", top=0.93)
         out = os.path.join(OUT, f"rank{rank + 1:02d}_grid{row.grid}_"
                                 f"{row.stable_class}_vs_{row.change_class}.png".replace("/", "-"))
         fig.savefig(out, dpi=150, bbox_inches="tight")

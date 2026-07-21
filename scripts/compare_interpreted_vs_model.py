@@ -172,6 +172,14 @@ def metrics_from_cm(cm):
     )
 
 
+def _caption(fig, text, top=1.0, width=125):
+    import textwrap
+    wrapped = "\n".join(textwrap.wrap(text, width))
+    nlines = wrapped.count("\n") + 1
+    fig.tight_layout(rect=[0, 0.02 + 0.035 * nlines, 1, top])
+    fig.text(0.5, 0.01, wrapped, ha="center", va="bottom", fontsize=8, color="0.35")
+
+
 def plot_cell(name, rf_common, model_common, colors, names, m, out_path):
     import matplotlib.pyplot as plt
     from matplotlib.colors import ListedColormap, BoundaryNorm
@@ -204,12 +212,18 @@ def plot_cell(name, rf_common, model_common, colors, names, m, out_path):
                      Patch(facecolor="#d62728", edgecolor="k", label="mismatch"),
                      Patch(facecolor="#eeeeee", edgecolor="k", label="no model data")]
     axes[2].legend(handles=agree_handles, loc="upper left", bbox_to_anchor=(1.02, 1), fontsize=8)
-    fig.legend(handles=class_handles, loc="lower center", ncol=min(10, len(codes)), fontsize=8)
+    fig.legend(handles=class_handles, loc="lower center", ncol=min(10, len(codes)), fontsize=8,
+               bbox_to_anchor=(0.5, 0.16))
 
     fig.suptitle(f"{name}\nvalid={100*m['n_valid']/rf_common.size:.0f}%  "
                  f"OA={m['overall_accuracy']:.2f}  macroF1={m['macro_f1']:.2f}  "
                  f"mIoU={m['mean_iou']:.2f}  kappa={m['kappa']:.2f}", fontsize=9)
-    fig.tight_layout(rect=[0, 0.08, 1, 0.94])
+    _caption(fig, "Side-by-side maps for one interpreted grid cell: the interpreted RF land cover "
+             "(left), the AlphaEarth model map (center), and their per-pixel agreement (right), all "
+             "in the shared 10-class scheme. In the agreement panel green marks matching pixels, red "
+             "marks mismatches, and light grey marks pixels with no model data, which are excluded "
+             "from the statistics. The header reports the valid overlap fraction along with overall "
+             "accuracy, macro-F1, mean IoU, and kappa for this cell.", top=0.93)
     fig.savefig(out_path, dpi=130, bbox_inches="tight")
     plt.close(fig)
 

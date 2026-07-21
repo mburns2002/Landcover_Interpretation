@@ -102,6 +102,14 @@ def stats_all(legend):
     print(f"\nwrote {out}")
 
 
+def _caption(fig, text, top=1.0, width=95):
+    import textwrap
+    wrapped = "\n".join(textwrap.wrap(text, width))
+    nlines = wrapped.count("\n") + 1
+    fig.tight_layout(rect=[0, 0.02 + 0.04 * nlines, 1, top])
+    fig.text(0.5, 0.01, wrapped, ha="center", va="bottom", fontsize=8, color="0.35")
+
+
 def _plot_axis(ax, arr, legend):
     """Render a class array onto ax using the legend colors. Returns codes shown."""
     from matplotlib.colors import ListedColormap, BoundaryNorm
@@ -131,7 +139,11 @@ def plot_one(path, legend):
                for c in sorted(legend) if c in present]
     ax.legend(handles=handles, bbox_to_anchor=(1.02, 1), loc="upper left",
               fontsize=8, title="class")
-    fig.tight_layout()
+    _caption(fig, "A single Random Forest classified land-cover raster, with each pixel coloured by "
+             "its class code as decoded through the legend on the right, which lists only the classes "
+             "present in this map. The map shows the spatial layout of land-cover and disturbance "
+             "classes for this interpreted cell. Read the colours against the legend to see where "
+             "each class falls.", width=90)
     os.makedirs(OUT_DIR, exist_ok=True)
     out = os.path.join(OUT_DIR, os.path.splitext(os.path.basename(path))[0] + ".png")
     fig.savefig(out, dpi=150, bbox_inches="tight")
@@ -159,8 +171,12 @@ def plot_montage(n, legend):
                      label=f"{c} {legend[c]['display_name']}")
                for c in sorted(legend) if c in present]
     fig.legend(handles=handles, loc="lower center", ncol=min(7, len(handles)),
-               fontsize=8, title="class")
-    fig.tight_layout(rect=[0, 0.06, 1, 1])
+               fontsize=8, title="class", bbox_to_anchor=(0.5, 0.08))
+    _caption(fig, "A montage of the first several Random Forest classified land-cover rasters, one "
+             "per panel, each coloured by class code through the shared legend below. The panels give "
+             "a quick overview of the range of land-cover and disturbance patterns across the "
+             "interpreted cells. Scan the panels to compare class composition and spatial texture "
+             "from cell to cell.", width=110)
     os.makedirs(OUT_DIR, exist_ok=True)
     out = os.path.join(OUT_DIR, f"montage_{len(files)}.png")
     fig.savefig(out, dpi=150, bbox_inches="tight")

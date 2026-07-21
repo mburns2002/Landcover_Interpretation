@@ -142,6 +142,14 @@ def main(boot=2000):
     print(f"\noutputs -> {OUT}/reviewer_*")
 
 
+def _caption(fig, text, top=1.0, width=125):
+    import textwrap
+    wrapped = "\n".join(textwrap.wrap(text, width))
+    nlines = wrapped.count("\n") + 1
+    fig.tight_layout(rect=[0, 0.02 + 0.035 * nlines, 1, top])
+    fig.text(0.5, 0.01, wrapped, ha="center", va="bottom", fontsize=8, color="0.35")
+
+
 def heatmap(df, reviewers, path):
     import matplotlib
     matplotlib.use("Agg")
@@ -169,7 +177,14 @@ def heatmap(df, reviewers, path):
     ax.set_title("Reviewer over-assignment index (log2)\n+ = over-assigns class vs. partners; "
                  "* = 95% CI excludes 0")
     fig.colorbar(im, fraction=0.046, pad=0.04, label="log2 over-assignment")
-    fig.tight_layout(); fig.savefig(path, dpi=140, bbox_inches="tight"); plt.close(fig)
+    _caption(fig, "Heatmap of the log2 over-assignment index for each reviewer (rows) and "
+                  "land-cover class (columns), pooled in pixels over every double-interpreted "
+                  "pair that reviewer took part in. Red cells with a positive value mark classes a "
+                  "reviewer over-assigns relative to their partners, blue cells mark classes they "
+                  "under-assign, and a trailing asterisk flags cells whose 95% cluster bootstrap "
+                  "confidence interval excludes zero. Read across a row to see one reviewer's "
+                  "systematic labeling leanings, and down a column to compare reviewers on a class.")
+    fig.savefig(path, dpi=140, bbox_inches="tight"); plt.close(fig)
 
 
 if __name__ == "__main__":

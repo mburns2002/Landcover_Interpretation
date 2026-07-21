@@ -126,6 +126,14 @@ def main():
     print(f"\noutputs -> {OUT}/dedup_sensitivity{suffix}_*.csv/png")
 
 
+def _caption(fig, text, top=1.0, width=110):
+    import textwrap
+    wrapped = "\n".join(textwrap.wrap(text, width))
+    nlines = wrapped.count("\n") + 1
+    fig.tight_layout(rect=[0, 0.02 + 0.04 * nlines, 1, top])
+    fig.text(0.5, 0.01, wrapped, ha="center", va="bottom", fontsize=8, color="0.35")
+
+
 def make_plot(runs_df, versions, path, n_runs):
     import matplotlib
     matplotlib.use("Agg")
@@ -139,7 +147,13 @@ def make_plot(runs_df, versions, path, n_runs):
         ax.set_title(titles[metric]); ax.set_ylabel(metric); ax.grid(alpha=0.3, axis="y")
     fig.suptitle(f"Sensitivity of model-comparison metrics to the choice of interpretation\n"
                  f"({n_runs} random one-per-location selections)", fontsize=12)
-    fig.tight_layout(rect=[0, 0, 1, 0.95])
+    _caption(fig, "Four boxplots, one per metric (overall accuracy, macro-F1, mean IoU, and Cohen's "
+             f"kappa), show the distribution of that metric across {n_runs} random draws that pick one "
+             "interpretation per multi-interpreted location, with one box per model version. The "
+             "spread of each box is how much the pooled metric depends on which interpretation is "
+             "kept rather than on the model itself. Read a narrow box as a result that is robust to "
+             "the interpretation choice, and compare boxes across versions to rank the models while "
+             "accounting for that selection uncertainty.", top=0.9)
     fig.savefig(path, dpi=140, bbox_inches="tight")
     plt.close(fig)
 

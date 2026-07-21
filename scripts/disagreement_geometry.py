@@ -58,6 +58,14 @@ AREA_THRESH_HA = 0.1               # 0.1 ha = 10 px at 10 m
 rng = np.random.default_rng(42)    # only used if any sampling is needed
 
 
+def _caption(fig, text, top=1.0, width=125):
+    import textwrap
+    wrapped = "\n".join(textwrap.wrap(text, width))
+    nlines = wrapped.count("\n") + 1
+    fig.tight_layout(rect=[0, 0.02 + 0.035 * nlines, 1, top])
+    fig.text(0.5, 0.01, wrapped, ha="center", va="bottom", fontsize=8, color="0.35")
+
+
 def per_pixel_perimeter(mask):
     """4-connected boundary-edge count per pixel (outside-array counts as boundary)."""
     m = mask.astype(np.int16)
@@ -224,7 +232,7 @@ def make_plots(df, names, colors):
     agr = df[df.kind == "agreement"]
     focus = FOCUS_LABELS()
 
-    def panels(value_col, xlabel, logx, fname, title):
+    def panels(value_col, xlabel, logx, fname, title, caption):
         fig, axes = plt.subplots(2, 3, figsize=(14, 8))
         axes = axes.ravel()
         for ax, (ttl, ca, cb) in zip(axes, focus):
@@ -259,14 +267,28 @@ def make_plots(df, names, colors):
         ax.set_xlabel(xlabel); ax.set_ylabel("cumulative fraction")
         ax.legend(fontsize=6.5, frameon=False); classic(ax)
         fig.suptitle(title, fontsize=12)
-        fig.tight_layout(rect=[0, 0, 1, 0.96])
+        _caption(fig, caption, top=0.93)
         fig.savefig(os.path.join(OUT, fname), dpi=140, bbox_inches="tight")
         plt.close(fig)
 
     panels("area_ha", "patch area (ha, log)", True, "area_ecdf_focus.png",
-           "Disagreement patch area by directed class pair (vs. agreement reference)")
+           "Disagreement patch area by directed class pair (vs. agreement reference)",
+           "Each panel plots the empirical cumulative distribution of disagreement-patch area, on "
+           "a log scale in hectares, for one high-disagreement class boundary, with solid and "
+           "dashed lines for the two directed orderings of the pair and a dotted gray reference "
+           "curve for the agreement patches of those classes. A curve shifted to the left means "
+           "the disagreement patches are smaller than the agreed features, indicating thin "
+           "boundary slivers rather than whole misclassified features. The sixth panel pools all "
+           "Beaver disagreement patches against the same agreement reference.")
     panels("shape_index", "shape index  P / (2√(πA))", False, "shape_index_ecdf_focus.png",
-           "Disagreement patch shape index by directed class pair (vs. agreement reference)")
+           "Disagreement patch shape index by directed class pair (vs. agreement reference)",
+           "Each panel plots the empirical cumulative distribution of the disagreement-patch "
+           "shape index, defined as perimeter divided by 2 times the square root of pi times "
+           "area, for one high-disagreement class boundary, with solid and dashed lines for the "
+           "two directed orderings and a dotted gray reference curve for the agreement patches. "
+           "The shape index equals 1 for a circle and rises for elongated or convoluted patches, "
+           "so curves shifted right of the agreement reference indicate ribbon-like disagreement "
+           "along class edges. The sixth panel pools all Beaver disagreement patches.")
 
     # pixel-width ECDF (resolution-limit check)
     fig, ax = plt.subplots(figsize=(7.5, 5))
@@ -281,7 +303,14 @@ def make_plots(df, names, colors):
     ax.set_xlabel("patch pixel width  (2A / P)"); ax.set_ylabel("cumulative fraction")
     ax.set_title("Disagreement patch width — resolution-limit check\n(dashed: 1 and 2 pixels)")
     ax.legend(fontsize=8, frameon=False); classic(ax)
-    fig.tight_layout(); fig.savefig(os.path.join(OUT, "width_ecdf.png"), dpi=140, bbox_inches="tight")
+    _caption(fig, "Empirical cumulative distribution of disagreement-patch pixel width, computed "
+                  "as twice the area over the perimeter, for all disagreement patches in blue and "
+                  "for interior patches that do not touch the cell edge in red. The dashed "
+                  "vertical lines mark widths of 1 and 2 pixels, the resolution limit at 10 m "
+                  "where the discrete perimeter and shape index become unreliable. A large share "
+                  "of mass at or below 2 pixels means much of the disagreement sits in thin "
+                  "ribbons near the pixel resolution limit.")
+    fig.savefig(os.path.join(OUT, "width_ecdf.png"), dpi=140, bbox_inches="tight")
     plt.close(fig)
 
 

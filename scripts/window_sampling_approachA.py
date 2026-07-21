@@ -173,6 +173,14 @@ def main():
     print(f"\noutputs -> {OUT}/  (sampling draws, NOT accuracy estimates)")
 
 
+def _caption(fig, text, top=1.0, width=125):
+    import textwrap
+    wrapped = "\n".join(textwrap.wrap(text, width))
+    nlines = wrapped.count("\n") + 1
+    fig.tight_layout(rect=[0, 0.02 + 0.035 * nlines, 1, top])
+    fig.text(0.5, 0.01, wrapped, ha="center", va="bottom", fontsize=8, color="0.35")
+
+
 def make_plots(df, versions, outdir):
     import matplotlib
     matplotlib.use("Agg")
@@ -195,7 +203,12 @@ def make_plots(df, versions, outdir):
         ax.legend(fontsize=7, frameon=False); ax.grid(alpha=0.3, which="both")
     fig.suptitle("Precision at equal cost: SD of sampled OA vs pixels interpreted per cell\n"
                  "(at equal x, lower = more information per pixel — does W=1 dominate?)", fontsize=12)
-    fig.tight_layout(rect=[0, 0, 1, 0.9])
+    _caption(fig, "Each panel is one model version and plots the standard deviation of overall accuracy across "
+                  "200 sampling draws against the number of pixels interpreted per cell, n times W squared, with one "
+                  "line per window size W. Both axes are logarithmic, so at any fixed x position a lower line means "
+                  "more information recovered per interpreted pixel. The W equal to 1 line sitting below the larger "
+                  "windows indicates that single pixels beat wide windows at equal cost, since pixels within a window "
+                  "are spatially autocorrelated.", top=0.9)
     fig.savefig(os.path.join(outdir, "sd_vs_cost.png"), dpi=140, bbox_inches="tight"); plt.close(fig)
 
     # 2) design effect vs W (mean over n) + effective sample size
@@ -219,7 +232,13 @@ def make_plots(df, versions, outdir):
     axes[1].legend(fontsize=8, frameon=False); axes[1].grid(alpha=0.3)
     fig.suptitle("Design effect: how much within-window autocorrelation costs, by W and version",
                  fontsize=12)
-    fig.tight_layout(rect=[0, 0, 1, 0.94])
+    _caption(fig, "The left panel plots the design effect, the ratio of observed sampling variance to the binomial "
+                  "variance expected from independent pixels, against window size W with one line per version, "
+                  "averaged over n. The right panel plots the reciprocal of the design effect, the effective pixel "
+                  "count divided by the nominal pixel count, which is the fraction of information retained per "
+                  "interpreted pixel. The dashed reference line marks a design effect of 1, so lines rising above it "
+                  "on the left, and falling below it on the right, show that wider windows and more autocorrelated "
+                  "versions waste sampling effort.", top=0.94)
     fig.savefig(os.path.join(outdir, "design_effect_vs_W.png"), dpi=140, bbox_inches="tight"); plt.close(fig)
 
     # 3) bias vs W (unbiasedness check)
@@ -232,7 +251,12 @@ def make_plots(df, versions, outdir):
     ax.set_xlabel("window size W"); ax.set_ylabel("mean sampled OA − census OA")
     ax.set_title("Unbiasedness: the sampling design recovers the census (bias ≈ 0 at all W)")
     ax.set_xticks(WS); ax.legend(fontsize=8, frameon=False); ax.grid(alpha=0.3)
-    fig.tight_layout(); fig.savefig(os.path.join(outdir, "bias_vs_W.png"), dpi=140, bbox_inches="tight")
+    _caption(fig, "This plots the bias in overall accuracy, the mean sampled overall accuracy across 200 draws minus "
+                  "the known census overall accuracy, against window size W with one line per version. The dashed line "
+                  "marks zero bias, the ideal. Lines hovering near zero at every W confirm that the window sampling "
+                  "design recovers the census value without systematic error, so the precision costs of wide windows "
+                  "seen in the other figures do not come with any bias penalty.")
+    fig.savefig(os.path.join(outdir, "bias_vs_W.png"), dpi=140, bbox_inches="tight")
     plt.close(fig)
 
 

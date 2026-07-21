@@ -292,6 +292,14 @@ def _style(ax):
         ax.spines[s].set_visible(False)
 
 
+def _caption(fig, text, top=1.0, width=125):
+    import textwrap
+    wrapped = "\n".join(textwrap.wrap(text, width))
+    nlines = wrapped.count("\n") + 1
+    fig.tight_layout(rect=[0, 0.02 + 0.035 * nlines, 1, top])
+    fig.text(0.5, 0.01, wrapped, ha="center", va="bottom", fontsize=8, color="0.35")
+
+
 def fig_overall(overall, path):
     import matplotlib
     matplotlib.use("Agg")
@@ -315,7 +323,13 @@ def fig_overall(overall, path):
     axes[-1].legend(fontsize=8, frameon=False, title="source")
     fig.suptitle("spectral spec_all vs embedding variants, per bracket and pooled "
                  "(2018-2020 is the in-sample control)", fontsize=11)
-    fig.tight_layout(rect=[0, 0, 1, 0.95])
+    _caption(fig, "Three panels show overall accuracy, macro-F1, and Cohen's kappa for the spectral "
+             "spec_all classifier (black, thick line) and the five embedding variants (v2 to v6) "
+             "against the CKIT-RF interpreted reference. Each x-axis position is one NAIP bracket, "
+             "with the pooled-across-cells result at the right, and 2018-2020 is the in-sample "
+             "control. Read each line as one source's accuracy across brackets, and compare the "
+             "black spec_all line against the coloured embedding lines to see which input type "
+             "transfers better.", top=0.93)
     fig.savefig(path, dpi=150, bbox_inches="tight")
     plt.close(fig)
 
@@ -342,9 +356,15 @@ def fig_perclass(combined, metric, title, path):
     ax.set_ylim(0, 1)
     ax.set_title(f"pooled per-class {title}, spectral spec_all vs embedding variants "
                  "(change classes: harvest, development, beaver, insect_disease)", fontsize=10)
-    ax.legend(fontsize=8, frameon=False, ncol=6, loc="upper center", bbox_to_anchor=(0.5, -0.18))
+    ax.legend(fontsize=8, frameon=False, ncol=6, loc="upper center", bbox_to_anchor=(0.5, -0.28))
     _style(ax)
-    fig.tight_layout()
+    _caption(fig, f"Grouped bars give the pooled per-class {title} for the spectral spec_all "
+             "classifier (black) and the five embedding variants (v2 to v6), one cluster per "
+             "land-cover class along the x-axis. The four change classes (harvest, development, "
+             "beaver, insect_disease) sit among the ten classes, and taller bars mean better "
+             "agreement with the interpreted reference. Compare bar heights within a class to see "
+             "which source classifies that class best, and scan across classes to find where all "
+             "sources struggle.")
     fig.savefig(path, dpi=150, bbox_inches="tight")
     plt.close(fig)
 
@@ -374,7 +394,13 @@ def fig_change_ua(combined, path):
     axes[-1].legend(fontsize=7, frameon=False, title="source")
     fig.suptitle("change-class user's accuracy per bracket, spectral vs embedding "
                  "(low UA means commission, e.g. false beaver)", fontsize=11)
-    fig.tight_layout(rect=[0, 0, 1, 0.94])
+    _caption(fig, "One panel per change class (harvest, development, beaver, insect_disease) plots "
+             "user's accuracy, which is precision, for the spectral spec_all classifier (black) and "
+             "the five embedding variants across NAIP brackets, with the pooled result at the right "
+             "of each panel. User's accuracy is the fraction of pixels a source labelled as the "
+             "class that the interpreted reference agrees with, so a low value means commission, for "
+             "example false beaver. Compare the black spec_all line against the embedding lines "
+             "within each panel to see which input type over-calls a given change class.", top=0.93)
     fig.savefig(path, dpi=150, bbox_inches="tight")
     plt.close(fig)
 
@@ -416,10 +442,17 @@ def fig_change_classes_pooled(combined, path):
         _style(ax)
     for ax in axes:
         ax.set_ylabel("accuracy")
-    axes[1].legend(fontsize=8, frameon=False, ncol=6, loc="upper center", bbox_to_anchor=(0.5, -0.13))
+    axes[1].legend(fontsize=8, frameon=False, ncol=6, loc="upper center", bbox_to_anchor=(0.5, -0.22))
     fig.suptitle("pooled change-class accuracy (10-class scheme, 168 cells): spectral spec_all vs "
                  "embedding variants (note: panels use independent y-scales)", fontsize=11)
-    fig.tight_layout(rect=[0, 0, 1, 0.95])
+    _caption(fig, "The left panel shows pooled user's accuracy (commission when low) and the right "
+             "panel pooled producer's accuracy (omission when low) for the four change classes, "
+             "comparing the spectral spec_all classifier (black) against the five embedding variants "
+             "on the shared 168 cells. Each x-axis tick is one change class with its reference pixel "
+             "support, and the two panels use independent y-scales, so the left is not directly "
+             "comparable in height to the right. Read down a class within a panel to compare sources, "
+             "and read across the two panels to weigh a source's commission against its omission.",
+             top=0.93)
     fig.savefig(path, dpi=150, bbox_inches="tight")
     plt.close(fig)
 
@@ -459,7 +492,11 @@ def fig_change_classes_area(pooled_spec, emb_mats, path):
                  "commission tendency, below = under-mapping / omission)", fontsize=10)
     ax.legend(fontsize=8, frameon=False, ncol=7, loc="upper center", bbox_to_anchor=(0.5, -0.13))
     _style(ax)
-    fig.tight_layout()
+    _caption(fig, "Share of pooled pixels each map assigns to each change class, on the 168 common "
+                  "cells, with the interpreted reference drawn as one bar per class. A bar above the "
+                  "interpreted reference indicates over-mapping (commission), and below indicates "
+                  "under-mapping (omission). Every classifier over-maps all four change classes "
+                  "relative to what the interpreters actually mapped.", top=0.88)
     fig.savefig(path, dpi=150, bbox_inches="tight")
     plt.close(fig)
 

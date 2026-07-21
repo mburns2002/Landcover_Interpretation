@@ -130,6 +130,14 @@ def main():
     print(f"\noutputs -> {OUT}/gs_wetland_training_overlay.csv/png")
 
 
+def _caption(fig, text, top=1.0, width=90):
+    import textwrap
+    wrapped = "\n".join(textwrap.wrap(text, width))
+    nlines = wrapped.count("\n") + 1
+    fig.tight_layout(rect=[0, 0.02 + 0.02 * nlines, 1, top])
+    fig.text(0.5, 0.008, wrapped, ha="center", va="bottom", fontsize=8, color="0.35")
+
+
 def make_render(render, path):
     import matplotlib
     matplotlib.use("Agg")
@@ -172,10 +180,17 @@ def make_render(render, path):
     handles = [Patch(facecolor=colors[c], edgecolor="k", label=names[c]) for c in (GS, WET)]
     handles += [Patch(facecolor="0.7", edgecolor="k", label="other classes (training pts)"),
                 Patch(edgecolor="red", facecolor="none", label="disagreement patch")]
-    fig.legend(handles=handles, loc="lower center", ncol=4, fontsize=8)
+    fig.legend(handles=handles, loc="lower center", ncol=4, fontsize=8, bbox_to_anchor=(0.5, 0.03))
     fig.suptitle("Grass/Shrub <-> Wetland disagreement patches with each reviewer's training points\n"
                  "(map faded; points colored by trained class; patch outlined red)", fontsize=11)
-    fig.tight_layout(rect=[0, 0.03, 1, 0.985])
+    _caption(fig, "Each row is one of the largest Grass/Shrub versus Wetland disagreement patches, "
+             "with the two reviewers' classified maps side by side, faded, and overlaid with their "
+             "interpreter training points coloured by the trained class; the disagreement patch is "
+             "outlined in red. This asks whether a patch is driven by conflicting training labels "
+             "inside the zone, by both models extrapolating where neither reviewer trained, or by "
+             "only one reviewer training there. Read the training points inside each red outline to "
+             "see which reviewer placed Grass/Shrub versus Wetland labels, and where the outline "
+             "holds no points, both maps are extrapolating.", top=0.96)
     fig.savefig(path, dpi=130, bbox_inches="tight")
     plt.close(fig)
 

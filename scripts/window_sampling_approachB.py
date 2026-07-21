@@ -167,6 +167,14 @@ def main():
     print(f"\noutputs -> {OUT}/window_sampling_*  (tie rule: lowest map code, then lowest ref code)")
 
 
+def _caption(fig, text, top=1.0, width=125):
+    import textwrap
+    wrapped = "\n".join(textwrap.wrap(text, width))
+    nlines = wrapped.count("\n") + 1
+    fig.tight_layout(rect=[0, 0.02 + 0.035 * nlines, 1, top])
+    fig.text(0.5, 0.01, wrapped, ha="center", va="bottom", fontsize=8, color="0.35")
+
+
 def plot(mdf, path):
     import matplotlib
     matplotlib.use("Agg")
@@ -190,7 +198,12 @@ def plot(mdf, path):
     ax.grid(alpha=0.3)
     fig.suptitle("Approach B (dominant pixel-pair per window): metrics vs. window size\n"
                  "interpreted (reference) vs. model maps; exhaustive non-overlapping tiling", fontsize=12)
-    fig.tight_layout(rect=[0, 0, 1, 0.95])
+    _caption(fig, "The first three panels plot overall accuracy, macro F1, and Cohen's kappa against window size W, "
+                  "with one colored line per model version v2 through v6, computed from the Approach B confusion "
+                  "matrix in which each window contributes its single most frequent map and reference pixel pair. The "
+                  "fourth panel shows windows per cell on a logarithmic axis, falling as roughly one over W squared "
+                  "and identical across versions. Reading left to right shows how collapsing each window to its "
+                  "dominant pair shifts the metrics as windows grow, while the effective sample size shrinks.", top=0.95)
     fig.savefig(path, dpi=140, bbox_inches="tight"); plt.close(fig)
 
 
