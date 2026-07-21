@@ -51,6 +51,7 @@ CAP_COLOR = "#1f77b4"        # v2 embedding cap sweep (v2 blue)
 SPEC_COLOR = "#8c564b"       # spec_all (brown, as in the spectral area figure)
 REF_COLOR = "black"          # interpreted reference
 HUMAN_COLOR = "#555555"      # inter-reviewer agreement benchmark
+CI_COLOR = "#add8e6"         # light blue band for the human agreement 95% CI
 
 
 def _caption(fig, text, width=115):
@@ -160,10 +161,10 @@ def _plot_pa_human(cap_M, spec_M, human, n):
         cap_pa = [cc.metrics(cap_M[cap])[f"recall[{c}]"] for cap in CAPS]
         spec_pa = cc.metrics(spec_M)[f"recall[{c}]"]
         f1, lo, hi = human[c]
+        ax.axhspan(lo, hi, color=CI_COLOR, alpha=0.5, lw=0, zorder=0)   # full-width CI band
         ax.plot(CAPS, cap_pa, "o-", lw=2.4, color=CAP_COLOR, zorder=3)
         ax.axhline(spec_pa, ls="--", lw=2.2, color=SPEC_COLOR)
         ax.axhline(f1, ls="-", lw=2.2, color=HUMAN_COLOR)
-        ax.fill_between(CAPS, lo, hi, color=HUMAN_COLOR, alpha=0.15, lw=0)
         ax.set_xticks(CAPS)
         ax.set_xlabel("training cap")
         # per-panel values in the title, so a single shared legend can carry only the series types
@@ -175,12 +176,12 @@ def _plot_pa_human(cap_M, spec_M, human, n):
     handles = [Line2D([0], [0], color=CAP_COLOR, marker="o", lw=2.4, label="v2 cap sweep PA"),
                Line2D([0], [0], color=SPEC_COLOR, ls="--", lw=2.2, label="spec_all PA"),
                Line2D([0], [0], color=HUMAN_COLOR, ls="-", lw=2.2, label="human agreement F1"),
-               Patch(facecolor=HUMAN_COLOR, alpha=0.15, label="human F1 95% CI")]
+               Patch(facecolor=CI_COLOR, alpha=0.5, label="human F1 95% CI")]
     fig.suptitle(f"change-class recall vs training cap, with spec_all and inter-reviewer agreement "
                  f"(pooled, {n} common cells; agreement from 72 double-interpreted cells)", fontsize=11)
     cap_text = ("Model recall (PA) of each change class versus the v2 training cap (blue), with "
                 "spec_all (brown) and the inter-reviewer agreement F1 with its 95 percent bootstrap "
-                "CI (grey shaded band) as reference lines. The human agreement is low for development, "
+                "CI (light blue band) as reference lines. The human agreement is low for development, "
                 "insect, and especially beaver (F1 ~0.08), so the interpreted reference is itself "
                 "unreliable there and model recall on those classes is bounded by reference noise. "
                 "Model recall that sits above the human line is not genuine skill: the change-class "
