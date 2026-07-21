@@ -12,9 +12,13 @@ Reference is the adjudicated interpreted cell; predictions are the change-cap ma
 the sensitivity export, cap 200 from the transferability export, band 1 = v2). Classes are collapsed to
 Stable plus Harvest, Development, Insect/Disease, and Beaver, coloured by the canonical class legend.
 
-Outputs -> reports/sensitivity_changecap_5class/top_disagreement_maps/cap<50|100|150>/
-  - rank<NN>_cell<gid>_<bracket>.png    one 7-panel figure per top-disagreement cell
-  - top_disagreement_summary.csv        rank, cell, bracket, disagreement fraction, valid pixels
+Two modes, one output tree each, both with cap50/cap100/cap150 subfolders:
+  - default (caps): each panel shows the interpreted reference and all four cap maps (50/100/150/200)
+    plus the ranking cap's agree/disagree map, in reports/.../top_disagreement_maps/.
+  - --embeddings: each panel shows the interpreted reference, only the ranking cap, and the embedding
+    variants v2-v5 plus the ranking cap's agree/disagree map, in reports/.../cap_vs_embedding_maps/.
+
+Each subfolder holds rank<NN>_cell<gid>_<bracket>.png and top_disagreement_summary.csv.
 
 Requires: rasterio, numpy, pandas, matplotlib
 """
@@ -41,8 +45,12 @@ bmc = scs.bmc
 
 TRUTH = "exports/truth_selections.csv"
 RANK_CAPS = [50, 100, 150]                                  # one output folder per swept cap
-ALL_CAPS = [50, 100, 150, 200]                              # every cap is shown in each panel
-OUT = "reports/sensitivity_changecap_5class/top_disagreement_maps"
+ALL_CAPS = [50, 100, 150, 200]                              # caps mode shows every cap in each panel
+EMB_DIR = "data/raw/transfer_predictions"
+EMB_VARIANTS = ["v2", "v3", "v4", "v5"]                     # embeddings mode shows these (v6 omitted)
+VBAND = {"v2": 1, "v3": 2, "v4": 3, "v5": 4, "v6": 5}
+OUT_CAPS = "reports/sensitivity_changecap_5class/top_disagreement_maps"
+OUT_EMB = "reports/sensitivity_changecap_5class/cap_vs_embedding_maps"
 TOP_N = 10
 AGREE_COLOR = "#0072B2"                                     # colorblind-friendly (Okabe-Ito)
 DISAGREE_COLOR = "#D55E00"
@@ -65,6 +73,14 @@ def to_pred(raw):
 
 
 def main():
+    import argparse
+    ap = argparse.ArgumentParser(description=__doc__,
+                                 formatter_class=argparse.RawDescriptionHelpFormatter)
+    ap.add_argument("--embeddings", action="store_true",
+                    help="show the ranking cap plus the embedding v2-v5 maps instead of all four caps")
+    args = ap.parse_args()
+    mode = "embeddings" if args.embeddings else "caps"
+    OUT = OUT_EMB if args.embeddings else OUT_CAPS
     import matplotlib
     matplotlib.use("Agg")
     import matplotlib.pyplot as plt
@@ -117,45 +133,71 @@ def main():
         for i, r in enumerate(top, 1):
             gid, bracket = r["gid"], r["bracket"]
             ref = to_ref(read_band(chosen_ref[gid], 1))
-            capmaps = {cap: to_pred(read_band(scs.cap_path(cap, bracket, gid), scs.cap_source(cap)[2]))
-                       for cap in ALL_CAPS}
-            p = capmaps[rank_cap]
-            valid = (ref >= 1) & (ref <= 5) & (p >= 1) & (p <= 5)
+            capX = to_pred(read_band(scs.cap_path(rank_cap, bracket, gid), rband))
+            valid = (ref >= 1) & (ref <= 5) & (capX >= 1) & (capX <= 5)
             ad = np.zeros(ref.shape, np.uint8)
-            ad[valid & (ref == p)] = 1
-            ad[valid & (ref != p)] = 2
+            ad[valid & (ref == capX)] = 1
+            ad[valid & (ref != capX)] = 2
 
             fig, axes = plt.subplots(2, 4, figsize=(15, 8))
-            panels = [(axes[0, 0], ref, "interpreted reference"),
-                      (axes[0, 1], capmaps[50], "cap 50"), (axes[0, 2], capmaps[100], "cap 100"),
-                      (axes[0, 3], capmaps[150], "cap 150"), (axes[1, 0], capmaps[200], "cap 200")]
-            for ax, arr, title in panels:
-                ax.imshow(arr, cmap=class_cmap, vmin=-0.5, vmax=5.5, interpolation="nearest")
-                mark = "  (ranked)" if title == f"cap {rank_cap}" else ""
-                ax.set_title(title + mark, fontsize=11,
-                             fontweight="bold" if mark else "normal")
-                ax.set_xticks([]); ax.set_yticks([])
-            axes[1, 1].imshow(ad, cmap=ad_cmap, vmin=-0.5, vmax=2.5, interpolation="nearest")
-            axes[1, 1].set_title(f"agree / disagree\n(cap {rank_cap} vs interpreted)", fontsize=11)
-            axes[1, 1].set_xticks([]); axes[1, 1].set_yticks([])
-            axes[1, 1].legend(handles=ad_handles, loc="lower right", fontsize=8, framealpha=0.9)
-            axes[1, 2].axis("off")
-            axes[1, 2].legend(handles=class_handles, loc="center left", fontsize=9, frameon=False,
-                              title="collapsed 5-class scheme")
-            axes[1, 3].axis("off")
+            if mode == "embeddings":
+                # top row: interpreted, the ranking cap, agree/disagree, legend; bottom row: v2-v5
+                for ax, arr, title, bold in [(axes[0, 0], ref, "interpreted reference", False),
+                                             (axes[0, 1], capX, f"cap {rank_cap}", True)]:
+                    ax.imshow(arr, cmap=class_cmap, vmin=-0.5, vmax=5.5, interpolation="nearest")
+                    ax.set_title(title, fontsize=11, fontweight="bold" if bold else "normal")
+                    ax.set_xticks([]); ax.set_yticks([])
+                adax = axes[0, 2]
+                for ax, v in zip(axes[1], EMB_VARIANTS):
+                    ev = to_pred(read_band(os.path.join(EMB_DIR, bracket,
+                                                        f"pred_{bracket}_cell{gid}.tif"), VBAND[v]))
+                    ax.imshow(ev, cmap=class_cmap, vmin=-0.5, vmax=5.5, interpolation="nearest")
+                    ax.set_title(f"embedding {v}", fontsize=11); ax.set_xticks([]); ax.set_yticks([])
+                legax = axes[0, 3]
+            else:
+                capmaps = {cap: to_pred(read_band(scs.cap_path(cap, bracket, gid),
+                                                  scs.cap_source(cap)[2])) for cap in ALL_CAPS}
+                panels = [(axes[0, 0], ref, "interpreted reference"),
+                          (axes[0, 1], capmaps[50], "cap 50"), (axes[0, 2], capmaps[100], "cap 100"),
+                          (axes[0, 3], capmaps[150], "cap 150"), (axes[1, 0], capmaps[200], "cap 200")]
+                for ax, arr, title in panels:
+                    ax.imshow(arr, cmap=class_cmap, vmin=-0.5, vmax=5.5, interpolation="nearest")
+                    mark = "  (ranked)" if title == f"cap {rank_cap}" else ""
+                    ax.set_title(title + mark, fontsize=11, fontweight="bold" if mark else "normal")
+                    ax.set_xticks([]); ax.set_yticks([])
+                adax = axes[1, 1]
+                legax = axes[1, 2]
+                axes[1, 3].axis("off")
+            adax.imshow(ad, cmap=ad_cmap, vmin=-0.5, vmax=2.5, interpolation="nearest")
+            adax.set_title(f"agree / disagree\n(cap {rank_cap} vs interpreted)", fontsize=11)
+            adax.set_xticks([]); adax.set_yticks([])
+            adax.legend(handles=ad_handles, loc="lower right", fontsize=8, framealpha=0.9)
+            legax.axis("off")
+            legax.legend(handles=class_handles, loc="center left", fontsize=9, frameon=False,
+                         title="collapsed 5-class scheme")
 
             fig.suptitle(f"cell {gid}  ·  bracket {bracket.replace('_', '-')}  ·  rank {i} of {TOP_N} "
                          f"by cap {rank_cap}-vs-interpreted disagreement ({r['disagree'] * 100:.0f}% of "
                          f"{r['n_valid']:,} valid px)", fontsize=13)
-            fig.text(0.5, 0.01,
-                     "Collapsed 5-class maps for one interpreted cell: the interpreted reference and "
-                     "the four change-cap predictions (50, 100, 150, and 200 training points per change "
-                     f"class). The agree/disagree panel marks where the cap {rank_cap} map matches the "
-                     "reference (blue) or differs (vermillion), in colorblind-friendly colors. This "
-                     f"cell is among the ten where the cap {rank_cap} prediction disagrees most with the "
-                     "interpreted reference, so the panels show how the predicted change changes with "
-                     "the training cap at a hard location.",
-                     ha="center", va="bottom", fontsize=8, color="0.35", wrap=True)
+            if mode == "embeddings":
+                caption = (f"Collapsed 5-class maps for one interpreted cell: the interpreted "
+                           f"reference, the cap {rank_cap} change-cap prediction, and the embedding "
+                           "variants v2, v3, v4, and v5 (v6, the dot-only variant, is omitted). The "
+                           f"agree/disagree panel marks where the cap {rank_cap} map matches the "
+                           "reference (blue) or differs (vermillion). This cell is among the ten where "
+                           f"the cap {rank_cap} prediction disagrees most with the interpreted "
+                           "reference, so the panels compare it against the embedding maps at a hard "
+                           "location.")
+            else:
+                caption = ("Collapsed 5-class maps for one interpreted cell: the interpreted reference "
+                           "and the four change-cap predictions (50, 100, 150, and 200 training points "
+                           f"per change class). The agree/disagree panel marks where the cap {rank_cap} "
+                           "map matches the reference (blue) or differs (vermillion), in "
+                           f"colorblind-friendly colors. This cell is among the ten where the cap "
+                           f"{rank_cap} prediction disagrees most with the interpreted reference, so the "
+                           "panels show how the predicted change changes with the training cap at a hard "
+                           "location.")
+            fig.text(0.5, 0.01, caption, ha="center", va="bottom", fontsize=8, color="0.35", wrap=True)
             fig.tight_layout(rect=[0, 0.06, 1, 0.95])
             fig.savefig(os.path.join(out, f"rank{i:02d}_cell{gid}_{bracket}.png"), dpi=140,
                         bbox_inches="tight")
