@@ -1,0 +1,15 @@
+reference points: adjudicated reviewer per location (truth_selections.csv)
+map field: spectral spec_all per-bracket predictions (data/raw/spectral_transferability_10class_percell)
+cells scored: 168 of 180 (dropped 12 cells whose spec_all prediction is entirely nodata)
+  blank 2021_2023: cell 15713
+  blank 2019_2021: cell 17111
+  blank 2021_2023: cell 17731
+  blank 2021_2023: cell 17863
+  blank 2021_2023: cell 18400
+  blank 2019_2021: cell 19683
+  blank 2021_2023: cell 19711
+  blank 2021_2023: cell 30292
+  blank 2020_2022: cell 32631
+  blank 2020_2022: cell 34240
+  blank 2020_2022: cell 50981
+  blank 2020_2022: cell 53151

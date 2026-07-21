@@ -1,0 +1,12 @@
+collapsed 5-class census, spectral spec_all (model vs interpreted reference)
+cells: 168 (adjudicated reference, spectral spec_all per-bracket map field) from the 21,561-cell frame; FPC sqrt(1 - n/N) applied to ratio-estimator CIs
+note: 12 interpreted cells dropped because their spec_all prediction is entirely nodata (out-of-sample brackets), so this census is on 168 cells, not 180
+
+OA is dominated by the ~98.5% Stable class. Read the all-Stable baseline and kappa,
+not OA alone.
+
+source          OA  all-Stable   kappa  macro-F1
+spec_all     0.782       0.985   0.031     0.203
+
+macro-F1 averages 5 classes here vs 10 in the 10-class matrices; not comparable
+as a level. Full per-class precision/recall/F1/IoU with CIs in metrics_long.csv.

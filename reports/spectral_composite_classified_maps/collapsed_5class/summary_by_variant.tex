@@ -1,0 +1,13 @@
+% Collapsed 5-class census per variant. Requires \usepackage{booktabs}.
+\begin{table}[t]
+\centering
+\caption{Collapsed 5-class census (Stable plus Harvest, Development, Insect/Disease, Beaver) per model variant over 168 interpreted cells. Values are point estimates with 95\% design-based ratio-estimator CIs (FPC $\sqrt{1-n/N}$, $N=21{,}561$). OA is dominated by the $\sim$98.5\% Stable class: every variant's OA is below the all-Stable baseline, and $\kappa\approx0$. macro-F1 averages 5 classes here versus 10 elsewhere and is not comparable as a level.}
+\label{tab:collapsed5_census}
+\begin{tabular}{lrrcccc}
+\toprule
+Variant & Valid px & All-Stable OA & OA (95\% CI) & $\kappa$ (95\% CI) & macro-F1 (95\% CI) & mean IoU (95\% CI) \\
+\midrule
+spec_all & 18,788,997 & 0.985 & 0.782 (0.758--0.806) & 0.031 (0.019--0.043) & 0.203 (0.192--0.215) & 0.171 (0.164--0.179) \\
+\bottomrule
+\end{tabular}
+\end{table}

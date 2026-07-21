@@ -19,7 +19,8 @@ The embedding results use per-bracket pooling only (25 matrices, no pooled matri
 
 ## Missing brackets and grid checks
 
-- Brackets found: 2017_2019 (36 cells), 2018_2020 (36 cells), 2019_2021 (36 cells), 2020_2022 (36 cells), 2021_2023 (36 cells).
+- Brackets found: 2017_2019 (36 cells), 2018_2020 (36 cells), 2019_2021 (34 cells), 2020_2022 (32 cells), 2021_2023 (30 cells).
+- Blank spec_all predictions (entire raster nodata, dropped and not counted as scored cells): 12. 2019_2021: ['17111', '19683']; 2020_2022: ['32631', '34240', '50981', '53151']; 2021_2023: ['15713', '17731', '17863', '18400', '19711', '30292']. These fall in the out-of-sample brackets, so spec_all covers fewer than 36 cells there, and the spectral-vs-embedding comparison is on 168 spectral cells versus 180 embedding cells; the pooled and per-bracket metrics reflect only the cells spec_all actually classified.
 - Missing reference: 0.
 - Grid mismatch (pinning failed, not resampled): 0.
 - Prediction band count not 1: 0.
@@ -37,7 +38,7 @@ At 36 cells per bracket several change classes have very few reference pixels, a
 - 2018_2020: none flagged
 - 2019_2021: none flagged
 - 2020_2022: none flagged
-- 2021_2023: insect_disease (331 px, 4 cells)
+- 2021_2023: insect_disease (331 px, 3 cells)
 
 ## Outputs
 

@@ -100,7 +100,7 @@ def build_spectral(chosen_ref):
     cms = {b: np.zeros((10, 10), np.int64) for b in BRACKETS}
     cells_used = defaultdict(set)
     cells_present = {b: np.zeros(11, int) for b in BRACKETS}
-    skipped = {"missing_ref": [], "grid_mismatch": [], "band_count": []}
+    skipped = {"missing_ref": [], "grid_mismatch": [], "band_count": [], "blank_pred": []}
     unmapped = defaultdict(int)
 
     for bracket in BRACKETS:
@@ -121,6 +121,12 @@ def build_spectral(chosen_ref):
                 if not ok:
                     skipped["grid_mismatch"].append((bracket, cid, why))
                     continue
+                pred = pds.read(1)
+                # a spec_all raster that is entirely nodata is a missing prediction, not a valid
+                # all-Stable map; drop it and report rather than counting it as a scored cell
+                if not (pred >= 1).any():
+                    skipped["blank_pred"].append((bracket, cid))
+                    continue
                 ref_raw = rds.read(1)
                 for val in np.unique(ref_raw):
                     iv = int(val)
@@ -131,7 +137,6 @@ def build_spectral(chosen_ref):
                 for k in range(1, 11):
                     if (ref == k).any():
                         cells_present[bracket][k] += 1
-                pred = pds.read(1)
                 valid = (ref >= 1) & (ref <= 10) & (pred >= 1) & (pred <= 10)
                 if valid.any():
                     np.add.at(cms[bracket], (ref[valid] - 1, pred[valid] - 1), 1)
@@ -194,6 +199,14 @@ def write_note(chosen_desc, cells_used, cells_present, skipped, unmapped, spectr
         "## Missing brackets and grid checks",
         "",
         f"- Brackets found: {', '.join(b + ' (' + str(len(cells_used[b])) + ' cells)' for b in BRACKETS)}.",
+        f"- Blank spec_all predictions (entire raster nodata, dropped and not counted as scored "
+        f"cells): {len(skipped['blank_pred'])}. "
+        + ("; ".join(f"{b}: {sorted(c for bb, c in skipped['blank_pred'] if bb == b)}"
+                     for b in BRACKETS if any(bb == b for bb, _ in skipped['blank_pred']))
+           or "none") + ". These fall in the out-of-sample brackets, so spec_all covers fewer than "
+        "36 cells there, and the spectral-vs-embedding comparison is on 168 spectral cells versus 180 "
+        "embedding cells; the pooled and per-bracket metrics reflect only the cells spec_all actually "
+        "classified.",
         f"- Missing reference: {len(skipped['missing_ref'])}.",
         f"- Grid mismatch (pinning failed, not resampled): {len(skipped['grid_mismatch'])}.",
         f"- Prediction band count not 1: {len(skipped['band_count'])}.",
