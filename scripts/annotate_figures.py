@@ -99,15 +99,21 @@ DESC = {
 
 "global_confusion_matrix.png": (
  "Inter-interpreter agreement confusion matrix",
- "Row-normalized confusion matrix of inter-interpreter agreement, pooled over all "
- "double-interpreted pairs.\n"
+ "Inter-interpreter confusion matrix pooled over all double-interpreted pairs, in the shared "
+ "count plus PA/UA style.\n"
  "Axes: rows = Reviewer A's class, columns = Reviewer B's class (reviewers ordered "
- "alphabetically within each cell). Cell value = P(B assigns column | A assigns row); the "
- "diagonal is the agreement rate for that class.\n"
+ "alphabetically within each pair). Cells are raw pixel counts colored by row proportion, so "
+ "the diagonal shade is the row-conditional agreement.\n"
+ "Margins: the PA column is agreement given Reviewer A's label (diagonal over the row total) "
+ "with n = Reviewer A support; the UA row is agreement given Reviewer B's label (diagonal over "
+ "the column total) with n = Reviewer B support; the corner holds overall agreement and Cohen's "
+ "kappa. With no ground-truth axis PA and UA are the two conditional agreement rates rather than "
+ "producer's and user's accuracy against truth.\n"
  "Why: shows which classes two independent interpreters concur on and which they confuse.\n"
- "Interpret: bright diagonal = reliable class (Water, Forest, Agriculture); off-diagonal "
- "mass = systematic confusion (Grass/Shrub spreads into Agriculture/Forest/Wetland; "
- "Insect/Disease -> Forest)."),
+ "Interpret: strong diagonal = reliable class (Water 90/94%, Forest 89/90%, Agriculture 84/73%); "
+ "off-diagonal mass = systematic confusion (Grass/Shrub spreads into Agriculture, Forest, and "
+ "Wetland; Insect/Disease into Forest), with Development, Insect/Disease, and Beaver the least "
+ "reliable."),
 
 "class_disagreement_top.png": (
  "Class boundaries driving inter-interpreter disagreement",
