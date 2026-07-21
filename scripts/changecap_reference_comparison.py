@@ -152,33 +152,47 @@ def _plot_pa_human(cap_M, spec_M, human, n):
     import matplotlib
     matplotlib.use("Agg")
     import matplotlib.pyplot as plt
-    fig, axes = plt.subplots(1, 4, figsize=(17, 4.6), sharey=True)
+    from matplotlib.lines import Line2D
+    from matplotlib.patches import Patch
+    import textwrap
+    fig, axes = plt.subplots(1, 4, figsize=(18, 4.8), sharey=True)
     for ax, c in zip(axes, CHANGE5):
-        k = c - 1
         cap_pa = [cc.metrics(cap_M[cap])[f"recall[{c}]"] for cap in CAPS]
         spec_pa = cc.metrics(spec_M)[f"recall[{c}]"]
         f1, lo, hi = human[c]
-        ax.plot(CAPS, cap_pa, "o-", lw=2.3, color=CAP_COLOR, label="v2 cap sweep PA", zorder=3)
-        ax.axhline(spec_pa, ls="--", lw=1.8, color=SPEC_COLOR, label=f"spec_all PA ({spec_pa:.2f})")
-        ax.axhline(f1, ls="-", lw=1.8, color=HUMAN_COLOR, label=f"human agreement F1 ({f1:.2f})")
-        ax.fill_between(CAPS, lo, hi, color=HUMAN_COLOR, alpha=0.12, zorder=1)
+        ax.plot(CAPS, cap_pa, "o-", lw=2.4, color=CAP_COLOR, zorder=3)
+        ax.axhline(spec_pa, ls="--", lw=2.2, color=SPEC_COLOR)
+        ax.axhline(f1, ls="-", lw=2.2, color=HUMAN_COLOR)
+        ax.fill_between(CAPS, lo, hi, color=HUMAN_COLOR, alpha=0.15, lw=0)
         ax.set_xticks(CAPS)
         ax.set_xlabel("training cap")
-        ax.set_title(NAMES5[c], fontsize=10)
+        # per-panel values in the title, so a single shared legend can carry only the series types
+        ax.set_title(f"{NAMES5[c]}\nspec_all PA {spec_pa:.2f}  ·  human F1 {f1:.2f} ({lo:.2f}-{hi:.2f})",
+                     fontsize=9)
         ax.set_ylim(0, 1)
-        ax.legend(fontsize=7, frameon=False)
         _style(ax)
     axes[0].set_ylabel("producer's accuracy (recall / PA)")
+    handles = [Line2D([0], [0], color=CAP_COLOR, marker="o", lw=2.4, label="v2 cap sweep PA"),
+               Line2D([0], [0], color=SPEC_COLOR, ls="--", lw=2.2, label="spec_all PA"),
+               Line2D([0], [0], color=HUMAN_COLOR, ls="-", lw=2.2, label="human agreement F1"),
+               Patch(facecolor=HUMAN_COLOR, alpha=0.15, label="human F1 95% CI")]
     fig.suptitle(f"change-class recall vs training cap, with spec_all and inter-reviewer agreement "
                  f"(pooled, {n} common cells; agreement from 72 double-interpreted cells)", fontsize=11)
-    _caption(fig, "Model recall (PA) of each change class versus the v2 training cap (blue), with "
-                  "spec_all (brown) and the inter-reviewer agreement F1 with its 95 percent bootstrap "
-                  "CI (grey) as reference lines. The human agreement is low for development, insect, "
-                  "and especially beaver (F1 ~0.08), so the interpreted reference is itself unreliable "
-                  "there and model recall on those classes is bounded by reference noise. Model recall "
-                  "that sits above the human line is not genuine skill: the change-class user's "
-                  "accuracy stays near zero, so the model reaches these recall values by over-mapping "
-                  "the class, not by separating it cleanly.")
+    cap_text = ("Model recall (PA) of each change class versus the v2 training cap (blue), with "
+                "spec_all (brown) and the inter-reviewer agreement F1 with its 95 percent bootstrap "
+                "CI (grey shaded band) as reference lines. The human agreement is low for development, "
+                "insect, and especially beaver (F1 ~0.08), so the interpreted reference is itself "
+                "unreliable there and model recall on those classes is bounded by reference noise. "
+                "Model recall that sits above the human line is not genuine skill: the change-class "
+                "user's accuracy stays near zero, so the model reaches these recall values by "
+                "over-mapping the class, not by separating it cleanly.")
+    wrapped = "\n".join(textwrap.wrap(cap_text, 132))
+    nlines = wrapped.count("\n") + 1
+    # reserve room on the right for the shared legend and at the bottom for the caption
+    fig.tight_layout(rect=[0, 0.04 + 0.045 * nlines, 0.86, 0.94])
+    fig.legend(handles=handles, loc="center left", bbox_to_anchor=(0.87, 0.6), fontsize=9,
+               frameon=False, title="reference")
+    fig.text(0.43, 0.01, wrapped, ha="center", va="bottom", fontsize=8, color="0.35")
     fig.savefig(os.path.join(OUT, "change_classes_pa_vs_human_benchmark.png"), dpi=150, bbox_inches="tight")
     plt.close(fig)
 
