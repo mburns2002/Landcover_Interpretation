@@ -168,6 +168,29 @@ def embedding_pooled_matrix(variant):
     return M
 
 
+EMB_PRED_DIR = "data/raw/transfer_predictions"
+EMB_BAND = {"v2": 1, "v3": 2, "v4": 3, "v5": 4, "v6": 5}   # 5-band embedding prediction order
+
+
+def embedding_matrix_on_cells(chosen_ref, cells_used, variant):
+    """Pooled 10x10 embedding matrix for one variant on exactly the cells spec_all scored, so the
+    mapped-area comparison is on the same 168 cells rather than the full 180."""
+    band = EMB_BAND[variant]
+    M = np.zeros((10, 10), np.int64)
+    for bracket in BRACKETS:
+        for cid in cells_used[bracket]:
+            rp = chosen_ref[cid]
+            pp = os.path.join(EMB_PRED_DIR, bracket, f"pred_{bracket}_cell{cid}.tif")
+            with rasterio.open(pp) as pds, rasterio.open(rp) as rds:
+                pred = pds.read(band)
+                ref_raw = rds.read(1)
+            safe = np.where((ref_raw >= 0) & (ref_raw <= 62), ref_raw, 0)
+            ref = _REF_LUT[safe]
+            valid = (ref >= 1) & (ref <= 10) & (pred >= 1) & (pred <= 10)
+            np.add.at(M, (ref[valid] - 1, pred[valid] - 1), 1)
+    return M
+
+
 def write_note(chosen_desc, cells_used, cells_present, skipped, unmapped, spectral_long):
     long = pd.DataFrame(spectral_long)
     low = []
@@ -370,14 +393,17 @@ def fig_change_classes_pooled(combined, path):
     sup = {c: int(spec_sub.loc[c, "support"]) for c in codes}
     x = np.arange(len(codes))
     w = 0.13
-    fig, axes = plt.subplots(1, 2, figsize=(15, 5.2), sharey=True)
+    # independent y-scales: UA tops out much lower than PA, so a shared axis flattens the UA bars
+    fig, axes = plt.subplots(1, 2, figsize=(15, 5.2))
     panels = [(axes[0], "precision", "user's accuracy (UA), low means commission"),
               (axes[1], "recall", "producer's accuracy (PA), low means omission")]
     for ax, metric, title in panels:
+        panel_max = 0.0
         for i, src in enumerate(sources):
             s = sub[sub.source == src].set_index("class_code")
             vals = [pd.to_numeric(s.loc[c, metric], errors="coerce") if c in s.index else np.nan
                     for c in codes]
+            panel_max = max(panel_max, np.nanmax(vals))
             spec = src == "spectral_specall"
             ax.bar(x + (i - 2.5) * w, vals, w, color=src_color(src), edgecolor="white",
                    linewidth=0.3, zorder=3 if spec else 2,
@@ -385,13 +411,55 @@ def fig_change_classes_pooled(combined, path):
         ax.set_xticks(x)
         ax.set_xticklabels([f"{NAMES[c]}\n(n={sup[c]:,} px)" for c in codes], fontsize=9)
         ax.set_title(title, fontsize=10)
-        ax.set_ylim(0, 1)
+        # round the top up to a clean tick above the tallest bar so each panel fills its own range
+        ax.set_ylim(0, np.ceil(panel_max * 11) / 10)
         _style(ax)
-    axes[0].set_ylabel("accuracy")
+    for ax in axes:
+        ax.set_ylabel("accuracy")
     axes[1].legend(fontsize=8, frameon=False, ncol=6, loc="upper center", bbox_to_anchor=(0.5, -0.13))
     fig.suptitle("pooled change-class accuracy (10-class scheme, 168 cells): spectral spec_all vs "
-                 "embedding variants", fontsize=11)
+                 "embedding variants (note: panels use independent y-scales)", fontsize=11)
     fig.tight_layout(rect=[0, 0, 1, 0.95])
+    fig.savefig(path, dpi=150, bbox_inches="tight")
+    plt.close(fig)
+
+
+SPEC_AREA_COLOR = "#8c564b"   # spec_all in the area figure; black is reserved for interpreted here
+
+
+def fig_change_classes_area(pooled_spec, emb_mats, path):
+    """Mapped-area comparison for the four change classes on the shared cells: the fraction of pixels
+    each map assigns to the class, plus the interpreted reference fraction. Over-mapping relative to
+    interpreted is a commission tendency, under-mapping is an omission tendency.
+    """
+    import matplotlib
+    matplotlib.use("Agg")
+    import matplotlib.pyplot as plt
+    codes = CHANGE_CLASSES
+    total = pooled_spec.sum()
+    interp = pooled_spec.sum(1) / total                 # reference marginal (row sums), same for all
+    fracs = [("interpreted", "black", pooled_spec.sum(1) / total)]   # interpreted is the reference bar
+    fracs.append(("spec_all", SPEC_AREA_COLOR, pooled_spec.sum(0) / pooled_spec.sum()))
+    for v in EMB_VARIANTS:
+        M = emb_mats[v]
+        fracs.append((v, VPAL[v], M.sum(0) / M.sum()))
+    x = np.arange(len(codes))
+    w = 0.115
+    fig, ax = plt.subplots(figsize=(13, 5.4))
+    for i, (name, color, fr) in enumerate(fracs):
+        vals = [fr[c - 1] for c in codes]
+        ax.bar(x + (i - 3) * w, vals, w, color=color, edgecolor="white", linewidth=0.3,
+               label=name, zorder=3 if name in ("interpreted", "spec_all") else 2)
+    ax.set_xticks(x)
+    ax.set_xticklabels([f"{NAMES[c]}\n(interpreted {interp[c - 1] * 100:.2f}% of area)" for c in codes],
+                       fontsize=9)
+    ax.set_ylabel("fraction of mapped pixels")
+    ax.set_title("pooled change-class mapped area (10-class scheme, 168 cells): each map's share of "
+                 "pixels vs the interpreted reference\n(bar above interpreted = over-mapping / "
+                 "commission tendency, below = under-mapping / omission)", fontsize=10)
+    ax.legend(fontsize=8, frameon=False, ncol=7, loc="upper center", bbox_to_anchor=(0.5, -0.13))
+    _style(ax)
+    fig.tight_layout()
     fig.savefig(path, dpi=150, bbox_inches="tight")
     plt.close(fig)
 
@@ -497,8 +565,13 @@ def main():
     fig_change_ua(combined, os.path.join(CMP, "compare_change_class_ua_by_bracket.png"))
     fig_change_classes_pooled(combined, os.path.join(CMP, "compare_change_classes_pooled.png"))
 
+    # mapped-area figure: embedding variants recomputed on the same 168 cells spec_all scored
+    emb_mats = {v: embedding_matrix_on_cells(chosen_ref, cells_used, v) for v in EMB_VARIANTS}
+    fig_change_classes_area(pooled, emb_mats,
+                            os.path.join(CMP, "compare_change_classes_area_pooled.png"))
+
     print(f"\nwrote {OUT}/ (6 matrices, spectral_metrics_long.csv, note.md) and "
-          f"{CMP}/ (combined table, overall table, 5 figures)")
+          f"{CMP}/ (combined table, overall table, 6 figures)")
 
 
 if __name__ == "__main__":
