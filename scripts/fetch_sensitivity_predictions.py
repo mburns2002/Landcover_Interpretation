@@ -1,0 +1,69 @@
+#!/usr/bin/env python3
+"""Fetch the change-cap sensitivity prediction rasters from Google Drive.
+
+The GEE export wrote one folder per NAIP bracket at the Drive root, named
+`sensitivity_changecap_10class_percell/<bracket>`. Drive renders the export path slash as a fullwidth
+slash (U+FF0F), so each bracket is a separate top-level folder. Each holds 36 rasters named
+`sens_<bracket>_cell<id>.tif`, 3 bands in the fixed order band1=cap50, band2=cap100, band3=cap150,
+values 1 to 10.
+
+This copies them into `data/raw/sensitivity_changecap_10class_percell/<bracket>/` (git-ignored) via
+the authenticated rclone remote. Run rclone config first if the `gdrive:` remote is not set up.
+
+Usage: python scripts/fetch_sensitivity_predictions.py [--remote gdrive]
+"""
+
+import argparse
+import os
+import re
+import subprocess
+
+BRACKETS = ["2017_2019", "2018_2020", "2019_2021", "2020_2022", "2021_2023"]
+DRIVE_PREFIX = "sensitivity_changecap_10class_percell／"   # fullwidth slash from the export path
+DEST = "data/raw/sensitivity_changecap_10class_percell"
+
+
+def list_source_dirs(remote):
+    out = subprocess.run(["rclone", "lsf", f"{remote}:", "--dirs-only"],
+                         capture_output=True, text=True, check=True).stdout
+    return [d.rstrip("/") for d in out.splitlines()]
+
+
+def main():
+    ap = argparse.ArgumentParser(description=__doc__)
+    ap.add_argument("--remote", default="gdrive", help="rclone remote name (default: gdrive)")
+    args = ap.parse_args()
+
+    all_dirs = list_source_dirs(args.remote)
+    for bracket in BRACKETS:
+        want = f"{DRIVE_PREFIX}{bracket}"
+        matches = [d for d in all_dirs if d == want]
+        dst = os.path.join(DEST, bracket)
+        os.makedirs(dst, exist_ok=True)
+        if not matches:
+            print(f"MISSING: no Drive folder named {want}")
+            continue
+        for i, _ in enumerate(matches):
+            src = f"{args.remote}:{want}"
+            print(f"copying {src}  (match {i + 1}/{len(matches)}) -> {dst}")
+            subprocess.run(["rclone", "copy", src, dst, "--transfers", "8"], check=True)
+
+    print("\nverification (recursive glob on sens_*.tif):")
+    rx = re.compile(r"sens_(\d{4}_\d{4})_cell(\d+)\.tif$")
+    seen = {}
+    for root, _, files in os.walk(DEST):
+        for f in files:
+            m = rx.search(f)
+            if m:
+                seen.setdefault(m.group(1), set()).add(m.group(2).zfill(5))
+    total = 0
+    for bracket in BRACKETS:
+        n = len(seen.get(bracket, set()))
+        total += n
+        flag = "" if n >= 30 else "  <-- SHORT of ~36"
+        print(f"  {bracket}: {n} unique cells{flag}")
+    print(f"  total unique cells: {total}")
+
+
+if __name__ == "__main__":
+    main()
