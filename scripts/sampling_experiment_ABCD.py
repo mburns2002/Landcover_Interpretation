@@ -604,6 +604,14 @@ def _make_plots(names, versions):
     n_values = sorted(md.n.unique())
     wpal = {1: "#1f77b4", 3: "#2ca02c", 5: "#9467bd", 7: "#ff7f0e", 9: "#d62728"}
     vpal = {"v2": "#1f77b4", "v3": "#2ca02c", "v4": "#9467bd", "v5": "#ff7f0e", "v6": "#d62728"}
+    # per-class colours from the canonical legend; collapsed Stable is grey and the change classes
+    # reuse the 10-class legend colours (collapsed code -> 10-class code)
+    class_colors_10 = C.load_mappings()[2]
+    if COLLAPSE:
+        _to10 = {2: 1, 3: 2, 4: 10, 5: 9}
+        ccol = {nm: ("#cccccc" if c == 1 else class_colors_10[_to10[c]]) for c, nm in names.items()}
+    else:
+        ccol = {nm: class_colors_10[c] for c, nm in names.items()}
 
     # 1) SD of A_oa vs n (log-log), line per W, panel per version + 1/sqrt(n) reference
     fig, axes = plt.subplots(1, len(versions), figsize=(3.3 * len(versions), 4), sharey=True)
@@ -698,7 +706,7 @@ def _make_plots(names, versions):
     s = ab[(ab.design == "simple") & (ab.version == "v2") & (ab.W == 1)]
     for cls in s.cls.unique():
         sc = s[s.cls == cls].sort_values("n")
-        ax.plot(sc.n, sc.frac_absent, "o-", label=cls, ms=4)
+        ax.plot(sc.n, sc.frac_absent, "o-", label=cls, color=ccol.get(cls), ms=4)
     ax.set_xlabel("n (windows)")
     ax.set_ylabel("fraction of iterations where class is entirely absent"); _logscale(ax, "x")
     _nticks(ax, n_values)
@@ -716,7 +724,7 @@ def _make_plots(names, versions):
     s = dc[(dc.design == "simple") & (dc.version == "v2") & (dc.W == 5)]
     for cls in s.cls.unique():
         sc = s[s.cls == cls].sort_values("n")
-        ax.plot(sc.n, sc.mean_corr, "o-", label=cls, ms=4)
+        ax.plot(sc.n, sc.mean_corr, "o-", label=cls, color=ccol.get(cls), ms=4)
     ax.set_xlabel("n (windows)")
     ax.set_ylabel("mean per-class corr(prop_map, prop_ref)"); _logscale(ax, "x")
     _nticks(ax, n_values, label_all=True)
