@@ -219,13 +219,17 @@ kappa 0.53) and lowest for the v6 dot-product map (OA 0.19). Stable classes agre
 well (Water, Forest, Agriculture); small disturbance classes get absorbed into
 stable classes.
 
-### De-duplication of repeated locations
+### De-duplication and adjudication of repeated locations
 
-Some locations were interpreted by multiple reviewers. The comparison de-duplicates
-by default — keeping one randomly-chosen interpretation per location (grid + sample +
-target), seeded for reproducibility — so no location is double-counted. Pooled metrics
-barely change under de-duplication (v2 OA 0.651 → 0.657), so the earlier double-counting
-was not materially biasing the numbers.
+Some locations were interpreted by multiple reviewers (72 of the 180 locations are
+multi-reviewer). The current analyses resolve these by **adjudication**: for each location the
+reviewer recorded in `exports/truth_selections.csv` is used, so each location contributes exactly
+one interpretation and none is double-counted. The cached outputs in this section predate
+adjudication; they instead de-duplicated by keeping one randomly-chosen interpretation per location
+(grid, sample, and target), seeded for reproducibility. Pooled metrics barely change either way:
+random de-duplication moved v2 OA from 0.651 to 0.657, and adjudication shifts aggregate OA by at
+most about 0.007, so which reviewer represents a multi-reviewer cell is not materially biasing the
+numbers.
 
 **These cached outputs reflect an earlier 154-location snapshot** (223 rasters, 30 with target
 year 2019). The current interpreted set is **180 locations** (253 rasters, 36 with target 2019).
