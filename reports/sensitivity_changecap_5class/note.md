@@ -25,3 +25,4 @@ OA is dominated by the ~98.5% Stable class, so read the all-Stable baseline and 
 - `cm_cap<cap>_counts.csv`, `_rownorm.csv`, `_colnorm.csv`: pooled 5x5 matrices, reference on rows (diagonal is producer's accuracy), prediction on columns.
 - `cm_cap<cap>.png`: count heatmaps with PA/UA margins and OA/kappa.
 - `sensitivity_metrics_long_5class.csv`: one row per (cap, collapsed class) with per-class UA, PA, F1, IoU, support, and predicted pixels, plus the aggregate OA, all-Stable baseline, macro-F1, mean IoU, and kappa.
+- `overall_metrics_vs_cap.png`: secondary, collapsed OA, macro-F1, and kappa vs cap with the all-Stable baseline. This differs from the 10-class overall figure: the collapse raises OA (within-stable error removed) but lowers kappa, so it is a distinct view, not a duplicate.

@@ -67,6 +67,38 @@ def build_matrix(cap, chosen_ref, common, cell_bracket):
     return M
 
 
+def fig_overall(res, path):
+    """Secondary: collapsed overall OA, macro-F1, and kappa vs cap, with the all-Stable baseline.
+
+    Unlike the 10-class overall figure this one carries the all-Stable baseline, since collapsed OA is
+    dominated by the ~98.5% Stable class and sits below that trivial baseline at every cap.
+    """
+    import matplotlib
+    matplotlib.use("Agg")
+    import matplotlib.pyplot as plt
+    fig, ax = plt.subplots(figsize=(7.5, 5))
+    for mk, lab, col in [("OA", "overall accuracy", "#444444"),
+                         ("macro_F1", "macro-F1 (5 classes)", "#1b9e77"),
+                         ("kappa", "kappa", "#7570b3")]:
+        ax.plot(CAPS, [res[c][mk] for c in CAPS], marker="o", lw=2.2, color=col, label=lab)
+    base = res[CAPS[0]]["baseline_OA"]
+    ax.axhline(base, color="firebrick", lw=1.5, ls="--", zorder=1,
+               label=f"all-Stable baseline ({base:.3f})")
+    ax.set_xticks(CAPS)
+    ax.set_xlabel("change-class training cap")
+    ax.set_ylabel("value")
+    ax.set_ylim(0, 1)
+    ax.set_title("SECONDARY: collapsed overall metrics vs cap\n(OA is dominated by Stable and stays "
+                 "below the all-Stable baseline; kappa is the honest read)", fontsize=10)
+    ax.legend(fontsize=8, frameon=False)
+    ax.grid(False)
+    for s in ("top", "right"):
+        ax.spines[s].set_visible(False)
+    fig.tight_layout()
+    fig.savefig(path, dpi=150, bbox_inches="tight")
+    plt.close(fig)
+
+
 def write_note(common, res, path):
     lines = [
         "# sensitivity_changecap_5class",
@@ -112,6 +144,9 @@ def write_note(common, res, path):
         "- `sensitivity_metrics_long_5class.csv`: one row per (cap, collapsed class) with per-class UA, "
         "PA, F1, IoU, support, and predicted pixels, plus the aggregate OA, all-Stable baseline, "
         "macro-F1, mean IoU, and kappa.",
+        "- `overall_metrics_vs_cap.png`: secondary, collapsed OA, macro-F1, and kappa vs cap with the "
+        "all-Stable baseline. This differs from the 10-class overall figure: the collapse raises OA "
+        "(within-stable error removed) but lowers kappa, so it is a distinct view, not a duplicate.",
     ]
     with open(path, "w") as fh:
         fh.write("\n".join(lines) + "\n")
@@ -172,8 +207,10 @@ def main():
               f"{int(M.sum(0)[4]):>10,}")
 
     pd.DataFrame(long_rows).to_csv(os.path.join(OUT, "sensitivity_metrics_long_5class.csv"), index=False)
+    fig_overall(res, os.path.join(OUT, "overall_metrics_vs_cap.png"))
     write_note(common, res, os.path.join(OUT, "note.md"))
-    print(f"\nwrote {OUT}/ (4 collapsed matrices x 3 csv + png, sensitivity_metrics_long_5class.csv, note.md)")
+    print(f"\nwrote {OUT}/ (4 collapsed matrices x 3 csv + png, sensitivity_metrics_long_5class.csv, "
+          f"overall_metrics_vs_cap.png, note.md)")
 
 
 if __name__ == "__main__":
