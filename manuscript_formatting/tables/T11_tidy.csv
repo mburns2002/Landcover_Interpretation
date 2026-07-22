@@ -1,5 +1,5 @@
 change_class,source,n_cells,mean_f1,median_f1,frac_f1_zero
-harvest,v2,140,0.068,0.0,0.629
+harvest,v2,140,0.067,0.0,0.629
 harvest,v3,145,0.034,0.0,0.71
 harvest,v4,150,0.062,0.0,0.553
 harvest,v5,150,0.012,0.0,0.733

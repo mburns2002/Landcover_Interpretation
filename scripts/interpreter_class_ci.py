@@ -36,21 +36,14 @@ import rasterio
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import compare_interpreters as CI  # reuse find_pairs / load_legend / confusion
+import collapsed_5class_confusion as cc  # canonical 5-class collapse
 
 OUT = "reports/interpreter_agreement"
 HIGH, MOD = 0.70, 0.50  # reliability tier thresholds on F1
 
-# ckit label_id -> 5-class collapse: stable = the six no-change classes, then the four change classes;
-# Unknown(10) and Other(13) map to 0 (excluded, dropped), consistent with the 10-class crosswalk
-_COLLAPSE5 = np.zeros(63, np.int64)
-for _c in (0, 1, 2, 3, 4, 5):
-    _COLLAPSE5[_c] = 1
-_COLLAPSE5[20] = 2; _COLLAPSE5[30] = 3; _COLLAPSE5[50] = 4; _COLLAPSE5[62] = 5
-NAMES5 = {1: "Stable", 2: "Harvest", 3: "Development", 4: "Insect/Disease", 5: "Beaver"}
-
-
-def collapse5(a):
-    return _COLLAPSE5[np.where((a >= 0) & (a <= 62), a, 0)]
+# canonical 5-class collapse from cc: Other(13) folds into Stable, Unknown(10) is excluded
+NAMES5 = cc.NAMES5
+collapse5 = cc.collapse_reference
 
 
 def per_class(cm):
@@ -99,7 +92,7 @@ def main():
     ap.add_argument("--seed", type=int, default=0)
     ap.add_argument("--collapse", action="store_true",
                     help="collapse to the 5-class scheme (Stable plus the four change classes) instead "
-                         "of the full CKIT legend; Unknown and Other are dropped")
+                         "of the full CKIT legend; Other folds into Stable, Unknown is dropped")
     args = ap.parse_args()
 
     codes, names, colors = CI.load_legend()

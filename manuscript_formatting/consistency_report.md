@@ -21,22 +21,35 @@ The evaluation cell set is not uniform across tables, for documented reasons.
   with a spec_all number, note the different N, or restrict to the common set. Do not mix 168 and 180
   silently inside one claim.
 
-## B. Two different 5-class collapses
+## B. Two different 5-class collapses (RESOLVED)
 
-There are two 5-class collapse rules in the repository, and they do not produce the same pooled
-numbers.
+Status: resolved. The 5-class collapse now has a single canonical definition, applied consistently
+across the whole analysis.
 
-- Exclude rule (drops Unknown and Other): used by `collapsed_5class/comparison_collapsed.csv`
-  (Table 4), `model_per_class_ci_5class.csv` (Table 7), `per_cell_f1_5class` (Table 10),
-  `per_cell_change_f1` (Table 11), and the interpreter 5-class agreement (Table 6).
-- Fold rule (folds Other into Stable, drops Unknown and Fire): used by
-  `transfer_confusion_adjudicated_5class/` (the per-bracket 5-class matrices).
-- Consequence: the pooled 5-class OA in Table 4 is not a re-aggregation of the per-bracket 5-class
-  matrices, and Table S4 (design-based CIs from `collapsed_5class_confusion/metrics_long.csv`) may
-  rest on a different collapse and cell set than Table 4. Confirm which collapse each 5-class number
-  uses before combining Table 4 and Table S4 in one statement.
-- Action for the author: pick one 5-class collapse as the manuscript standard (the exclude rule is
-  the more widely used here) and state it once in Methods; footnote any table that uses the other.
+Canonical 5-class collapse (the only correct definition):
+- Stable = {forest, urban, water, agriculture, grass/shrub, wetland}, plus Harvest = {1},
+  Development = {2}, Insect/Disease = {10}, and Beaver = {9}.
+- Reference-only handling of the two non-schema CKIT labels: Other (CKIT 13) folds into Stable, and
+  Unknown (CKIT 10) is excluded (dropped). Fire (CKIT 40) is absent and excluded. This differs from
+  the 10-class analysis, which excludes both Other and Unknown, since Other has no 10-class home; under
+  the 5-class collapse Other is a stable land-cover state and becomes Stable.
+
+Resolution: the collapse is defined once in `scripts/collapsed_5class_confusion.py` as
+`collapse_reference` (CKIT to 5-class) and `collapse_prediction` (10-class to 5-class), built on
+`_REF_COLLAPSE` and `_MODEL_COLLAPSE`. Every 5-class script now imports these. The scripts that had
+previously excluded Other were corrected to fold it into Stable: `per_cell_f1_5class.py` (Table 10),
+`per_cell_change_f1.py` (Table 11), `model_class_ci_5class.py` (Table 7), and `interpreter_class_ci.py`
+(Table 6). The scripts that were already canonical are unchanged: `spectral_collapsed_5class.py`
+(Table 4), `collapsed_5class_confusion.py` (Table S4), `build_transfer_confusion_5class.py`, and the
+changecap and disagreement figures. Table 4 and Table S4 were verified byte-identical after
+regeneration.
+
+Numeric effect (small, as expected): across the 180 adjudicated reference cells, 33,978 Other pixels
+in 25 cells moved from excluded to Stable, and 4,139 Unknown pixels in 10 cells stayed excluded. Per
+source, the Stable reference support rose by 33,978 pixels for the embeddings (180 cells) and by
+32,938 for spec_all (168 cells, since 1,040 Other pixels fall in the 12 blank spec_all cells). Pooled
+per-class F1 and per-cell F1 were unchanged to three decimals, since Stable already dominates. The
+inter-interpreter Stable support (72 pairs) rose by 28,519 pixels with F1 unchanged at 0.993.
 
 ## C. No pooled 10-class embedding confusion matrix
 

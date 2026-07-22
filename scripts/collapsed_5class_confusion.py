@@ -63,14 +63,27 @@ BOOT = 2000
 NAMES5 = {1: "Stable", 2: "Harvest", 3: "Development", 4: "Insect/Disease", 5: "Beaver"}
 LABELS5 = [NAMES5[c] for c in range(1, 6)]
 
-# reference (RF codes) -> collapsed 1..5: stable set incl. Other(13) -> Stable(1); change kept;
-# Unknown(10) and Fire(40) -> 0 (excluded). consistent with data/reference/class_crosswalk.csv.
+# CANONICAL 5-class collapse, the single definition imported everywhere the 5-class collapse is used.
+# reference (CKIT RF codes) -> collapsed 1..5: stable set incl. Other(13) -> Stable(1); change kept;
+# Unknown(10) and Fire(40) -> 0 (excluded). Other folds into Stable here, unlike the 10-class analysis
+# which excludes Other (it has no 10-class home). consistent with data/reference/class_crosswalk.csv.
 _REF_COLLAPSE = np.zeros(63, np.uint8)
 for _c in (0, 1, 2, 3, 4, 5, 13):
     _REF_COLLAPSE[_c] = 1
 _REF_COLLAPSE[20] = 2; _REF_COLLAPSE[30] = 3; _REF_COLLAPSE[50] = 4; _REF_COLLAPSE[62] = 5
 # model (common codes 0..10) -> collapsed 1..5
 _MODEL_COLLAPSE = np.array([0, 2, 3, 1, 1, 1, 1, 1, 1, 5, 4], np.uint8)
+
+
+def collapse_reference(a):
+    """CKIT reference codes -> canonical 5-class (0 = excluded pixel). Other(13) folds into Stable;
+    Unknown(10) and Fire(40) are excluded. Use this everywhere the 5-class reference is built."""
+    return _REF_COLLAPSE[np.where((a >= 0) & (a <= 62), a, 0)]
+
+
+def collapse_prediction(a):
+    """10-class prediction codes (1..10) -> canonical 5-class (0 = nodata/excluded)."""
+    return _MODEL_COLLAPSE[np.where(a <= 10, a, 0)]
 
 
 # ----------------------------------------------------------------------------- cells and stitching

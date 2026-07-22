@@ -65,6 +65,7 @@ import rasterio
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import compare_interpreted_vs_model as C
+import collapsed_5class_confusion as cc  # canonical 5-class collapse
 
 OUT = "reports/Case_ABCD_sampling"
 N = 10
@@ -80,12 +81,9 @@ COLLAPSE = False
 NAMES_5 = {1: "Stable", 2: "Harvest", 3: "Development", 4: "Insect/Disease", 5: "Beaver"}
 # reference is in RF codes; Stable = urban/ag/grass-shrub/forest/water/wetland/other; Unknown(10)
 # and Fire(40, absent) -> 0 (excluded).
-_REF_COLLAPSE = np.zeros(63, np.uint8)
-for _c in (0, 1, 2, 3, 4, 5, 13):
-    _REF_COLLAPSE[_c] = 1
-_REF_COLLAPSE[20] = 2; _REF_COLLAPSE[30] = 3; _REF_COLLAPSE[50] = 4; _REF_COLLAPSE[62] = 5
-# model is in common 0..10 codes: 3-8 stable; 1 harvest; 2 development; 10 insect/disease; 9 beaver.
-_MODEL_COLLAPSE = np.array([0, 2, 3, 1, 1, 1, 1, 1, 1, 5, 4], np.uint8)
+# canonical 5-class collapse, shared from collapsed_5class_confusion (Other -> Stable, Unknown drop)
+_REF_COLLAPSE = cc._REF_COLLAPSE
+_MODEL_COLLAPSE = cc._MODEL_COLLAPSE
 
 
 # ---- metrics from a (float-weighted) confusion matrix (rows = reference, cols = map). Returns

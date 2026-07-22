@@ -10,8 +10,8 @@ number.
 
 5-class collapse: Stable = {forest, urban, water, ag, grass/shrub, wetland} (kept in the matrix but not
 analyzed), Harvest, Development, Insect/Disease, and Beaver. The CKIT reference is crosswalked to the
-10-class schema (0->4, 1->6, 2->7, 3->3, 4->5, 5->8, 20->1, 30->2, 50->10, 62->9), with Unknown(10) and
-Other(13) excluded and those pixels dropped, then collapsed with the same 10-to-5 map used for the
+10-class schema (0->4, 1->6, 2->7, 3->3, 4->5, 5->8, 20->1, 30->2, 50->10, 62->9), then collapsed to five classes with Other(13)
+folded into Stable and Unknown(10) excluded (dropped), using the same 10-to-5 map used for the
 predictions. Out-of-crosswalk reference values are counted and reported.
 
 Include rule (the crux): a cell is part of class X's distribution if X is present in the cell's
@@ -116,7 +116,7 @@ def main():
         for val in np.unique(ref_raw):
             if int(val) not in ALLOWED:
                 unmapped[(cid, int(val))] += int((ref_raw == val).sum())
-        ref5 = MODEL_COLLAPSE[REF_LUT[np.where((ref_raw >= 0) & (ref_raw <= 62), ref_raw, 0)]]
+        ref5 = pcf.cc.collapse_reference(ref_raw)       # canonical: Other(13) -> Stable, Unknown -> drop
         ref_valid = (ref5 >= 1) & (ref5 <= 5)
         if not ref_valid.any():
             drops["reference_no_valid_px"].append(cid)
@@ -135,7 +135,7 @@ def main():
             if not (pred_raw >= 1).any():
                 drops[f"{s}_blank_pred"].append(cid)
                 continue
-            pred5 = MODEL_COLLAPSE[np.where(pred_raw <= 10, pred_raw, 0)]
+            pred5 = pcf.cc.collapse_prediction(pred_raw)
             valid = ref_valid & (pred5 >= 1) & (pred5 <= 5)
             M = np.zeros((5, 5), np.int64)
             np.add.at(M, (ref5[valid] - 1, pred5[valid] - 1), 1)
@@ -303,7 +303,7 @@ def write_note(df, summ, common, ref_valid_cells, usable, drops, unmapped, inclu
         "the matrix so precision and recall are computed against everything else, but not analyzed), "
         "plus Harvest, Development, Insect/Disease, and Beaver. The CKIT reference is crosswalked to the "
         "10-class schema (" + ", ".join(f"{k}->{v}" for k, v in bmc.CROSSWALK.items())
-        + "), with Unknown(10) and Other(13) excluded and dropped, then collapsed with the same "
+        + "), with Other(13) folded into Stable and Unknown(10) excluded, then collapsed with the same "
         "10-to-5 map applied to the predictions. Out-of-crosswalk reference values found: "
         + (str({v: sum(m for (c, v2), m in unmapped.items() if v2 == v)
                 for v in sorted({v for _, v in unmapped})}) if unmapped else "none") + ".",

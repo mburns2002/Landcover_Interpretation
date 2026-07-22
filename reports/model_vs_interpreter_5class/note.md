@@ -8,7 +8,7 @@ The inter-interpreter forest (`reports/interpreter_agreement/per_class_agreement
 
 ## Method
 
-F1 per class = 2*TP / (reference support + predicted support), pooled over the usable cells with reference on rows and prediction on columns. The reference is the adjudicated CKIT cell crosswalked to the 10-class schema and collapsed to 5 classes; Unknown and Other are dropped. Confidence intervals use a cluster (cell) bootstrap (2000 replicates) that resamples cells with replacement and re-pools their confusion matrices, mirroring the cluster (pair) bootstrap used for the interpreter agreement. Each model is scored on its own full set of usable cells, so N differs across models (spec_all has entirely-nodata rasters the embeddings do not) and the figures are read one model at a time.
+F1 per class = 2*TP / (reference support + predicted support), pooled over the usable cells with reference on rows and prediction on columns. The reference is the adjudicated CKIT cell collapsed to 5 classes with Other folded into Stable and Unknown excluded. Confidence intervals use a cluster (cell) bootstrap (2000 replicates) that resamples cells with replacement and re-pools their confusion matrices, mirroring the cluster (pair) bootstrap used for the interpreter agreement. Each model is scored on its own full set of usable cells, so N differs across models (spec_all has entirely-nodata rasters the embeddings do not) and the figures are read one model at a time.
 
 Reference-valid cells: 180. Usable cells per model: v2=180, v3=180, v4=180, v5=180, v6=180, spec_all=168.
 
@@ -18,7 +18,7 @@ Reference-valid cells: 180. Usable cells per model: v2=180, v3=180, v4=180, v5=1
 |-------|-------------------------|-------------|
 | Stable | 0.99 (0.99-1.00) | High |
 | Harvest | 0.75 (0.63-0.82) | High |
-| Development | 0.29 (0.03-0.48) | Low |
+| Development | 0.29 (0.03-0.47) | Low |
 | Insect/Disease | 0.23 (0.00-0.47) | Low |
 | Beaver | 0.08 (0.00-0.21) | Low |
 

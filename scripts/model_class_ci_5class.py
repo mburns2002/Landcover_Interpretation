@@ -10,7 +10,7 @@ ceiling: where two humans barely agree on a class, a model cannot be scored abov
 
 Method (mirrors interpreter_class_ci.py so the two are comparable):
   - reference: adjudicated CKIT cell, crosswalked to the 10-class schema then collapsed to 5 classes
-    (Stable plus Harvest, Development, Insect/Disease, Beaver); Unknown and Other are dropped.
+    (Stable plus Harvest, Development, Insect/Disease, Beaver); Other folds into Stable, Unknown is dropped.
   - prediction: the source's 10-class map collapsed with the same 10-to-5 map.
   - per class F1 = 2*TP / (reference support + predicted support), pooled over all usable cells.
   - CI: cluster (cell) bootstrap resamples the cells with replacement, re-pools their 5x5 confusion
@@ -80,7 +80,7 @@ def cell_confusions(truth_path):
         with rasterio.open(chosen_ref[cid]) as rds:
             ref_raw = rds.read(1)
             meta = (rds.width, rds.height, rds.transform, rds.crs)
-        ref5 = pcf.MODEL_COLLAPSE[pcf.REF_LUT[np.where((ref_raw >= 0) & (ref_raw <= 62), ref_raw, 0)]]
+        ref5 = pcf.cc.collapse_reference(ref_raw)       # canonical: Other(13) -> Stable, Unknown -> drop
         ref_valid = (ref5 >= 1) & (ref5 <= 5)
         if not ref_valid.any():
             drops["reference_no_valid_px"].append(cid)
@@ -99,7 +99,7 @@ def cell_confusions(truth_path):
             if not (pred_raw >= 1).any():
                 drops[f"{s}_blank_pred"].append(cid)
                 continue
-            pred5 = pcf.MODEL_COLLAPSE[np.where(pred_raw <= 10, pred_raw, 0)]
+            pred5 = pcf.cc.collapse_prediction(pred_raw)
             valid = ref_valid & (pred5 >= 1) & (pred5 <= 5)
             M = np.zeros((5, 5), np.int64)
             np.add.at(M, (ref5[valid] - 1, pred5[valid] - 1), 1)   # rows = reference, cols = prediction
@@ -249,7 +249,7 @@ def write_note(out_df, interp_df, n_by_source, ref_valid_cells, drops, boot):
         "",
         "F1 per class = 2*TP / (reference support + predicted support), pooled over the usable cells "
         "with reference on rows and prediction on columns. The reference is the adjudicated CKIT cell "
-        "crosswalked to the 10-class schema and collapsed to 5 classes; Unknown and Other are dropped. "
+        "collapsed to 5 classes with Other folded into Stable and Unknown excluded. "
         f"Confidence intervals use a cluster (cell) bootstrap ({boot} replicates) that resamples cells "
         "with replacement and re-pools their confusion matrices, mirroring the cluster (pair) bootstrap "
         "used for the interpreter agreement. Each model is scored on its own full set of usable cells, "

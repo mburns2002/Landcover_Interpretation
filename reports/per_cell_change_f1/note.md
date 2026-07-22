@@ -4,7 +4,7 @@ Per-class, per-grid-cell F1 for the four change classes (Harvest, Development, I
 
 ## Collapse, crosswalk, and exclusions
 
-5-class collapse: Stable = {forest, urban, water, agriculture, grass/shrub, wetland} (kept in the matrix so precision and recall are computed against everything else, but not analyzed), plus Harvest, Development, Insect/Disease, and Beaver. The CKIT reference is crosswalked to the 10-class schema (0->4, 1->6, 2->7, 3->3, 4->5, 5->8, 20->1, 30->2, 50->10, 62->9), with Unknown(10) and Other(13) excluded and dropped, then collapsed with the same 10-to-5 map applied to the predictions. Out-of-crosswalk reference values found: none.
+5-class collapse: Stable = {forest, urban, water, agriculture, grass/shrub, wetland} (kept in the matrix so precision and recall are computed against everything else, but not analyzed), plus Harvest, Development, Insect/Disease, and Beaver. The CKIT reference is crosswalked to the 10-class schema (0->4, 1->6, 2->7, 3->3, 4->5, 5->8, 20->1, 30->2, 50->10, 62->9), with Other(13) folded into Stable and Unknown(10) excluded, then collapsed with the same 10-to-5 map applied to the predictions. Out-of-crosswalk reference values found: none.
 
 ## Per-class per-cell F1 rule
 

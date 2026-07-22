@@ -115,14 +115,13 @@ def t_overall_5():
         "All-Stable baseline OA": d.all_stable_baseline.map(r),
         "Kappa": d.kappa.map(r), "Macro-F1": d.macro_F1.map(r), "Mean IoU": d.mean_IoU.map(r),
         "N cells": d.n_cells.astype(int)})
-    note = ("Pooled accuracy under the 5-class collapse (Stable, Harvest, Development, "
+    note = ("Pooled accuracy under the canonical 5-class collapse (Stable, Harvest, Development, "
             "Insect/Disease, Beaver), all six sources on the common 168-cell set. In this collapse "
-            "Unknown and Other reference pixels are excluded and dropped. The all-Stable baseline "
-            "OA is the accuracy of predicting Stable everywhere, near 0.985, so a high 5-class OA "
-            "reflects the stable-dominated landscape and kappa and macro-F1 carry the change-class "
-            "signal. This collapse differs from the per-bracket 5-class matrices in "
-            "transfer_confusion_adjudicated_5class, which fold Other into Stable rather than "
-            "dropping it; see the consistency report. Accuracies rounded to 3 decimals. Source: "
+            "the reference Other pixels fold into Stable and Unknown pixels are excluded, which is "
+            "the single collapse now used across the whole 5-class analysis, including Tables 6, 7, "
+            "10, and 11. The all-Stable baseline OA is the accuracy of predicting Stable everywhere, "
+            "near 0.985, so a high 5-class OA reflects the stable-dominated landscape and kappa and "
+            "macro-F1 carry the change-class signal. Accuracies rounded to 3 decimals. Source: "
             "collapsed_5class/comparison_collapsed.csv.")
     return dict(id="T4", title="Table 4. Pooled accuracy by prediction source (5-class collapse, "
                 "common 168-cell set).", note=note,
