@@ -315,27 +315,32 @@ def s_dedup():
     note = ("Selection sensitivity of the earlier all-years model_comparison arm: the "
             "pick-one-interpretation-per-location draw repeated 100 times with different random "
             "selections, on the earlier 154-location snapshot. Reports the OA distribution per "
-            "version. Included as a robustness check; the version ranking is stable. Values as "
-            "stored. Source: model_comparison/dedup_sensitivity_summary.csv.")
+            "version. This robustness check is moot under the current adjudicated pipeline, where "
+            "each cell already has exactly one chosen reviewer and there is nothing to resample, so "
+            "it is retained only as an earlier-snapshot record and is not part of the current "
+            "results. Values as stored. Source: model_comparison/dedup_sensitivity_summary.csv.")
     return dict(id="S2", title="Table S2. Dedup-selection sensitivity of overall accuracy "
                 "(earlier 154-location snapshot).", note=note,
                 sources=["dedup_sensitivity_summary.csv"], df=d)
 
 
 def s_speckle():
-    d = pd.read_csv(f"{R}/model_comparison/model_speckle.csv")
+    d = pd.read_csv(f"{R}/model_comparison_current/model_speckle.csv")
     out = pd.DataFrame({
         "Source": d.version,
-        "Neighbor-change": d.neighbor_change_full.map(r),
-        "Valid pixel pairs": d.valid_pairs.astype("int64"),
-        "Coverage": d.coverage.map(r)})
-    note = ("Map speckle per embedding variant: neighbor_change is the fraction of "
-            "horizontally-adjacent, both-valid pixel pairs whose class differs, over the full "
-            "rasters. Low is smooth, high is per-pixel speckle. Coverage is the fraction of pixel "
-            "pairs that were both valid. Values rounded to 3 decimals. Source: "
-            "model_comparison/model_speckle.csv.")
-    return dict(id="S3", title="Table S3. Map speckle (neighbor-change) by embedding variant.",
-                note=note, sources=["model_speckle.csv"], df=out)
+        "Neighbor-change": d.neighbor_change.map(r),
+        "Pooled OA": d.pooled_OA.map(r),
+        "Valid pixel pairs": d.valid_pairs.astype("int64")})
+    note = ("Map speckle per embedding variant on the current pipeline: neighbor-change is the "
+            "fraction of horizontally-adjacent, both-valid pixel pairs whose class differs, computed "
+            "over the current 180 per-bracket adjudicated cells (coverage 1.0, the cells are fully "
+            "classified). Low is smooth, high is per-pixel speckle. Pooled OA is the current pooled "
+            "overall accuracy against the adjudicated reference, so the table shows the speckle "
+            "versus accuracy relationship. This replaces the earlier 154-location snapshot and "
+            "matches Figure 2.9. Values rounded to 3 decimals. Source: "
+            "model_comparison_current/model_speckle.csv.")
+    return dict(id="S3", title="Table S3. Map speckle (neighbor-change) by embedding variant "
+                "(current 180-cell pipeline).", note=note, sources=["model_speckle.csv"], df=out)
 
 
 def s_design_5class_ci():

@@ -41,10 +41,9 @@ different footprints.
 - This figure no longer draws from the 154-location snapshot, so consistency_report flag on the
   superseded arm no longer applies to Figure 2.9.
 - Table S2 (dedup-selection sensitivity) still references the earlier arm; it is left as-is.
-- Flag: Table S3 (map speckle) still holds the earlier-snapshot neighbor-change values from
-  `model_comparison/model_speckle.csv` (0.074, 0.077, 0.135, 0.091, 0.781), so it and Figure 2.9 now
-  sit on different bases. If Table S3 is kept, regenerate it from the current 180-cell neighbor-change
-  to match Figure 2.9.
+- Table S3 (map speckle) was regenerated on the current 180-cell basis
+  (reports/model_comparison_current/model_speckle.csv) and now matches Figure 2.9 (v2 0.085, v3 0.084,
+  v4 0.155, v5 0.093, v6 0.801).
 
 ## Output
 

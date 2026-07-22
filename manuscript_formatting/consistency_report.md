@@ -89,8 +89,8 @@ deliberately overlays the two bases and labels each, which is the intended use.
   from that arm, and both are labeled as the earlier snapshot. Do not quote a 154-basis number next
   to a 180-basis number without saying so.
 - Figure 2.9 (classified-map speckle) was regenerated from the current 180-cell pipeline, so it no
-  longer draws from the superseded arm. Table S3 (map speckle) still holds the earlier-snapshot
-  neighbor-change values and is on a different basis than Figure 2.9 until regenerated.
+  longer draws from the superseded arm. Table S3 (map speckle) was also regenerated on the current
+  180-cell basis (reports/model_comparison_current/) and now matches Figure 2.9.
 - The adjudicated 10-class results (`transfer_confusion_adjudicated/`) and the combined comparison
   (`comparison/`) are the current basis and are what Tables 2.3 to 2.5 use.
 
