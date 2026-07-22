@@ -67,9 +67,10 @@ def main():
              (0.35, 4.05, "4", "Evaluation")]
     for (y0, y1, num, title), bg in zip(bands, BAND_BG):
         ax.add_patch(Rectangle((0, y0), 10, y1 - y0, facecolor=bg, edgecolor="none", zorder=0))
-        ax.text(0.12, y1 - 0.18, f"{num}", fontsize=14, fontweight="bold", color="0.45",
+        # indented past the left-margin training-points line so it does not strike the titles
+        ax.text(0.65, y1 - 0.18, f"{num}", fontsize=14, fontweight="bold", color="0.45",
                 va="top", ha="left")
-        ax.text(0.45, y1 - 0.18, title, fontsize=11.5, fontweight="bold", color="0.25",
+        ax.text(0.98, y1 - 0.18, title, fontsize=11.5, fontweight="bold", color="0.25",
                 va="top", ha="left")
 
     # ---- band 1: reference inputs ----
@@ -89,7 +90,7 @@ def main():
     arrow(ax, (5.0, 12.72), (4.05, 11.62))
 
     # ---- band 2: feature construction ----
-    ax.text(0.45, 10.0, "features sampled at the training points, which supply the labels",
+    ax.text(0.98, 10.0, "features sampled at the training points, which supply the labels",
             fontsize=7.5, style="italic", color="0.4", ha="left", va="top")
     # tiny tone legend, top right of the band
     ax.add_patch(Rectangle((7.0, 10.05), 0.26, 0.18, facecolor=BASELINE_L, edgecolor=BASELINE, lw=1))
