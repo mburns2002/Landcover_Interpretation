@@ -18,7 +18,6 @@ import matplotlib.pyplot as plt
 import pandas as pd
 from matplotlib.lines import Line2D
 from matplotlib.patches import Patch, Rectangle
-from matplotlib_scalebar.scalebar import ScaleBar
 from shapely.geometry import box
 
 CRS = 5070
@@ -45,6 +44,32 @@ PARK_COLOR = {
     "sacn": "#E69F00", "slbe": "#7B3294", "isro": "#8C564B",
 }
 STATE_LABELS = ["Minnesota", "Wisconsin", "Michigan"]
+# small nudge in meters (dx, dy) so a label clears a nearby cell; Michigan up and left a little
+LABEL_OFFSET = {"Michigan": (-45000, 30000)}
+
+
+def draw_scalebar(ax, length_m=150000, n_seg=3):
+    """Segmented scale bar with tick labels (matplotlib-scalebar draws a plain bar with no ticks, so
+    a proper divided bar is drawn by hand). Alternating black and white segments, labels above."""
+    xlim, ylim = ax.get_xlim(), ax.get_ylim()
+    w, h = xlim[1] - xlim[0], ylim[1] - ylim[0]
+    x0, y0 = xlim[0] + 0.05 * w, ylim[0] + 0.075 * h
+    seg = length_m / n_seg
+    bh = 0.013 * h                                         # bar height in data units
+    # light backing box for legibility
+    ax.add_patch(Rectangle((x0 - 0.02 * w, y0 - 0.005 * h), length_m + 0.085 * w, bh + 0.055 * h,
+                           facecolor="white", alpha=0.7, edgecolor="none", zorder=10))
+    for i in range(n_seg):
+        ax.add_patch(Rectangle((x0 + i * seg, y0), seg, bh,
+                               facecolor=("black" if i % 2 == 0 else "white"),
+                               edgecolor="black", lw=0.8, zorder=11))
+    for i in range(n_seg + 1):                             # ticks and labels above the bar
+        xt = x0 + i * seg
+        ax.plot([xt, xt], [y0 + bh, y0 + bh + 0.010 * h], color="black", lw=0.8, zorder=11)
+        ax.annotate(f"{int(round(i * seg / 1000))}", (xt, y0 + bh + 0.012 * h),
+                    ha="center", va="bottom", fontsize=6.5, zorder=11)
+    ax.annotate("km", (x0 + length_m + 0.012 * w, y0 + bh / 2), va="center", ha="left",
+                fontsize=7, zorder=11)
 
 
 def build_grid():
@@ -74,6 +99,13 @@ def main():
     lakes = gpd.read_file(f"{NE}/ne_50m_lakes.shp").to_crs(CRS)
     countries = gpd.read_file(f"{NE}/ne_110m_admin_0_countries.shp").to_crs(CRS)
 
+    # clip parks to the United States so watersheds crossing into Canada show only their US portion
+    # (keeps US-side lake areas such as Apostle Islands, drops the Canadian side of Isle Royale etc.)
+    c50 = gpd.read_file(f"{NE}/ne_50m_admin_0_countries.shp").to_crs(CRS)
+    us_poly = c50[c50.NAME == "United States of America"].geometry.union_all()
+    parks["geometry"] = parks.geometry.intersection(us_poly)
+    parks = parks[~parks.geometry.is_empty].copy()
+
     # main-map extent from the grid and parks, padded
     minx, miny, maxx, maxy = grid.total_bounds
     pminx, pminy, pmaxx, pmaxy = parks.total_bounds
@@ -92,8 +124,8 @@ def main():
     # back to front: states, lakes, grid extent, parks, interpreted cells
     states_na.plot(ax=ax, facecolor="#efece6", edgecolor="#b9b3a7", linewidth=0.5, zorder=1)
     lakes.plot(ax=ax, facecolor="#cfe3ef", edgecolor="#9dc4d8", linewidth=0.3, zorder=2)
-    gpd.GeoSeries([footprint], crs=CRS).plot(ax=ax, facecolor="#000000", alpha=0.04,
-                                             edgecolor="#555555", linewidth=0.9, zorder=3)
+    gpd.GeoSeries([footprint], crs=CRS).plot(ax=ax, facecolor="none",
+                                             edgecolor="black", linewidth=0.8, zorder=3)
     for code, sub in parks.groupby("park"):
         sub.plot(ax=ax, facecolor=PARK_COLOR[code], edgecolor=PARK_COLOR[code],
                  alpha=0.45, linewidth=1.1, zorder=4)
@@ -109,7 +141,8 @@ def main():
             clipped = s.geometry.union_all().intersection(extent_box)
             if not clipped.is_empty:
                 c = clipped.representative_point()
-                ax.annotate(nm, (c.x, c.y), fontsize=8, color="#6b6459", ha="center",
+                dx, dy = LABEL_OFFSET.get(nm, (0, 0))
+                ax.annotate(nm, (c.x + dx, c.y + dy), fontsize=8, color="#6b6459", ha="center",
                             style="italic", zorder=7)
 
     ax.set_xlim(*xlim); ax.set_ylim(*ylim)
@@ -118,18 +151,17 @@ def main():
     for sp in ax.spines.values():
         sp.set_edgecolor("#888888")
 
-    # scale bar (5070 units are meters; auto-labels in km at this range)
-    ax.add_artist(ScaleBar(1, units="m", location="lower left", box_alpha=0.7,
-                           length_fraction=0.22, font_properties={"size": 7}))
-    # north arrow, placed over open water so it covers no layer
-    ax.annotate("N", xy=(0.58, 0.96), xytext=(0.58, 0.85), xycoords="axes fraction",
+    # segmented scale bar with tick labels, in kilometers (5070 units are meters)
+    draw_scalebar(ax, length_m=150000, n_seg=3)
+    # north arrow, off to the side at top right over open water, left of the inset
+    ax.annotate("N", xy=(0.72, 0.97), xytext=(0.72, 0.86), xycoords="axes fraction",
                 ha="center", va="center", fontsize=11, fontweight="bold",
                 arrowprops=dict(arrowstyle="-|>", color="black", linewidth=1.4))
 
     # external legend strip below the map: parks (full names) plus the grid and cell layers
     handles = [Patch(facecolor=PARK_COLOR[c], edgecolor=PARK_COLOR[c], alpha=0.6,
                      label=PARK_NAME[c]) for c in sorted(PARK_NAME)]
-    handles += [Patch(facecolor="#000000", alpha=0.06, edgecolor="#555555",
+    handles += [Patch(facecolor="none", edgecolor="black", linewidth=0.8,
                       label="Study grid extent"),
                 Line2D([], [], marker="s", ls="", markerfacecolor="#111111",
                        markeredgecolor="#111111", markersize=6,

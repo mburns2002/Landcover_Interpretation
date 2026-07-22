@@ -30,18 +30,24 @@ count.
 
 - Basemap: Natural Earth vector layers, not raster tiles, since this is line and vector cartography
   and a vector basemap keeps the figure fully vector. Layers used: `ne_50m_admin_1_states_provinces_
-  lakes` (state and province context), `ne_50m_lakes` (Great Lakes), and `ne_110m_admin_0_countries`
-  (locator inset), downloaded to `data/raw/naturalearth/`. Contextily tiles were available but not
-  used.
+  lakes` (state and province context), `ne_50m_lakes` (Great Lakes), `ne_50m_admin_0_countries` (US
+  boundary for clipping the parks), and `ne_110m_admin_0_countries` (locator inset), downloaded to
+  `data/raw/naturalearth/`. Contextily tiles were available but not used.
+- Park clipping: the GLKN watersheds are clipped to the United States boundary so units whose
+  watersheds cross into Canada show only their US portion (Voyageurs 5,195 to 3,675 km2, Grand Portage
+  913 to 757 km2, Isle Royale clipped to the island at 572 km2). US-side lake areas are kept, so
+  Apostle Islands is unchanged.
 - Layer order, back to front: states and provinces, Great Lakes, study grid extent (dissolved to one
-  polygon), the seven GLKN park boundaries (distinct color per park), and the 180 interpreted cells.
+  polygon, drawn as a black outline with no fill), the seven GLKN park boundaries (distinct color per
+  park), and the 180 interpreted cells.
 
 ## Projection and cartographic elements
 
 - Projection: EPSG:5070 (CONUS Albers, equal-area). Every layer is reprojected to 5070 before
   plotting.
-- Scale bar: units are kilometers (5070 units are meters, auto-labeled in kilometers at this range).
-- North arrow: included, placed over open water.
+- Scale bar: a custom segmented bar (matplotlib-scalebar draws only a plain bar with no ticks), with
+  alternating black and white 50 km segments and tick labels at 0, 50, 100, and 150 kilometers.
+- North arrow: included, placed at the top right over open water, to the side of the map.
 - Locator inset: conterminous United States with a red box marking the main-map extent.
 
 ## Figure dimensions and format
