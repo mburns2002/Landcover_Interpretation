@@ -53,12 +53,9 @@ def draw_scalebar(ax, length_m=150000, n_seg=3):
     a proper divided bar is drawn by hand). Alternating black and white segments, labels above."""
     xlim, ylim = ax.get_xlim(), ax.get_ylim()
     w, h = xlim[1] - xlim[0], ylim[1] - ylim[0]
-    x0, y0 = xlim[0] + 0.05 * w, ylim[0] + 0.075 * h
+    x0, y0 = xlim[0] + 0.03 * w, ylim[0] + 0.028 * h       # very bottom left, in the clean strip
     seg = length_m / n_seg
     bh = 0.013 * h                                         # bar height in data units
-    # light backing box for legibility
-    ax.add_patch(Rectangle((x0 - 0.02 * w, y0 - 0.005 * h), length_m + 0.085 * w, bh + 0.055 * h,
-                           facecolor="white", alpha=0.7, edgecolor="none", zorder=10))
     for i in range(n_seg):
         ax.add_patch(Rectangle((x0 + i * seg, y0), seg, bh,
                                facecolor=("black" if i % 2 == 0 else "white"),
@@ -111,9 +108,10 @@ def main():
     pminx, pminy, pmaxx, pmaxy = parks.total_bounds
     minx, miny = min(minx, pminx), min(miny, pminy)
     maxx, maxy = max(maxx, pmaxx), max(maxy, pmaxy)
-    padx, pady = 0.06 * (maxx - minx), 0.06 * (maxy - miny)
-    xlim = (minx - padx, maxx + padx)
-    ylim = (miny - pady, maxy + pady)
+    rx, ry = maxx - minx, maxy - miny
+    # extra bottom margin gives a data-free strip below the grid for the scale bar
+    xlim = (minx - 0.06 * rx, maxx + 0.06 * rx)
+    ylim = (miny - 0.13 * ry, maxy + 0.06 * ry)
 
     # map on top, external legend strip below (keeps double-column width, frees the data area)
     fig = plt.figure(figsize=(7.5, 6.7))
