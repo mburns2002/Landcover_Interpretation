@@ -55,7 +55,7 @@ def t_overall_10():
             "embedding and spectral pooled columns rest on different cell sets. Accuracies rounded "
             "to 3 decimals. Source: reports/spectral_composite_classified_maps/comparison/"
             "overall_comparison.csv (bracket = pooled).")
-    return dict(id="T1", title="Table 1. Pooled classification accuracy by prediction source "
+    return dict(id="table_2_3", title="Table 2.3. Pooled classification accuracy by prediction source "
                 "(10-class schema).", note=note,
                 sources=["overall_comparison.csv"], df=out)
 
@@ -79,7 +79,7 @@ def t_overall_10_bracket():
             "uses 36, 36, 34, 32, and 30 cells across the brackets (168 pooled). OA rounded to 3 "
             "decimals. Source: overall_comparison.csv. The tidy CSV adds kappa and n_cells per "
             "bracket.")
-    return dict(id="T2", title="Table 2. Overall accuracy by source and temporal bracket "
+    return dict(id="table_2_4", title="Table 2.4. Overall accuracy by source and temporal bracket "
                 "(10-class schema).", note=note,
                 sources=["overall_comparison.csv"], df=piv, tidy=tidy)
 
@@ -103,7 +103,7 @@ def t_perclass_f1_10():
             "are given. Support is identical across v2 to v6 (shared reference). F1 rounded to 3 "
             "decimals. Full per-class UA, PA, F1, IoU, and support for every source are in the "
             "supplementary long table. Source: combined_metrics_long.csv (bracket = pooled).")
-    return dict(id="T3", title="Table 3. Per-class F1 by prediction source (10-class schema, "
+    return dict(id="table_2_5", title="Table 2.5. Per-class F1 by prediction source (10-class schema, "
                 "pooled).", note=note, sources=["combined_metrics_long.csv"], df=out)
 
 
@@ -118,12 +118,14 @@ def t_overall_5():
     note = ("Pooled accuracy under the canonical 5-class collapse (Stable, Harvest, Development, "
             "Insect/Disease, Beaver), all six sources on the common 168-cell set. In this collapse "
             "the reference Other pixels fold into Stable and Unknown pixels are excluded, which is "
-            "the single collapse now used across the whole 5-class analysis, including Tables 6, 7, "
-            "10, and 11. The all-Stable baseline OA is the accuracy of predicting Stable everywhere, "
+            "the single collapse now used across the whole 5-class analysis, including the other "
+            "5-class exhibits (former Tables 6, 7, 10, and 11, now unassigned; see "
+            "renumber_manifest.md). The all-Stable baseline OA is the accuracy of predicting Stable "
+            "everywhere, "
             "near 0.985, so a high 5-class OA reflects the stable-dominated landscape and kappa and "
             "macro-F1 carry the change-class signal. Accuracies rounded to 3 decimals. Source: "
             "collapsed_5class/comparison_collapsed.csv.")
-    return dict(id="T4", title="Table 4. Pooled accuracy by prediction source (5-class collapse, "
+    return dict(id="T4", title="(unassigned) Pooled accuracy by prediction source (5-class collapse, "
                 "common 168-cell set).", note=note,
                 sources=["comparison_collapsed.csv"], df=out)
 
@@ -148,7 +150,7 @@ def t_interp_10():
             "Moderate 0.50 to 0.70, Low below 0.50. Pairs is the number of pairs in which the class "
             "occurs. Values rounded to 3 decimals. Source: "
             "interpreter_agreement/per_class_agreement_ci.csv.")
-    return dict(id="T5", title="Table 5. Inter-interpreter per-class agreement with 95% CIs "
+    return dict(id="table_2_8", title="Table 2.8. Inter-interpreter per-class agreement with 95% CIs "
                 "(10-class schema).", note=note,
                 sources=["per_class_agreement_ci.csv"], df=out)
 
@@ -162,7 +164,7 @@ def t_interp_5():
             "Beaver, so a model scored on those classes against a single interpretation is bounded "
             "by reference noise. Values rounded to 3 decimals. Source: "
             "interpreter_agreement/per_class_agreement_ci_5class.csv.")
-    return dict(id="T6", title="Table 6. Inter-interpreter per-class agreement with 95% CIs "
+    return dict(id="T6", title="(unassigned) Inter-interpreter per-class agreement with 95% CIs "
                 "(5-class collapse).", note=note,
                 sources=["per_class_agreement_ci_5class.csv"], df=out)
 
@@ -188,7 +190,7 @@ def t_model_vs_interp_5():
             "the 95% CIs, IoU, and per-class cell counts. Sources: "
             "model_vs_interpreter_5class/model_per_class_ci_5class.csv and "
             "interpreter_agreement/per_class_agreement_ci_5class.csv.")
-    return dict(id="T7", title="Table 7. Per-class F1 by source versus the inter-interpreter "
+    return dict(id="T7", title="(unassigned) Per-class F1 by source versus the inter-interpreter "
                 "ceiling (5-class collapse).", note=note,
                 sources=["model_per_class_ci_5class.csv", "per_class_agreement_ci_5class.csv"],
                 df=out, tidy=tidy)
@@ -212,7 +214,7 @@ def t_changecap():
             "and insect_disease (small pools) far more than harvest and development. Support is the "
             "reference pixel count. Values rounded to 3 decimals. Source: "
             "sensitivity_changecap/sensitivity_metrics_long.csv.")
-    return dict(id="T8", title="Table 8. Training-cap sensitivity for the change classes "
+    return dict(id="table_2_7", title="Table 2.7. Training-cap sensitivity for the change classes "
                 "(10-class schema, 180 cells).", note=note,
                 sources=["sensitivity_metrics_long.csv"], df=out)
 
@@ -237,7 +239,7 @@ def t_spatial():
             "temporally-matched per-bracket prediction. Patch sizes rounded to 2 decimals, Moran's "
             "I to 2 (mean) and 3 (std) decimals. Source: "
             "spatial_structure/with_spec_all/spatial_structure_summary.csv.")
-    return dict(id="T9", title="Table 9. Spatial-structure diagnostics by source.", note=note,
+    return dict(id="table_2_6", title="Table 2.6. Spatial-structure diagnostics by source.", note=note,
                 sources=["with_spec_all/spatial_structure_summary.csv"], df=out)
 
 
@@ -256,7 +258,7 @@ def t_percell_f1_5():
             "cells (v2 to v6 have 180, spec_all 168), so the full-set columns are not a head-to-head "
             "ranking. Values rounded to 3 decimals. Source: "
             "per_cell_f1_5class/per_cell_f1_summary.csv.")
-    return dict(id="T10", title="Table 10. Per-cell 5-class macro-F1 summary by source.", note=note,
+    return dict(id="T10", title="(unassigned) Per-cell 5-class macro-F1 summary by source.", note=note,
                 sources=["per_cell_f1_summary.csv"], df=out)
 
 
@@ -280,7 +282,7 @@ def t_percell_change():
             "is given, with the median and the fraction of contributing cells with F1 = 0, in the "
             "tidy CSV. Values rounded to 3 decimals. Source: "
             "per_cell_change_f1/change_f1_summary.csv.")
-    return dict(id="T11", title="Table 11. Mean per-cell F1 by change class and source "
+    return dict(id="T11", title="(unassigned) Mean per-cell F1 by change class and source "
                 "(5-class collapse, 168-cell common set).", note=note,
                 sources=["change_f1_summary.csv"], df=mean, tidy=tidy)
 
@@ -347,16 +349,19 @@ def s_design_5class_ci():
     note = ("Design-based pooled 5-class overall metrics with bootstrap uncertainty, from the "
             "adjudicated collapsed-confusion analysis. Reported here as point estimates; the source "
             "CSV carries the ratio and bootstrap CI bounds per metric and class. This is the "
-            "CI-bearing 5-class companion to Table 4; note its basis may differ (fold-Other collapse "
-            "and its own cell set), see the consistency report before combining with Table 4. "
+            "CI-bearing 5-class companion to the flagged 5-class overall table (former Table 4); note "
+            "its basis may differ (its own cell set), see the consistency report before combining "
+            "them. "
             "Values rounded to 3 decimals. Source: collapsed_5class_confusion/metrics_long.csv.")
     return dict(id="S4", title="Table S4. Design-based pooled 5-class overall metrics (point "
                 "estimates; CIs in source CSV).", note=note,
                 sources=["collapsed_5class_confusion/metrics_long.csv"], df=piv)
 
 
-MAIN = [t_overall_10, t_overall_10_bracket, t_perclass_f1_10, t_overall_5, t_interp_10,
-        t_interp_5, t_model_vs_interp_5, t_changecap, t_spatial, t_percell_f1_5, t_percell_change]
+# chapter 2 main-text tables, in new-number order (2.3 to 2.8)
+CH2 = [t_overall_10, t_overall_10_bracket, t_perclass_f1_10, t_spatial, t_changecap, t_interp_10]
+# kept but not assigned a chapter 2 number (the 5-class tables; the 5-class results appear as figures)
+FLAGGED = [t_overall_5, t_interp_5, t_model_vs_interp_5, t_percell_f1_5, t_percell_change]
 SUPP = [s_perclass_full_10, s_dedup, s_speckle, s_design_5class_ci]
 
 
@@ -406,16 +411,16 @@ def _add_table(doc, df):
     return table
 
 
-def render_docx(main_specs, supp_specs, captions_md_path, path):
+def render_docx(ch2_specs, flagged_specs, supp_specs, captions_md_path, path):
     import docx
     from docx.shared import Pt, Inches
     doc = docx.Document()
     style = doc.styles["Normal"]; style.font.name = "Calibri"; style.font.size = Pt(10)
 
-    h = doc.add_heading("Manuscript tables and figure captions", level=0)
-    doc.add_paragraph("Formatted from existing repository results. Every table traces to a source "
-                      "CSV named in its note. Numbers are rounded only, not recomputed. This is a "
-                      "proposal set for the author to accept, edit, or drop.")
+    h = doc.add_heading("Chapter 2 tables and figure captions", level=0)
+    doc.add_paragraph("Formatted from existing repository results, numbered in the thesis per-chapter "
+                      "scheme (Table 2.n). Every table traces to a source CSV named in its note. "
+                      "Numbers are rounded only, not recomputed.")
 
     def emit(specs, header):
         doc.add_heading(header, level=1)
@@ -426,8 +431,12 @@ def render_docx(main_specs, supp_specs, captions_md_path, path):
             run = n.add_run("Note. " + spec["note"]); run.italic = True; run.font.size = Pt(8)
             doc.add_paragraph("")
 
-    emit(main_specs, "Main-text candidate tables")
-    emit(supp_specs, "Supplementary candidate tables")
+    emit(ch2_specs, "Chapter 2 main-text tables (Tables 2.1 to 2.8)")
+    doc.add_paragraph("Table 2.1 (ten-class schema) is in tables/schema_table/; no Table 2.2 exists "
+                      "yet. See renumber_manifest.md.")
+    emit(flagged_specs, "Tables not assigned a Chapter 2 number (flagged; the 5-class results appear "
+                        "in the main text as figures)")
+    emit(supp_specs, "Supplementary tables (S-prefix retained)")
 
     # figure captions section, pasted from the markdown file
     doc.add_page_break()
@@ -448,20 +457,23 @@ def render_docx(main_specs, supp_specs, captions_md_path, path):
 
 def main():
     os.makedirs(TAB, exist_ok=True)
-    specs_main = [f() for f in MAIN]
+    specs_ch2 = [f() for f in CH2]
+    specs_flagged = [f() for f in FLAGGED]
     specs_supp = [f() for f in SUPP]
     manifest = []
-    for spec in specs_main + specs_supp:
+    for spec in specs_ch2 + specs_flagged + specs_supp:
         spec["df"].to_csv(os.path.join(TAB, f"{spec['id']}.csv"), index=False)
         if "tidy" in spec:
             spec["tidy"].to_csv(os.path.join(TAB, f"{spec['id']}_tidy.csv"), index=False)
         manifest.append((spec["id"], spec["title"].split(".", 1)[0], ", ".join(spec["sources"])))
     captions_md = os.path.join(OUT, "figure_captions.md")
-    render_docx(specs_main, specs_supp, captions_md, os.path.join(OUT, "manuscript_tables.docx"))
+    render_docx(specs_ch2, specs_flagged, specs_supp, captions_md,
+                os.path.join(OUT, "manuscript_tables.docx"))
     print("wrote", os.path.join(OUT, "manuscript_tables.docx"))
-    print(f"tidy CSVs -> {TAB}/ ({len(specs_main)} main + {len(specs_supp)} supp)")
+    print(f"tidy CSVs -> {TAB}/ ({len(specs_ch2)} ch2 + {len(specs_flagged)} flagged + "
+          f"{len(specs_supp)} supp)")
     for mid, title, src in manifest:
-        print(f"  {mid:4} {title:52} <- {src}")
+        print(f"  {mid:12} {title:46} <- {src}")
 
 
 if __name__ == "__main__":

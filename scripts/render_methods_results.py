@@ -27,7 +27,13 @@ PDF_OUT = os.path.join(OUTDIR, "Methods_and_Results_draft.pdf")
 REL = os.path.relpath(ROOT, OUTDIR)                          # "../.." so repo-relative figures resolve
 
 
+# the six renamed chapter-2 tables keep working from unedited [[TABLE Tn]] placeholders in the draft
+OLD_ID_ALIAS = {"T1": "table_2_3", "T2": "table_2_4", "T3": "table_2_5",
+                "T9": "table_2_6", "T8": "table_2_7", "T5": "table_2_8"}
+
+
 def table_md(tid):
+    tid = OLD_ID_ALIAS.get(tid, tid)
     df = pd.read_csv(os.path.join(TAB, f"{tid}.csv"))
     # comma-group integer-valued columns for readability
     def fmt(v):

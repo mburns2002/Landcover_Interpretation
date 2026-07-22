@@ -64,23 +64,30 @@ Format column: CSV = tidy or matrix CSV; PNG = rendered figure; TXT/MD = note or
 | `Case_ABCD_sampling/`, `Case_ABCD_sampling_5class/` | sampling-design study | CSV, PNG |
 | `TC_training/*` | Tasseled Cap training-signal diagnostics | PNG |
 
-## 2. Proposed MAIN-TEXT tables
+## 2. MAIN-TEXT tables (Chapter 2 numbering, see renumber_manifest.md)
 
-Built (tidy CSV + docx). Author decides inclusion.
+Built (tidy CSV + docx). Numbered in the thesis per-chapter scheme.
 
-| ID | Table | Rationale | Source CSV |
+| New | Old | Table | File |
 |---|---|---|---|
-| T1 | Pooled overall accuracy by source (10-class) | Headline accuracy comparison, one row per source | overall_comparison.csv |
-| T2 | Overall accuracy by source and bracket (10-class) | Temporal-transfer summary with the in-sample control marked | overall_comparison.csv |
-| T3 | Per-class F1 by source (10-class, pooled) | Where each source succeeds or fails per class | combined_metrics_long.csv |
-| T4 | Pooled accuracy by source (5-class collapse) | Change-focused accuracy, all six sources on one basis | comparison_collapsed.csv |
-| T5 | Inter-interpreter per-class agreement, 10-class | Reference-reliability ceiling per class | per_class_agreement_ci.csv |
-| T6 | Inter-interpreter per-class agreement, 5-class | Reference-reliability ceiling, collapsed | per_class_agreement_ci_5class.csv |
-| T7 | Model F1 vs interpreter ceiling (5-class) | Ties model accuracy to reference reliability | model_per_class_ci_5class.csv + interpreter CI |
-| T8 | Training-cap sensitivity, change classes | Sensitivity of the rare change classes to training size | sensitivity_metrics_long.csv |
-| T9 | Spatial-structure diagnostics by source | Spatial coherence beyond aggregate accuracy | with_spec_all/spatial_structure_summary.csv |
-| T10 | Per-cell 5-class macro-F1 by source | Per-cell distribution summary | per_cell_f1_summary.csv |
-| T11 | Mean per-cell F1 by change class and source | Per-cell change-class summary | change_f1_summary.csv |
+| Table 2.1 | Table 2.1 | Ten-class classification schema | tables/schema_table/table_2_1_schema.csv/.docx |
+| Table 2.2 | Table 2.2 | Embedding configurations (not present; see flags) | none |
+| Table 2.3 | Table 1 | Pooled overall accuracy by source (10-class) | tables/table_2_3.csv |
+| Table 2.4 | Table 2 | Overall accuracy by source and bracket (10-class) | tables/table_2_4.csv |
+| Table 2.5 | Table 3 | Per-class F1 by source (10-class, pooled) | tables/table_2_5.csv |
+| Table 2.6 | Table 9 | Spatial-structure diagnostics by source | tables/table_2_6.csv |
+| Table 2.7 | Table 8 | Training-cap sensitivity, change classes | tables/table_2_7.csv |
+| Table 2.8 | Table 5 | Inter-interpreter reliability, 10-class (may move to Ch. 3) | tables/table_2_8.csv |
+
+Kept but not assigned a Chapter 2 number (the 5-class results appear as figures 2.5, 2.6, 2.11, 2.12):
+
+| Old | Table | File |
+|---|---|---|
+| Table 4 | Pooled accuracy by source (5-class collapse) | tables/T4.csv |
+| Table 6 | Inter-interpreter per-class agreement, 5-class | tables/T6.csv |
+| Table 7 | Model F1 vs interpreter ceiling (5-class) | tables/T7.csv |
+| Table 10 | Per-cell 5-class macro-F1 by source | tables/T10.csv |
+| Table 11 | Mean per-cell F1 by change class and source | tables/T11.csv |
 
 ## 3. Proposed SUPPLEMENTARY tables
 
@@ -102,25 +109,29 @@ Built: S1-S4. Proposed but not yet built: S5+ (source CSVs named for the author 
 
 ## 4. Proposed figures
 
-See `figure_captions.md` for full descriptive captions. Main: F1 study area (TO CREATE), F2 overall
-accuracy bars, F3 OA by bracket, F4 pooled 5-class confusion, F5 per-class 10-class confusion
-(representative), F6 and F7 interpreter agreement forests, F8 model vs interpreter forests, F9
-spatial structure, F10 speckle crops, F11 per-cell F1 violins, F12 change-class per-cell F1, F13
-change-cap sensitivity. Supplementary: S1 interpreter global confusion, S2 boundary disagreement, S3
+See `figure_captions.md` for full descriptive captions and `renumber_manifest.md` for the old-to-new
+mapping. Chapter 2 main figures: 2.1 study area, 2.2 workflow, 2.3 embedding configurations, 2.4 OA by
+bracket, 2.5 per-cell F1 violins, 2.6 change-class per-cell F1, 2.7 area-weighted patch-size ECDF, 2.8
+Moran's I, 2.9 speckle crops, 2.10 change-cap sensitivity, 2.11 model-vs-interpreter forests, 2.12
+pooled confusion matrices. Flagged (number pending): classification schema (former 1b), overall
+accuracy bars (former 2), interpreter agreement forests (former 6 and 7), mean patch size per class
+(former 9 panel B). Supplementary: S1 interpreter global confusion, S2 boundary disagreement, S3
 spectral-vs-embedding change comparison, S4 dedup sensitivity, S5 Tasseled Cap diagnostics, S6
 reviewer over-assignment, S7 top-disagreement panels.
 
 ## 5. Flagged issues (see consistency_report.md)
 
 1. 168 versus 180 cells. Embedding pooled metrics use 180 cells; spec_all uses 168 (12 blank spec_all
-   rasters). Tables 1 to 3 keep both sources on their native bases and label N; the 5-class Tables 4,
-   7, 10, and 11 use the common 168-cell set. This must not be mixed silently within one comparison.
-2. Two different 5-class collapses. The pooled comparison (Table 4) drops Unknown and Other; the
-   per-bracket 5-class matrices fold Other into Stable. The pooled OA values therefore differ from a
-   re-aggregation of the per-bracket matrices. Table 4 and Table S4 may sit on different bases.
-3. No pooled 10-class embedding confusion matrix exists (embeddings are per-bracket only), so Figure 5
-   mixes a per-bracket embedding panel with a pooled spectral panel. Flagged, not reconciled.
+   rasters). Tables 2.3 to 2.5 keep both sources on their native bases and label N; the 5-class tables
+   (former Tables 4, 7, 10, 11, now unassigned) use the common 168-cell set. This must not be mixed
+   silently within one comparison.
+2. Two different 5-class collapses: RESOLVED. A single canonical collapse (Other folds into Stable,
+   Unknown excluded) is now used everywhere; see consistency_report.md item B.
+3. No pooled 10-class embedding confusion matrix exists (embeddings are per-bracket only), so
+   Figure 2.12 mixes a per-bracket embedding panel with a pooled spectral panel. Flagged, not
+   reconciled.
 4. Superseded arm. `model_comparison/` and `model_comparison_2018_2020/` reflect an earlier
    154-location snapshot with random dedup; the current reference set is 180 locations with
    adjudication. Only S2 and S3 draw from that arm, and both are labeled as the earlier snapshot.
-5. Missing study-area and schema figure (Figure 1). Not found in the repository.
+5. Structural renumbering flags: Figure 9 split into 2.7 and 2.8 with panel B unassigned, old Figure 4
+   and Figure 5 both map to 2.12, and no Table 2.2 exists. See renumber_manifest.md.
