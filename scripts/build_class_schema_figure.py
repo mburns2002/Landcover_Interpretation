@@ -20,7 +20,7 @@ from matplotlib.colors import to_rgb
 from matplotlib.patches import FancyArrowPatch, Rectangle
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-OUT = f"{ROOT}/figure_study_area"
+OUT = f"{ROOT}/manuscript_formatting/figure_study_area"
 
 
 def _load(name, path):

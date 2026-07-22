@@ -32,7 +32,7 @@ of the nine GLKN units, Indiana Dunes and Pictured Rocks, fall outside the study
 not used. Figure 1 maps the study region, the grid extent, the park units,
 and the interpreted cells.
 
-![Figure 1. Study area in the western Great Lakes region (Wisconsin, Minnesota, and the Michigan Upper Peninsula), EPSG:5070, showing the study grid extent, the Great Lakes, the seven GLKN park units, and the 180 interpreted reference cells, with a conterminous-US locator inset, scale bar, and north arrow.](../../figure_study_area/figure1_study_area.png)
+![Figure 1. Study area in the western Great Lakes region (Wisconsin, Minnesota, and the Michigan Upper Peninsula), EPSG:5070, showing the study grid extent, the Great Lakes, the seven GLKN park units, and the 180 interpreted reference cells, with a conterminous-US locator inset, scale bar, and north arrow.](../../manuscript_formatting/figure_study_area/figure1_study_area.png)
 
 *Figure 1. Study area in the western Great Lakes region (Wisconsin, Minnesota, and the Michigan Upper Peninsula), EPSG:5070, showing the study grid extent, the Great Lakes, the seven GLKN park units, and the 180 interpreted reference cells, with a conterminous-US locator inset, scale bar, and north arrow.*
 
@@ -52,7 +52,7 @@ Unknown and Other. A second per-bracket 5-class product folds Other into Stable 
 collapses are kept distinct and are not interchangeable (see the consistency report). Figure 1b shows
 the 10-class schema and the 5-class collapse.
 
-![Figure 1b. Classification schema. Left, the 10-class schema grouped into the six no-change (stable) classes and the four change (disturbance) classes, each with its class code and legend color. Right, the 5-class collapse that folds the six stable classes into a single Stable class and keeps the four change classes.](../../figure_study_area/figure_class_schema.png)
+![Figure 1b. Classification schema. Left, the 10-class schema grouped into the six no-change (stable) classes and the four change (disturbance) classes, each with its class code and legend color. Right, the 5-class collapse that folds the six stable classes into a single Stable class and keeps the four change classes.](../../manuscript_formatting/figure_study_area/figure_class_schema.png)
 
 *Figure 1b. Classification schema. Left, the 10-class schema grouped into the six no-change (stable) classes and the four change (disturbance) classes, each with its class code and legend color. Right, the 5-class collapse that folds the six stable classes into a single Stable class and keeps the four change classes.*
 
