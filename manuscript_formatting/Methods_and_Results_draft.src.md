@@ -47,7 +47,10 @@ For change-focused analysis the schema is collapsed to five classes: Stable (the
 classes pooled), Harvest, Development, Insect/Disease, and Beaver. The primary 5-class collapse
 (used for the pooled comparison, the per-cell analyses, and the interpreter agreement) excludes
 Unknown and Other. A second per-bracket 5-class product folds Other into Stable instead; the two
-collapses are kept distinct and are not interchangeable (see the consistency report).
+collapses are kept distinct and are not interchangeable (see the consistency report). Figure 1b shows
+the 10-class schema and the 5-class collapse.
+
+[[FIG figure_study_area/figure_class_schema.png | Figure 1b. Classification schema. Left, the 10-class schema grouped into the six no-change (stable) classes and the four change (disturbance) classes, each with its class code and legend color. Right, the 5-class collapse that folds the six stable classes into a single Stable class and keeps the four change classes.]]
 
 ### 2.3 Prediction sources: embedding variants and the spectral baseline
 
