@@ -9,10 +9,16 @@ The 5-class collapse is Stable, Harvest, Development, Insect/Disease, and Beaver
 
 ## Main-text candidate figures
 
-### Figure 1. Study area and class schema
-FLAGGED, ARTIFACT NOT FOUND. No study-area map or schema diagram figure was located in `reports/`.
-This figure needs to be created (western Great Lakes extent over WI, MN, and MI; the 10-class
-schema and its 5-class collapse; the interpreted cell locations). Flagged rather than substituted.
+### Figure 1. Study area
+Study area in the western Great Lakes region of the United States, spanning Wisconsin, Minnesota, and
+the Michigan Upper Peninsula, in EPSG:5070 (CONUS Albers, equal-area). Shows the study grid extent,
+the Great Lakes, the seven GLKN park units used here (each outlined and named), and the 180
+interpreted reference cells (black squares), with a conterminous-United-States locator inset, a
+kilometer scale bar, and a north arrow. State and Great Lakes boundaries are from Natural Earth; the
+grid, park boundaries, and interpreted cells are from the Google Earth Engine exports. Source:
+`figure_study_area/figure1_study_area.png` (and `.pdf`). Full caption in
+`figure_study_area/figure1_caption.md`. A class-schema panel (10-class and 5-class collapse) is not
+yet included and could be added as a second panel if wanted.
 
 ### Figure 2. Overall accuracy by prediction source
 Overall accuracy, Cohen's kappa, macro-F1, and mean IoU for the six prediction sources (embedding
