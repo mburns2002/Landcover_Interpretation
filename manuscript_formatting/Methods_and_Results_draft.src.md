@@ -25,10 +25,11 @@ by adjudication, recorded in `exports/truth_selections.csv`, so each cell contri
 reference and none is double counted. The 72 multi-interpreted cells are also retained separately for
 the inter-interpreter reliability analysis (Section 2.7), where each is scored as a reviewer pair.
 
-The reference cells fall within the watersheds of seven GLKN park units (Apostle Islands, Grand
-Portage, Isle Royale, Mississippi National River and Recreation Area, Saint Croix, Sleeping Bear
-Dunes, and Voyageurs); two of the nine GLKN units, Indiana Dunes and Pictured Rocks, fall outside the
-study grid extent and are not used. Figure 1 maps the study region, the grid extent, the park units,
+The reference cells fall within the watersheds of seven park units of the National Park Service Great
+Lakes Inventory and Monitoring Network (GLKN): Apostle Islands, Grand Portage, Isle Royale,
+Mississippi National River and Recreation Area, Saint Croix, Sleeping Bear Dunes, and Voyageurs. Two
+of the nine GLKN units, Indiana Dunes and Pictured Rocks, fall outside the study grid extent and are
+not used. Figure 1 maps the study region, the grid extent, the park units,
 and the interpreted cells.
 
 [[FIG figure_study_area/figure1_study_area.png | Figure 1. Study area in the western Great Lakes region (Wisconsin, Minnesota, and the Michigan Upper Peninsula), EPSG:5070, showing the study grid extent, the Great Lakes, the seven GLKN park units, and the 180 interpreted reference cells, with a conterminous-US locator inset, scale bar, and north arrow.]]
