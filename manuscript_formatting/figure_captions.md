@@ -68,11 +68,16 @@ smoothness diagnostic), measured within the interpreted cell footprints for the 
 interpreted reference and each source's temporally-matched per-bracket prediction. Source:
 `reports/spatial_structure/with_spec_all/morans_i_by_source.png`. Corresponds to Table 2.6.
 
-### Figure 2.9. Model-map speckle
-Cropped detail of each embedding variant's classified map at a common location, illustrating the
-per-pixel character captured by the neighbor-change metric (fraction of horizontally-adjacent,
-both-valid pixel pairs whose class differs, over the full rasters). Source:
-`reports/model_comparison/model_speckle_crops.png`. Corresponds to Table S3.
+### Figure 2.9. Classified-map speckle
+The same location (cell 31320, EPSG:5070) classified by each embedding configuration (v2 to v6), from
+the current 180-cell temporally-matched classifications, colored with the standard 10-class palette.
+Each panel is annotated with its neighbor-change value (fraction of horizontally-adjacent, both-valid
+pixel pairs whose class differs), computed over all 180 current cells: v2 0.085, v3 0.084, v4 0.155,
+v5 0.093, v6 0.801. Baseline-preserving configurations (v2, v3, v5) produce contiguous patches, v4 is
+grainier, and v6 is salt-and-pepper. A 1 km scale bar is on the v2 panel. Source:
+`manuscript_formatting/figures/figure_2_9_speckle_crops.png` (and `.pdf`); build note in the same
+folder. Replaces the earlier crop from the 154-location snapshot. Table S3 (map speckle) still holds
+the earlier-snapshot neighbor-change values, so it is on a different basis until regenerated.
 
 ### Figure 2.10. Training-cap sensitivity for the change classes
 User's accuracy (UA) and producer's accuracy (PA) for the four change classes as the change-class
