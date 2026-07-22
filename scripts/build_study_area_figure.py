@@ -26,7 +26,7 @@ GLKN = f"{ROOT}/data/raw/glkn/GLKN_watershed_boundaries_7park_5070.shp"
 GRID = f"{ROOT}/data/raw/glkn/grid_112_naip_brackets_5_11_26.csv"
 CELLS = f"{ROOT}/exports/gee/interpreted_cells_by_bracket.csv"
 NE = f"{ROOT}/data/raw/naturalearth"
-OUT = f"{ROOT}/manuscript_formatting/figure_study_area"
+OUT = f"{ROOT}/manuscript_formatting/figures/figure_study_area"
 
 # park code to full name for the legend
 PARK_NAME = {

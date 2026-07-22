@@ -19,7 +19,7 @@ from matplotlib.colors import to_rgb
 from matplotlib.patches import FancyArrowPatch, Rectangle
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-OUT = f"{ROOT}/manuscript_formatting/figure_embedding_configs"
+OUT = f"{ROOT}/manuscript_formatting/figures/figure_embedding_configs"
 
 # two colourblind-safe tones (Okabe-Ito blue and orange); differ in hue and lightness, so they read in
 # grayscale too. no Figure 2.2 exists yet, so these are the reference tones for it to match.

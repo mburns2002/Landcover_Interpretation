@@ -19,9 +19,9 @@ import re
 import pandas as pd
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-SRC = os.path.join(ROOT, "manuscript_formatting", "Methods_and_Results_draft.src.md")
+SRC = os.path.join(ROOT, "manuscript_formatting", "sections", "Methods_and_Results_draft.src.md")
 TAB = os.path.join(ROOT, "manuscript_formatting", "tables")
-OUTDIR = os.path.join(ROOT, "manuscript_formatting", "draft")
+OUTDIR = os.path.join(ROOT, "manuscript_formatting", "sections", "draft")
 MD_OUT = os.path.join(OUTDIR, "Methods_and_Results_draft.md")
 PDF_OUT = os.path.join(OUTDIR, "Methods_and_Results_draft.pdf")
 REL = os.path.relpath(ROOT, OUTDIR)                          # "../.." so repo-relative figures resolve

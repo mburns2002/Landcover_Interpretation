@@ -19,5 +19,5 @@ chosen here as the reference. Baseline (full embedding field) is Okabe-Ito blue 
 in grayscale, and the change blocks also carry a diagonal hatch, so the encoding does not rely on
 color alone. Figure 2.2 should reuse these two tones for the baseline versus change distinction.
 
-Source figure: `manuscript_formatting/figure_embedding_configs/figure_2_3_embedding_configs.png`
+Source figure: `manuscript_formatting/figures/figure_embedding_configs/figure_2_3_embedding_configs.png`
 (and `.pdf`).

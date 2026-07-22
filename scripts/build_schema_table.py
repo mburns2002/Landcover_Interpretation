@@ -15,7 +15,7 @@ import os
 import pandas as pd
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-OUT = os.path.join(ROOT, "manuscript_formatting", "schema_table")
+OUT = os.path.join(ROOT, "manuscript_formatting", "tables", "schema_table")
 
 CAPTION = ("Table 2.1. Ten-class classification schema. Change classes are defined by a transition "
            "observed between the two analysis dates rather than by an end-state land cover.")

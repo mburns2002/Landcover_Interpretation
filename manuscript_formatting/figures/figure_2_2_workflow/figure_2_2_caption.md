@@ -20,4 +20,4 @@ The baseline versus change shading reuses the Figure 2.3 tones so the two figure
 labels stay legible. The rest of the diagram is a neutral palette, and every box is labeled, so the
 figure does not rely on color alone.
 
-Source figure: `manuscript_formatting/figures/figure_2_2_workflow.png` (and `.pdf`).
+Source figure: `manuscript_formatting/figures/figure_2_2_workflow/figure_2_2_workflow.png` (and `.pdf`).

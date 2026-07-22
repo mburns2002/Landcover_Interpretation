@@ -16,8 +16,8 @@ the Great Lakes, the seven GLKN park units used here (each outlined and named), 
 interpreted reference cells (black squares), with a conterminous-United-States locator inset, a
 kilometer scale bar, and a north arrow. State and Great Lakes boundaries are from Natural Earth; the
 grid, park boundaries, and interpreted cells are from the Google Earth Engine exports. Source:
-`manuscript_formatting/figure_study_area/figure1_study_area.png` (and `.pdf`). Full caption in
-`manuscript_formatting/figure_study_area/figure1_caption.md`. A class-schema panel (10-class and 5-class collapse) is not
+`manuscript_formatting/figures/figure_study_area/figure1_study_area.png` (and `.pdf`). Full caption in
+`manuscript_formatting/figures/figure_study_area/figure1_caption.md`. A class-schema panel (10-class and 5-class collapse) is not
 yet included and could be added as a second panel if wanted.
 
 ### Figure 1b. Classification schema
@@ -25,8 +25,8 @@ The 10-class classification schema and its 5-class collapse. Left, the 10 classe
 no-change (stable) classes and the four change (disturbance) classes, each with its class code and
 legend color. Right, the 5-class collapse that folds the six stable classes into a single Stable class
 and keeps the four change classes. Colors are the project class legend. Source:
-`manuscript_formatting/figure_study_area/figure_class_schema.png` (and `.pdf`). Full caption in
-`manuscript_formatting/figure_study_area/figure_class_schema_caption.md`. Can serve as Figure 1b (paired with the study
+`manuscript_formatting/figures/figure_study_area/figure_class_schema.png` (and `.pdf`). Full caption in
+`manuscript_formatting/figures/figure_study_area/figure_class_schema_caption.md`. Can serve as Figure 1b (paired with the study
 area) or a standalone methods figure.
 
 ### Figure 2. Overall accuracy by prediction source

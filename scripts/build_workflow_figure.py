@@ -18,7 +18,7 @@ from matplotlib.colors import to_rgb
 from matplotlib.patches import FancyArrowPatch, FancyBboxPatch, Rectangle
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-OUT = f"{ROOT}/manuscript_formatting/figures"
+OUT = f"{ROOT}/manuscript_formatting/figures/figure_2_2_workflow"
 
 BASELINE = "#0072B2"                                        # baseline-preserving (matches Figure 2.3)
 CHANGE = "#E69F00"                                          # change-only

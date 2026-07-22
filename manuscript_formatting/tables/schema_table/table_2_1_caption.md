@@ -7,5 +7,5 @@ Notes: the schema has ten classes, six stable (no-change) and four change (distu
 ordered by class code. The Type column marks each class as stable or change, and the Definition column
 gives the land-cover state for a stable class or the observed transition for a change class. Per OSU
 Manuscript Format the caption sits above the table at body-text size, and the table is numbered per
-chapter (2.1). Source: `manuscript_formatting/schema_table/table_2_1_schema.docx` (and
+chapter (2.1). Source: `manuscript_formatting/tables/schema_table/table_2_1_schema.docx` (and
 `table_2_1_schema.csv`).
