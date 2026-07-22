@@ -32,7 +32,7 @@ of the nine GLKN units, Indiana Dunes and Pictured Rocks, fall outside the study
 not used. Figure 1 maps the study region, the grid extent, the park units,
 and the interpreted cells.
 
-![Figure 1. Study area in the western Great Lakes region (Wisconsin, Minnesota, and the Michigan Upper Peninsula), EPSG:5070, showing the study grid extent, the Great Lakes, the seven GLKN park units, and the 180 interpreted reference cells, with a conterminous-US locator inset, scale bar, and north arrow.](figure_study_area/figure1_study_area.png)
+![Figure 1. Study area in the western Great Lakes region (Wisconsin, Minnesota, and the Michigan Upper Peninsula), EPSG:5070, showing the study grid extent, the Great Lakes, the seven GLKN park units, and the 180 interpreted reference cells, with a conterminous-US locator inset, scale bar, and north arrow.](../../figure_study_area/figure1_study_area.png)
 
 *Figure 1. Study area in the western Great Lakes region (Wisconsin, Minnesota, and the Michigan Upper Peninsula), EPSG:5070, showing the study grid extent, the Great Lakes, the seven GLKN park units, and the 180 interpreted reference cells, with a conterminous-US locator inset, scale bar, and north arrow.*
 
@@ -171,7 +171,7 @@ change-only feature design.]`
 | v6 | 0.13 | 0.04 | 0.089 | 0.049 | 180 | 20,404,977 |
 | spec_all | 0.588 | 0.461 | 0.362 | 0.275 | 168 | 18,756,059 |
 
-![Figure 2. Overall accuracy, kappa, macro-F1, and mean IoU by prediction source (10-class schema, pooled; embeddings on 180 cells, spec_all on 168).](reports/spectral_composite_classified_maps/comparison/compare_overall_metrics.png)
+![Figure 2. Overall accuracy, kappa, macro-F1, and mean IoU by prediction source (10-class schema, pooled; embeddings on 180 cells, spec_all on 168).](../../reports/spectral_composite_classified_maps/comparison/compare_overall_metrics.png)
 
 *Figure 2. Overall accuracy, kappa, macro-F1, and mean IoU by prediction source (10-class schema, pooled; embeddings on 180 cells, spec_all on 168).*
 
@@ -191,7 +191,7 @@ which do not, keeping the disjoint-cell caveat in view.]`
 | v6 | 0.165 | 0.193 | 0.071 | 0.141 | 0.079 | 0.13 |
 | spec_all | 0.521 | 0.693 | 0.548 | 0.659 | 0.513 | 0.588 |
 
-![Figure 3. Overall accuracy per source across the five NAIP brackets (10-class schema, adjudicated reference; 2018-2020 is the in-sample control).](reports/transfer_confusion_adjudicated/oa_by_bracket.png)
+![Figure 3. Overall accuracy per source across the five NAIP brackets (10-class schema, adjudicated reference; 2018-2020 is the in-sample control).](../../reports/transfer_confusion_adjudicated/oa_by_bracket.png)
 
 *Figure 3. Overall accuracy per source across the five NAIP brackets (10-class schema, adjudicated reference; 2018-2020 is the in-sample control).*
 
@@ -215,11 +215,11 @@ low for the rare change classes, so their per-class numbers rest on little data.
 | Beaver | 0.004 | 0.003 | 0.012 | 0.003 | 0.001 | 0.004 | 8,021 | 7,922 |
 | Insect/Disease | 0.016 | 0.017 | 0.008 | 0.012 | 0.006 | 0.023 | 68,738 | 64,989 |
 
-![Figure 5a. Per-class confusion for v2, in-sample control bracket 2018-2020 (10-class, 36 cells; raw counts colored by row proportion, PA column and UA row, OA and kappa in the corner). See the consistency report on the per-bracket versus pooled basis.](reports/transfer_confusion_adjudicated/cm_v2_2018_2020.png)
+![Figure 5a. Per-class confusion for v2, in-sample control bracket 2018-2020 (10-class, 36 cells; raw counts colored by row proportion, PA column and UA row, OA and kappa in the corner). See the consistency report on the per-bracket versus pooled basis.](../../reports/transfer_confusion_adjudicated/cm_v2_2018_2020.png)
 
 *Figure 5a. Per-class confusion for v2, in-sample control bracket 2018-2020 (10-class, 36 cells; raw counts colored by row proportion, PA column and UA row, OA and kappa in the corner). See the consistency report on the per-bracket versus pooled basis.*
 
-![Figure 5b. Per-class confusion for spec_all, pooled (10-class, 168 cells).](reports/spectral_composite_classified_maps/cm_specall_pooled.png)
+![Figure 5b. Per-class confusion for spec_all, pooled (10-class, 168 cells).](../../reports/spectral_composite_classified_maps/cm_specall_pooled.png)
 
 *Figure 5b. Per-class confusion for spec_all, pooled (10-class, 168 cells).*
 
@@ -241,11 +241,11 @@ change classes are folded.]`
 | v6 | 0.602 | 0.985 | 0.004 | 0.157 | 0.124 | 168 |
 | spec_all | 0.782 | 0.985 | 0.031 | 0.203 | 0.171 | 168 |
 
-![Figure 4a. Pooled 5-class confusion for v2 (180 cells).](reports/collapsed_5class_confusion/confusion_v2.png)
+![Figure 4a. Pooled 5-class confusion for v2 (180 cells).](../../reports/collapsed_5class_confusion/confusion_v2.png)
 
 *Figure 4a. Pooled 5-class confusion for v2 (180 cells).*
 
-![Figure 4b. Pooled 5-class confusion for spec_all (168 cells).](reports/spectral_composite_classified_maps/collapsed_5class/confusion_specall.png)
+![Figure 4b. Pooled 5-class confusion for spec_all (168 cells).](../../reports/spectral_composite_classified_maps/collapsed_5class/confusion_specall.png)
 
 *Figure 4b. Pooled 5-class confusion for spec_all (168 cells).*
 
@@ -266,7 +266,7 @@ Low. `[Interpretation: state the consequence for model evaluation on the Low-rel
 | Insect/Disease | 19 | 56,257 | 0.229 | 0.004-0.466 | 0.129 | 0.002-0.303 | Low |
 | Beaver | 15 | 8,828 | 0.077 | 0.0-0.209 | 0.04 | 0.0-0.117 | Low |
 
-![Figure 7. Inter-interpreter per-class agreement F1 with 95% cluster (pair) bootstrap CIs, 5-class collapse, 72 pairs.](reports/interpreter_agreement/per_class_agreement_forest_5class.png)
+![Figure 7. Inter-interpreter per-class agreement F1 with 95% cluster (pair) bootstrap CIs, 5-class collapse, 72 pairs.](../../reports/interpreter_agreement/per_class_agreement_forest_5class.png)
 
 *Figure 7. Inter-interpreter per-class agreement F1 with 95% cluster (pair) bootstrap CIs, 5-class collapse, 72 pairs.*
 
@@ -289,7 +289,7 @@ Development, Insect/Disease, and Beaver both the sources and the ceiling are low
 | Insect/Disease | 0.016 | 0.017 | 0.008 | 0.012 | 0.006 | 0.023 | 0.229 |
 | Beaver | 0.004 | 0.003 | 0.012 | 0.003 | 0.001 | 0.004 | 0.077 |
 
-![Figure 8. Per-class F1 for v4 (colored) against the inter-interpreter ceiling (grey), 5-class collapse, with 95% bootstrap CIs. One panel per source in reports/model_vs_interpreter_5class/.](reports/model_vs_interpreter_5class/forest_5class_v4.png)
+![Figure 8. Per-class F1 for v4 (colored) against the inter-interpreter ceiling (grey), 5-class collapse, with 95% bootstrap CIs. One panel per source in reports/model_vs_interpreter_5class/.](../../reports/model_vs_interpreter_5class/forest_5class_v4.png)
 
 *Figure 8. Per-class F1 for v4 (colored) against the inter-interpreter ceiling (grey), 5-class collapse, with 95% bootstrap CIs. One panel per source in reports/model_vs_interpreter_5class/.*
 
@@ -309,7 +309,7 @@ indicates about commission or omission.]`
 | v6 | 168 | 0.155 | 0.152 | 180 | 0.154 | 0.151 |
 | spec_all | 168 | 0.207 | 0.19 | 168 | 0.207 | 0.19 |
 
-![Figure 11. Per-cell 5-class macro-F1 by source on the common 168-cell set, median (bar) and mean (diamond) marked.](reports/per_cell_f1_5class/f1_violin_common.png)
+![Figure 11. Per-cell 5-class macro-F1 by source on the common 168-cell set, median (bar) and mean (diamond) marked.](../../reports/per_cell_f1_5class/f1_violin_common.png)
 
 *Figure 11. Per-cell 5-class macro-F1 by source on the common 168-cell set, median (bar) and mean (diamond) marked.*
 
@@ -320,7 +320,7 @@ indicates about commission or omission.]`
 | Insect/Disease | 0.008 | 0.009 | 0.006 | 0.006 | 0.005 | 0.011 |
 | Beaver | 0.007 | 0.006 | 0.015 | 0.004 | 0.002 | 0.007 |
 
-![Figure 12. Per-cell F1 for the four change classes by source (5-class collapse, common set; contributing cell counts annotated).](reports/per_cell_change_f1/change_f1_violins.png)
+![Figure 12. Per-cell F1 for the four change classes by source (5-class collapse, common set; contributing cell counts annotated).](../../reports/per_cell_change_f1/change_f1_violins.png)
 
 *Figure 12. Per-cell F1 for the four change classes by source (5-class collapse, common set; contributing cell counts annotated).*
 
@@ -344,15 +344,15 @@ predictions.]`
 | v6 | 9,502,626 | 0.02 | 0.03 | 0.08 | 0.045 |
 | spec_all | 337,808 | 0.56 | 47.02 | 0.73 | 0.071 |
 
-![Figure 9a. Area-weighted patch-size ECDF by source (within interpreted footprints).](reports/spatial_structure/with_spec_all/patch_size_ecdf_area_weighted.png)
+![Figure 9a. Area-weighted patch-size ECDF by source (within interpreted footprints).](../../reports/spatial_structure/with_spec_all/patch_size_ecdf_area_weighted.png)
 
 *Figure 9a. Area-weighted patch-size ECDF by source (within interpreted footprints).*
 
-![Figure 9b. Moran's I by source.](reports/spatial_structure/with_spec_all/morans_i_by_source.png)
+![Figure 9b. Moran's I by source.](../../reports/spatial_structure/with_spec_all/morans_i_by_source.png)
 
 *Figure 9b. Moran's I by source.*
 
-![Figure 10. Cropped classified-map detail per embedding variant illustrating the neighbor-change speckle metric.](reports/model_comparison/model_speckle_crops.png)
+![Figure 10. Cropped classified-map detail per embedding variant illustrating the neighbor-change speckle metric.](../../reports/model_comparison/model_speckle_crops.png)
 
 *Figure 10. Cropped classified-map detail per embedding variant illustrating the neighbor-change speckle metric.*
 
@@ -382,7 +382,7 @@ commission for recall or simply relabel, per the interpretive guardrail in the a
 | Insect/Disease | 150 | 662 | 0.007 | 0.085 | 0.013 | 68,738 | 795,788 |
 | Insect/Disease | 200 | 662 | 0.008 | 0.097 | 0.016 | 68,738 | 787,829 |
 
-![Figure 13. User's and producer's accuracy for the four change classes versus the training cap (v2, 10-class, 180 cells).](reports/sensitivity_changecap/change_classes_ua_pa_vs_cap.png)
+![Figure 13. User's and producer's accuracy for the four change classes versus the training cap (v2, 10-class, 180 cells).](../../reports/sensitivity_changecap/change_classes_ua_pa_vs_cap.png)
 
 *Figure 13. User's and producer's accuracy for the four change classes versus the training cap (v2, 10-class, 180 cells).*
 

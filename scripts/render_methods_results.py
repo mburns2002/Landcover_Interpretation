@@ -21,8 +21,10 @@ import pandas as pd
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SRC = os.path.join(ROOT, "manuscript_formatting", "Methods_and_Results_draft.src.md")
 TAB = os.path.join(ROOT, "manuscript_formatting", "tables")
-MD_OUT = os.path.join(ROOT, "Methods_and_Results_draft.md")
-PDF_OUT = os.path.join(ROOT, "Methods_and_Results_draft.pdf")
+OUTDIR = os.path.join(ROOT, "manuscript_formatting", "draft")
+MD_OUT = os.path.join(OUTDIR, "Methods_and_Results_draft.md")
+PDF_OUT = os.path.join(OUTDIR, "Methods_and_Results_draft.pdf")
+REL = os.path.relpath(ROOT, OUTDIR)                          # "../.." so repo-relative figures resolve
 
 
 def table_md(tid):
@@ -48,7 +50,9 @@ def expand(text):
         body = m.group(1)
         path, _, cap = body.partition("|")
         path = path.strip(); cap = cap.strip()
-        return f"![{cap}]({path})\n\n*{cap}*"
+        # rewrite repo-relative figure paths to be relative to the draft subfolder
+        rel = path if (path.startswith("http") or os.path.isabs(path)) else f"{REL}/{path}"
+        return f"![{cap}]({rel})\n\n*{cap}*"
 
     text = re.sub(r"\[\[TABLE\s+([^\]]+)\]\]", do_table, text)
     text = re.sub(r"\[\[FIG\s+(.+?)\]\]", do_fig, text, flags=re.S)
@@ -77,11 +81,10 @@ def to_pdf(md_text):
     html = f"<html><head><style>{CSS}</style></head><body>{html_body}</body></html>"
 
     def link_callback(uri, rel):
-        # resolve repo-relative image paths (reports/..., manuscript_formatting/...) to absolute
+        # image srcs in the md are relative to the draft subfolder; resolve them from there
         if uri.startswith("http"):
             return uri
-        p = uri if os.path.isabs(uri) else os.path.join(ROOT, uri)
-        return p
+        return uri if os.path.isabs(uri) else os.path.normpath(os.path.join(OUTDIR, uri))
 
     with open(PDF_OUT, "wb") as fh:
         status = pisa.CreatePDF(html, dest=fh, link_callback=link_callback)
@@ -89,6 +92,7 @@ def to_pdf(md_text):
 
 
 def main():
+    os.makedirs(OUTDIR, exist_ok=True)
     src = open(SRC).read()
     md = expand(src)
     with open(MD_OUT, "w") as fh:
