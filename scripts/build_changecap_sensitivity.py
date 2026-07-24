@@ -173,7 +173,7 @@ def _caption(fig, text, top=1.0, width=125):
     wrapped = "\n".join(textwrap.wrap(text, width))
     nlines = wrapped.count("\n") + 1
     fig.tight_layout(rect=[0, 0.02 + 0.035 * nlines, 1, top])
-    fig.text(0.5, 0.01, wrapped, ha="center", va="bottom", fontsize=8, color="0.35")
+    fig.text(0.5, 0.01, wrapped, ha="center", va="bottom", fontsize=9, color="0.3")
 
 
 def fig_beaver_headline(res, path):
@@ -220,41 +220,45 @@ def fig_beaver_headline(res, path):
 
 
 def fig_change_small_multiples(res, path):
-    """One panel per change class: UA and PA vs cap, shared y so the classes are comparable."""
+    """One panel per change class (2x2): UA and PA vs cap, shared y so the classes are comparable."""
     import matplotlib
     matplotlib.use("Agg")
     import matplotlib.pyplot as plt
+    disp = {"harvest": "Harvest", "development": "Development", "beaver": "Beaver",
+            "insect_disease": "Insect/Disease"}
     ymax = 0.0
     for c in CAPS:
         for cc in CHANGE_CLASSES:
             k = cc - 1
             ymax = max(ymax, np.nanmax([res[c]["precision"][k], res[c]["recall"][k]]))
     ymax = np.ceil(ymax * 11) / 10
-    fig, axes = plt.subplots(1, 4, figsize=(17, 4.4), sharey=True)
-    for ax, cc in zip(axes, CHANGE_CLASSES):
+    fig, axes = plt.subplots(2, 2, figsize=(11, 10), sharey=True)
+    for ax, cc in zip(axes.ravel(), CHANGE_CLASSES):
         k = cc - 1
         ua = [res[c]["precision"][k] for c in CAPS]
         pa = [res[c]["recall"][k] for c in CAPS]
-        ax.plot(CAPS, ua, marker="o", lw=2.2, color=UA_COLOR, label="UA (commission)")
-        ax.plot(CAPS, pa, marker="s", lw=2.2, color=PA_COLOR, label="PA (recall)")
+        ax.plot(CAPS, ua, marker="o", lw=2.4, ms=8, color=UA_COLOR, label="UA (commission)")
+        ax.plot(CAPS, pa, marker="s", lw=2.4, ms=8, color=PA_COLOR, label="PA (recall)")
         ax.set_xticks(CAPS)
-        ax.set_xlabel("training cap")
+        ax.set_xlabel("Training cap (points per change class)", fontsize=12)
+        ax.set_ylabel("Accuracy", fontsize=12)
         ax.set_ylim(0, ymax)
-        ax.set_title(f"{NAMES[cc]}\n(ceiling ~{TRAIN_CEILING[cc]:,} px, "
-                     f"ref {int(res[CAPS[-1]]['support'][k]):,} px)", fontsize=9)
+        ax.tick_params(labelsize=11)
+        ax.set_title(f"{disp[NAMES[cc]]}\n(ceiling ~{TRAIN_CEILING[cc]:,} px, "
+                     f"ref {int(res[CAPS[-1]]['support'][k]):,} px)", fontsize=13, fontweight="bold")
         _style(ax)
-    axes[0].set_ylabel("accuracy")
-    axes[-1].legend(fontsize=8, frameon=False)
-    fig.suptitle(f"change-class UA and PA vs training cap (pooled, {res['n_cells']} cells); "
-                 "small-pool classes (beaver, insect) are the informative ones", fontsize=11)
+    axes.ravel()[0].legend(fontsize=11, frameon=False)
+    fig.suptitle("Change-Class Commission and Recall vs Training Cap", fontsize=15,
+                 fontweight="bold", y=0.98)
     _caption(fig, "One panel per change class plots user's accuracy (commission) and producer's "
              "accuracy (recall) against the training cap of 50, 100, 150, and 200 points, on a shared "
-             "y-axis so the classes are comparable. Each panel title lists the class training ceiling "
-             "and its interpreted-reference pixel count, and the small-pool classes beaver and insect "
-             "are the informative ones since the cap is a large fraction of their pool. Read each "
-             "panel for how commission and recall move as the cap changes, and compare panels to see "
-             "that the cap barely affects the large-pool harvest and development classes.", top=0.93)
-    fig.savefig(path, dpi=150, bbox_inches="tight")
+             "y-axis so the classes are comparable, pooled over all "
+             f"{res['n_cells']} cells. Each panel title lists the class training ceiling and its "
+             "interpreted-reference pixel count, and the small-pool classes beaver and insect are the "
+             "informative ones since the cap is a large fraction of their pool. Read each panel for "
+             "how commission and recall move as the cap changes, and compare panels to see that the "
+             "cap barely affects the large-pool harvest and development classes.", top=0.93)
+    fig.savefig(path, dpi=300, bbox_inches="tight")
     plt.close(fig)
 
 
