@@ -139,10 +139,10 @@ def plot_one(path, legend):
                for c in sorted(legend) if c in present]
     ax.legend(handles=handles, bbox_to_anchor=(1.02, 1), loc="upper left",
               fontsize=8, title="class")
-    _caption(fig, "A single Random Forest classified land-cover raster, with each pixel coloured by "
+    _caption(fig, "A single Random Forest classified land-cover raster, with each pixel colored by "
              "its class code as decoded through the legend on the right, which lists only the classes "
              "present in this map. The map shows the spatial layout of land-cover and disturbance "
-             "classes for this interpreted cell. Read the colours against the legend to see where "
+             "classes for this interpreted cell. Read the colors against the legend to see where "
              "each class falls.", width=90)
     os.makedirs(OUT_DIR, exist_ok=True)
     out = os.path.join(OUT_DIR, os.path.splitext(os.path.basename(path))[0] + ".png")
@@ -173,7 +173,7 @@ def plot_montage(n, legend):
     fig.legend(handles=handles, loc="lower center", ncol=min(7, len(handles)),
                fontsize=8, title="class", bbox_to_anchor=(0.5, 0.08))
     _caption(fig, "A montage of the first several Random Forest classified land-cover rasters, one "
-             "per panel, each coloured by class code through the shared legend below. The panels give "
+             "per panel, each colored by class code through the shared legend below. The panels give "
              "a quick overview of the range of land-cover and disturbance patterns across the "
              "interpreted cells. Scan the panels to compare class composition and spatial texture "
              "from cell to cell.", width=110)

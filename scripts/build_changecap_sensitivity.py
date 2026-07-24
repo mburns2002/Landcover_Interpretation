@@ -63,7 +63,7 @@ CHANGE_CLASSES = [1, 2, 9, 10]   # harvest, development, beaver, insect_disease
 # stated training ceilings (unique training pixels available), from the sample generation
 TRAIN_CEILING = {1: 18807, 2: 8482, 9: 502, 10: 662}
 
-# ua is commission (precision), pa is omission (recall); one colour each, used across every figure
+# ua is commission (precision), pa is omission (recall); one color each, used across every figure
 UA_COLOR = "#2c7fb8"
 PA_COLOR = "#d95f0e"
 

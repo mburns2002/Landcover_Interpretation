@@ -3,7 +3,7 @@
 cells side by side, with the disagreed area outlined.
 
 Reads the top rows of change_stable_pixels_long.csv (by area), finds the two reviewer rasters for
-each cell, and renders reviewer A next to reviewer B in the RF interpreted colours, outlining the
+each cell, and renders reviewer A next to reviewer B in the RF interpreted colors, outlining the
 pixels where one reviewer assigned the stable class and the other the change class for that row.
 
 Outputs -> reports/interpreter_agreement/change_stable_conflicts/examples/

@@ -36,7 +36,7 @@ DESC = {
  "Training points (Landsat 8, 2000 pts, 10 balanced classes) in Tasseled Cap CHANGE space "
  "(2018→2020 deltas).\n"
  "Layout: three panels, one per pair of Δ components (Δbrightness–Δgreenness, Δbrightness–"
- "Δwetness, Δgreenness–Δwetness). Grey = the six stable land-cover classes pooled; coloured = "
+ "Δwetness, Δgreenness–Δwetness). Grey = the six stable land-cover classes pooled; colored = "
  "the four change classes (Harvest, Development, Beaver, Insect/Disease). Zero lines mark 'no "
  "change'.\n"
  "Why: disturbance has a spectral-change signature; this shows how separable the change classes "
@@ -62,7 +62,7 @@ DESC = {
 "tc_mean_delta_heatmap.png": (
  "Tasseled Cap mean-delta class signature",
  "Compact 10×3 signature: mean Tasseled Cap delta (2018→2020) per class.\n"
- "Layout: rows = the 10 classes, columns = Δbrightness/Δgreenness/Δwetness; diverging colour "
+ "Layout: rows = the 10 classes, columns = Δbrightness/Δgreenness/Δwetness; diverging color "
  "(red = increase, blue = decrease) symmetric about zero; cell text = the mean value.\n"
  "Why: summarises the average spectral-change direction each class carries.\n"
  "Interpret: Development brightens most (+0.10) while greenness/wetness drop; Harvest and "
@@ -88,7 +88,7 @@ DESC = {
  "combinations and are dropped to keep within-class scatter non-singular). Computed by "
  "whitening the within-class scatter then diagonalising the between-class scatter (numpy, no "
  "sklearn).\n"
- "Layout: x = LD1, y = LD2 (the two most class-separating linear axes); one colour per class; "
+ "Layout: x = LD1, y = LD2 (the two most class-separating linear axes); one color per class; "
  "change classes drawn larger/opaque.\n"
  "Why: shows the best-case linear separability in the space the classifier actually sees — an "
  "upper bound on how distinguishable the classes are.\n"

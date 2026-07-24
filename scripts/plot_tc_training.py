@@ -26,7 +26,7 @@ NAMES = {1: "Harvest", 2: "Development", 3: "Forest", 4: "Urban", 5: "Water",
          6: "Agriculture", 7: "Grass/Shrub", 8: "Wetland", 9: "Beaver", 10: "Insect/Disease"}
 # the four disturbance/change classes vs the six stable land-cover classes
 CHANGE = {1, 2, 9, 10}
-# tab10 gives a distinct colour per label
+# tab10 gives a distinct color per label
 PAL = {i: plt.get_cmap("tab10")(k) for k, i in enumerate(sorted(NAMES))}
 DELTAS = ["d_brightness", "d_greenness", "d_wetness"]
 DLAB = {"d_brightness": "Δ brightness", "d_greenness": "Δ greenness",

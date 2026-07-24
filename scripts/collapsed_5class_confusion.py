@@ -28,7 +28,7 @@ a cell-level bootstrap (seed 42).
 
 Outputs -> reports/collapsed_5class_confusion/
   - confusion_<v>_counts.csv / _rownorm.csv     raw and row-normalized 5x5 matrices
-  - confusion_<v>.png                            count heatmap (cells = raw counts, colour = row
+  - confusion_<v>.png                            count heatmap (cells = raw counts, color = row
                                                  proportion) with PA and UA margins and support
                                                  (n) on both, and OA/kappa in the corner
   - metrics_long.csv                             long format, every metric x variant x class + CIs
@@ -244,7 +244,7 @@ def bootstrap_cis(cms, n, seed=SEED, B=BOOT):
 
 # ----------------------------------------------------------------------------- figure
 def plot_rownorm(M, version, mt, path):
-    """5x5 confusion in the transfer_confusion style: cells are raw counts, colour is the row
+    """5x5 confusion in the transfer_confusion style: cells are raw counts, color is the row
     proportion (so the diagonal shade is producer's accuracy), with a PA column (producer's /
     recall) and support on the right, a UA row (user's / precision) on the bottom, and OA and
     kappa in the corner.
@@ -264,7 +264,7 @@ def plot_rownorm(M, version, mt, path):
     oa, kappa = mt["OA"], mt["kappa"]
     blues, greens = plt.get_cmap("Blues"), plt.get_cmap("Greens")
 
-    # build a 6x6 rgba image: main block coloured by row proportion, margins by accuracy
+    # build a 6x6 rgba image: main block colored by row proportion, margins by accuracy
     img = np.ones((6, 6, 4))
     for i in range(5):
         for j in range(5):
@@ -312,7 +312,7 @@ def plot_rownorm(M, version, mt, path):
     ax.grid(which="minor", color="white", lw=0.6); ax.tick_params(which="minor", length=0)
 
     ax.set_title(f"{version}  ·  collapsed 5-class\n"
-                 f"cells = raw counts; colour = row proportion (producer's). "
+                 f"cells = raw counts; color = row proportion (producer's). "
                  f"PA = producer's accuracy (recall), UA = user's accuracy (precision); "
                  f"n = reference support on PA (row totals), predicted support on UA (column totals)",
                  fontsize=8, pad=26)

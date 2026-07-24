@@ -160,7 +160,7 @@ def forest_overlay(model_df, interp_df, source, color, n_cells, path):
             r = idf.loc[c]
             ax.plot([r.f1_lo, r.f1_hi], [i - dy, i - dy], color="0.55", lw=2, zorder=1)
             ax.scatter(r.f1, i - dy, color="0.35", marker="D", s=42, zorder=3)
-        # model vs reference: the source colour just below the class line
+        # model vs reference: the source color just below the class line
         if c in md.index:
             r = md.loc[c]
             ax.plot([r.f1_lo, r.f1_hi], [i + dy, i + dy], color=color, lw=2, zorder=1)

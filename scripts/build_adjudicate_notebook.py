@@ -131,10 +131,10 @@ print(f"\nnote: {len(shared_sample)} of {len(multi_gids)} multi-interpreted loca
 print("so sample_id is per-location here, not per-reviewer; the interpretations differ by reviewer.")
 print("the shared sample_id is shown once per location for NAIP cross-reference.")'''
 
-PALETTE = r'''# palette: fixed class-to-colour map so both panels use identical colours. the rasters carry the
+PALETTE = r'''# palette: fixed class-to-color map so both panels use identical colors. the rasters carry the
 # RF interpreter codes, so the palette is loaded from the RF legend. to swap it, edit PALETTE_HEX.
 _leg = pd.read_csv(RF_LEGEND)
-PALETTE_HEX = {int(r.code): r.color for r in _leg.itertuples()}       # {class_value: colour}
+PALETTE_HEX = {int(r.code): r.color for r in _leg.itertuples()}       # {class_value: color}
 CLASS_NAME = {int(r.code): r.display_name for r in _leg.itertuples()}
 _PALETTE_RGB = {c: mcolors.to_rgb(h) for c, h in PALETTE_HEX.items()}
 
@@ -146,7 +146,7 @@ def load_class(path):
 
 
 def rgb_from_class(a):
-    # colourize a class array with the fixed palette (white for unmapped values)
+    # colorize a class array with the fixed palette (white for unmapped values)
     rgb = np.ones(a.shape + (3,), dtype=float)
     for code, col in _PALETTE_RGB.items():
         rgb[a == code] = col
@@ -249,7 +249,7 @@ def render(i):
         ax.set_xticks([]); ax.set_yticks([])
         for s in ax.spines.values():
             s.set_color("#bbbbbb"); s.set_linewidth(1)
-        # legend below every panel: the classes present in this location, plus the agree colours
+        # legend below every panel: the classes present in this location, plus the agree colors
         present = sorted(set().union(*[set(np.unique(a).tolist()) for a in arrs]) & set(CLASS_NAME))
         handles = [Patch(facecolor=PALETTE_HEX[c], edgecolor="0.4", label=CLASS_NAME[c])
                    for c in present]

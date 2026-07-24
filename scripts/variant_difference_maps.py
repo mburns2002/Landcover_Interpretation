@@ -8,7 +8,7 @@ convention the lower version number is always A and the higher is B.
 Per pixel, in the 10-class model scheme (1=Harvest, 2=Development, 9=Beaver, 10=Insect/Disease
 are change; 3-8 are stable), each pixel falls in one category:
   0 background     either map is 0 (no classified data)
-  1 agree          same class in both, rendered in that class's colour
+  1 agree          same class in both, rendered in that class's color
   2 stable/stable  both stable but different classes, grey
   3 A-change/B-stable   A calls change where B calls stable
   4 B-change/A-stable   B calls change where A calls stable
@@ -70,7 +70,7 @@ MIN_BLOCK_PX = 16                                       # >= 25% of an 80 m (64 
 MAX_CROP = 2500                                         # cap on a crop dimension so reads stay bounded
 N_OVERLAY = 5                                           # patch overlays and cell examples per pair
 
-# category render codes and their colours; agree pixels keep the class code 1..10
+# category render codes and their colors; agree pixels keep the class code 1..10
 CAT_GREY, CAT_A, CAT_B, CAT_CC = 11, 12, 13, 14
 CAT_COLORS = {CAT_GREY: "#6e6e6e", CAT_A: "#ff00ff", CAT_B: "#00e0ff", CAT_CC: "#ff2a00"}
 CAT_LABEL = {
@@ -108,26 +108,26 @@ def load_crosswalk():
 
 
 def _mute(color, frac=0.55):
-    # blend a class colour toward white so agree areas read as a faint landscape and the
-    # saturated disagreement colours stand out on top
+    # blend a class color toward white so agree areas read as a faint landscape and the
+    # saturated disagreement colors stand out on top
     import matplotlib.colors as mc
     r, g, b = mc.to_rgb(color)
     return (r + (1 - r) * frac, g + (1 - g) * frac, b + (1 - b) * frac)
 
 
-# change-focused recolour: stable classes read as one gray, only change carries colour
+# change-focused recolor: stable classes read as one gray, only change carries color
 CHANGE_GRAY = "#8a8a8a"                                 # all stable agree + stable/stable mismatch
 WATER_GRAY = "#565656"                                  # water is a slightly darker gray
 
 
 def build_cmaps(names, colors):
     from matplotlib.colors import ListedColormap, BoundaryNorm
-    # difference-map colormap: 0 black, 1..10 muted class colours, 11..14 disagreement categories
+    # difference-map colormap: 0 black, 1..10 muted class colors, 11..14 disagreement categories
     diff_cols = ["#000000"] + [_mute(colors[c]) for c in range(1, 11)] + \
                 [CAT_COLORS[c] for c in (CAT_GREY, CAT_A, CAT_B, CAT_CC)]
     diff_cmap = ListedColormap(diff_cols)
     diff_norm = BoundaryNorm(np.arange(-0.5, 15.5), diff_cmap.N)
-    # class colormap for the A|B|interpreted panels: 0 white, 1..10 full class colours
+    # class colormap for the A|B|interpreted panels: 0 white, 1..10 full class colors
     cls_cmap = ListedColormap(["#ffffff"] + [colors[c] for c in range(1, 11)])
     cls_norm = BoundaryNorm(np.arange(-0.5, 11.5), cls_cmap.N)
     return diff_cmap, diff_norm, cls_cmap, cls_norm
@@ -135,12 +135,12 @@ def build_cmaps(names, colors):
 
 def build_change_cmap(colors):
     """Change-focused colormap over the same render codes: stable -> gray (water darker), only the
-    agreed change classes and the change-involved disagreement categories keep colour."""
+    agreed change classes and the change-involved disagreement categories keep color."""
     from matplotlib.colors import ListedColormap, BoundaryNorm
     # codes: 0 bg, 1..10 dominant agree class, 11 stable/stable, 12 A-change, 13 B-change, 14 chg/chg
     agree = []
     for c in range(1, 11):
-        if c in CHANGE_CODES:                          # agreed change class -> its saturated colour
+        if c in CHANGE_CODES:                          # agreed change class -> its saturated color
             agree.append(colors[c])
         elif c == 5:                                   # water -> darker gray
             agree.append(WATER_GRAY)
@@ -225,7 +225,7 @@ def stream_pair(tilesA, tilesB, H, W, max_rows=None):
     rH, rW = -(-H // RENDER_DS), -(-W // RENDER_DS)      # ceil division
     lH, lW = -(-H // LABEL_DS), -(-W // LABEL_DS)
     # per 160 m render block, count each of the 10 agree classes and the 4 disagreement categories,
-    # so the block can be coloured by what actually dominates it rather than by priority
+    # so the block can be colored by what actually dominates it rather than by priority
     blockcnt = np.zeros((rH, rW, 14), dtype=np.uint16)   # 0..9 agree class 1..10, 10..13 cat2..cat5
     labelcount = np.zeros((lH, lW), dtype=np.uint32)     # exact cat3/4/5 pixels per 80 m block
 
@@ -259,7 +259,7 @@ def stream_pair(tilesA, tilesB, H, W, max_rows=None):
             np.add.at(cat4_cls, B[m["cat4"]], 1)
 
         # overview render: accumulate per-block class and category counts (composition, not
-        # priority) so each 160 m block can later be coloured by its dominant content
+        # priority) so each 160 m block can later be colored by its dominant content
         rr = r0 // RENDER_DS
         for k in range(1, 11):                          # agree, split by the agreed class
             am = m["agree"] & (A == k)
@@ -279,7 +279,7 @@ def stream_pair(tilesA, tilesB, H, W, max_rows=None):
 
         print(f"    rows {r0:>6}-{r1:<6} of {row_end}", flush=True)
 
-    # colour each block by what dominates it: compare total agree vs total disagreement pixels; if
+    # color each block by what dominates it: compare total agree vs total disagreement pixels; if
     # disagreement wins, use the leading disagreement category, else use the dominant agree class.
     # blocks with no valid pixels stay background. no priority bias, so the map reflects the true
     # per-block composition
@@ -351,18 +351,18 @@ def render_full_map(out_dir, render, diff_cmap, diff_norm, names, colors, A_name
                     title="disagreement (saturated)")
     leg.get_title().set_fontsize(8)
     ax.add_artist(leg)
-    # agree blocks (muted) are coloured by the agreed class; give every class its own swatch below
+    # agree blocks (muted) are colored by the agreed class; give every class its own swatch below
     agree_handles = [Patch(facecolor=_mute(colors[c]), edgecolor="0.5", label=names[c])
                      for c in range(1, 11)]
     fig.legend(handles=agree_handles, loc="lower center", ncol=10, fontsize=7.5, frameon=False,
                bbox_to_anchor=(0.5, 0.09),
                title="agree (muted): both variants assign this land-cover class")
-    ax.set_title(f"{A_name} vs {B_name}  difference map  (each {RENDER_DS*10} m block coloured by "
+    ax.set_title(f"{A_name} vs {B_name}  difference map  (each {RENDER_DS*10} m block colored by "
                  f"its majority: agree vs disagreement, then the leading category; no priority bias. "
                  f"stats at full 10 m resolution)", fontsize=9)
     _caption(fig, f"Full-mosaic overview comparing the {A_name} and {B_name} classified maps, with "
-             f"each {RENDER_DS*10} m block coloured by its dominant content: muted land-cover colours "
-             f"where the two variants agree on the class, and saturated colours where they disagree. "
+             f"each {RENDER_DS*10} m block colored by its dominant content: muted land-cover colors "
+             f"where the two variants agree on the class, and saturated colors where they disagree. "
              f"The saturated categories separate {A_name}-calls-change / {B_name}-stable, "
              f"{B_name}-calls-change / {A_name}-stable, change / change mismatch, and stable / stable "
              f"mismatch, as listed in the legends. Scan for saturated regions to find where the two "
@@ -375,7 +375,7 @@ def render_full_map(out_dir, render, diff_cmap, diff_norm, names, colors, A_name
 
 
 def render_change_map(out_dir, render, names, colors, A_name, B_name):
-    """Change-focused recolour of the same block render: stable is gray (water darker), colour only
+    """Change-focused recolor of the same block render: stable is gray (water darker), color only
     for the agreed change classes and the change-involved disagreement categories."""
     import matplotlib
     matplotlib.use("Agg")
@@ -397,17 +397,17 @@ def render_change_map(out_dir, render, names, colors, A_name, B_name):
                     title="change-involved disagreement (stable = gray)")
     leg.get_title().set_fontsize(8)
     ax.add_artist(leg)
-    # the agreed change classes keep their own colour; give each a swatch below
+    # the agreed change classes keep their own color; give each a swatch below
     agree_handles = [Patch(facecolor=colors[c], edgecolor="0.4", label=names[c]) for c in CHANGE_CODES]
     fig.legend(handles=agree_handles, loc="lower center", ncol=len(CHANGE_CODES), fontsize=8,
                frameon=False, bbox_to_anchor=(0.5, 0.09),
                title="agreed change class (both variants assign the same change class)")
     ax.set_title(f"{A_name} vs {B_name}  change-focused difference map  (stable in gray, water "
-                 f"darker; colour only for agreed change and change disagreement; {RENDER_DS*10} m "
+                 f"darker; color only for agreed change and change disagreement; {RENDER_DS*10} m "
                  f"blocks)", fontsize=9)
-    _caption(fig, f"Change-focused recolour of the same {A_name} versus {B_name} block render: all "
+    _caption(fig, f"Change-focused recolor of the same {A_name} versus {B_name} block render: all "
              f"stable land cover is drawn in gray, with water a darker gray, so only the agreed change "
-             f"classes and the change-involved disagreement categories carry saturated colour. The "
+             f"classes and the change-involved disagreement categories carry saturated color. The "
              f"legend separates {A_name}-change / {B_name}-stable, {B_name}-change / {A_name}-stable, "
              f"and change / change mismatch from the agreed change classes. Use this view to isolate "
              f"where the two variants disagree about disturbance against a muted stable background, at "
@@ -488,9 +488,9 @@ def render_zoom(out_dir, rank, patch, tilesA, tilesB, H, W, diff_cmap, diff_norm
                fontsize=7, frameon=False, title="agree (muted): both variants assign this class")
     _caption(fig, f"Full 10 m resolution crop of one of the ten largest patches where the {A_name} "
              f"and {B_name} maps disagree and at least one calls change, ranked #{rank} at "
-             f"{patch['area_ha']:,} ha. Pixels are coloured with the same scheme as the overview: "
+             f"{patch['area_ha']:,} ha. Pixels are colored with the same scheme as the overview: "
              f"muted where the two variants agree on the class, and saturated for the four "
-             f"disagreement categories in the legend. Read the saturated colours to see which variant "
+             f"disagreement categories in the legend. Read the saturated colors to see which variant "
              f"is calling disturbance and which is calling stable inside this patch.", top=0.95)
     fig.savefig(os.path.join(out_dir, f"zoom_top{rank:02d}_{patch['area_px']}px.png"),
                 dpi=150, bbox_inches="tight")
@@ -540,7 +540,7 @@ def render_overlay(out_dir, rank, patch, tilesA, tilesB, H, W, cells, rf2common,
     fig.suptitle(f"#{rank}  {patch['area_ha']} ha change-involved disagreement intersecting an "
                  f"interpreted cell", fontsize=10)
     _caption(fig, f"Three panels show the same crop for variant {A_name}, variant {B_name}, and the "
-             f"interpreted reference, all in the shared 10-class colour scheme, for a "
+             f"interpreted reference, all in the shared 10-class color scheme, for a "
              f"{patch['area_ha']} ha change-involved disagreement patch that overlaps an interpreted "
              f"cell. The interpreted panel is only populated where an interpreted cell falls in the "
              f"crop, so the surrounding area is blank. Compare the two variant panels against the "
@@ -608,7 +608,7 @@ def render_cell_overlay(out_dir, rank, score, cell, tilesA, tilesB, mosaic_tf, r
                  f"disagreement in the cell", fontsize=10)
     _caption(fig, f"Three panels show one whole interpreted cell at the same extent for variant "
              f"{A_name}, variant {B_name}, and the interpreted reference, in the shared 10-class "
-             f"colour scheme. This cell was selected for holding a large amount of change-involved "
+             f"color scheme. This cell was selected for holding a large amount of change-involved "
              f"{A_name} versus {B_name} disagreement, so the interpreted reference fills its panel "
              f"rather than sitting as a speck in a larger crop. Compare the two variant panels to the "
              f"interpreted panel to see which variant matches the human interpretation where the two "
@@ -683,7 +683,7 @@ def render_cell_panel(out_dir, rank, score, cell, tiles, allv, mosaic_tf, rf2com
                  f"·  all five variants vs the interpreted reference  ·  ranked #{rank} by v2-v5 "
                  f"in-cell disagreement ({score * PIX_HA:.0f} ha)", fontsize=11)
     _caption(fig, "Six panels show one interpreted cell at the same extent: the five embedding "
-             "variants v2 through v6 and the interpreted reference, all in the shared 10-class colour "
+             "variants v2 through v6 and the interpreted reference, all in the shared 10-class color "
              "scheme. The cell is ranked by how much the four smooth variants v2 to v5 disagree "
              "inside it, and v6 is shown but excluded from the ranking since its per-pixel speckle "
              "disagrees almost everywhere. Compare each variant panel against the interpreted "
@@ -849,7 +849,7 @@ def main():
         return
 
     if args.plots_only:
-        # re-draw only the overview from the cached grid, so legend or colour tweaks are instant
+        # re-draw only the overview from the cached grid, so legend or color tweaks are instant
         diff_cmap, diff_norm = cmaps[0], cmaps[1]
         for A_name, B_name in all_pairs:
             out_dir = os.path.join(OUT_ROOT, f"{A_name}_vs_{B_name}")

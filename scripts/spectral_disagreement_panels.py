@@ -39,7 +39,7 @@ C = _load("C", "compare_interpreted_vs_model.py")           # class names, color
 cc = _load("cc", "collapsed_5class_confusion.py")           # 5-class collapse maps and names
 
 # collapsed 5-class -> 10-class code for the four change classes, so they reuse the 10-class legend
-# colours (Stable has no single 10-class colour, so it gets a neutral grey)
+# colors (Stable has no single 10-class color, so it gets a neutral grey)
 COLLAPSE_TO_10 = {2: 1, 3: 2, 4: 10, 5: 9}    # Harvest, Development, Insect/Disease, Beaver
 STABLE_COLOR = "#cccccc"
 
@@ -94,7 +94,7 @@ def main():
     if collapse:
         N = 5
         class_names = cc.NAMES5
-        # change classes reuse the 10-class legend colours; Stable is a neutral grey
+        # change classes reuse the 10-class legend colors; Stable is a neutral grey
         class_colors = {1: STABLE_COLOR}
         class_colors.update({c: colors[t] for c, t in COLLAPSE_TO_10.items()})
         scheme_label = "collapsed 5-class"

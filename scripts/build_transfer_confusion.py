@@ -132,7 +132,7 @@ def grids_match(a, b, atol=1e-6):
 
 
 def render_cm_png(M, mt, variant, bracket, path):
-    """Heatmap of one 10x10 matrix: cells are raw counts, colour is the row proportion (so the
+    """Heatmap of one 10x10 matrix: cells are raw counts, color is the row proportion (so the
     diagonal shade is producer's accuracy), with a PA column (producer's / recall) and support on
     the right, a UA row (user's / precision) on the bottom, and OA and kappa in the corner.
     """
@@ -149,7 +149,7 @@ def render_cm_png(M, mt, variant, bracket, path):
     oa, kappa = mt["OA"], mt["kappa"]
     blues, greens = plt.get_cmap("Blues"), plt.get_cmap("Greens")
 
-    # build an 11x11 rgba image: main block coloured by row proportion, margins by accuracy
+    # build an 11x11 rgba image: main block colored by row proportion, margins by accuracy
     img = np.ones((11, 11, 4))
     for i in range(10):
         for j in range(10):
@@ -198,7 +198,7 @@ def render_cm_png(M, mt, variant, bracket, path):
 
     ctrl = "  [in-sample control]" if bracket == CONTROL else ""
     ax.set_title(f"{variant}  ·  {bracket}{ctrl}\n"
-                 f"cells = raw counts; colour = row proportion (producer's). "
+                 f"cells = raw counts; color = row proportion (producer's). "
                  f"PA = producer's accuracy (recall), UA = user's accuracy (precision); "
                  f"n = reference support on PA (row totals), predicted support on UA (column totals)",
                  fontsize=9, pad=28)

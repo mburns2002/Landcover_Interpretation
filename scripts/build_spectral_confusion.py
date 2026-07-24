@@ -328,7 +328,7 @@ def fig_overall(overall, path):
              "against the CKIT-RF interpreted reference. Each x-axis position is one NAIP bracket, "
              "with the pooled-across-cells result at the right, and 2018-2020 is the in-sample "
              "control. Read each line as one source's accuracy across brackets, and compare the "
-             "black spec_all line against the coloured embedding lines to see which input type "
+             "black spec_all line against the colored embedding lines to see which input type "
              "transfers better.", top=0.93)
     fig.savefig(path, dpi=150, bbox_inches="tight")
     plt.close(fig)

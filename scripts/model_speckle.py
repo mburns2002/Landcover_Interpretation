@@ -173,7 +173,7 @@ def plot_crops(versions, out_path):
         ax.set_xticks([]); ax.set_yticks([])
     fig.suptitle("Same location across model versions (smooth vs. speckly)", fontsize=11)
     _caption(fig, "Each panel is the same ground location classified by a different model version, "
-             "drawn in the 10-class land-cover colour scheme, with its local neighbor-change value "
+             "drawn in the 10-class land-cover color scheme, with its local neighbor-change value "
              "printed above. Smooth versions render the scene as coherent patches, while speckly "
              "versions such as v6 break it into per-pixel noise. Compare the panels side by side to "
              "see the same landscape grow noisier as neighbor-change rises.", top=0.95, width=110)

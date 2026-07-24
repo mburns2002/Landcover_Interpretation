@@ -185,7 +185,7 @@ def make_render(render, path):
                  "(map faded; points colored by trained class; patch outlined red)", fontsize=11)
     _caption(fig, "Each row is one of the largest Grass/Shrub versus Wetland disagreement patches, "
              "with the two reviewers' classified maps side by side, faded, and overlaid with their "
-             "interpreter training points coloured by the trained class; the disagreement patch is "
+             "interpreter training points colored by the trained class; the disagreement patch is "
              "outlined in red. This asks whether a patch is driven by conflicting training labels "
              "inside the zone, by both models extrapolating where neither reviewer trained, or by "
              "only one reviewer training there. Read the training points inside each red outline to "

@@ -10,7 +10,7 @@ ranking cap. One output folder per ranking cap.
 
 Reference is the adjudicated interpreted cell; predictions are the change-cap maps (cap 50/100/150 from
 the sensitivity export, cap 200 from the transferability export, band 1 = v2). Classes are collapsed to
-Stable plus Harvest, Development, Insect/Disease, and Beaver, coloured by the canonical class legend.
+Stable plus Harvest, Development, Insect/Disease, and Beaver, colored by the canonical class legend.
 
 Two modes, one output tree each, both with cap50/cap100/cap150 subfolders:
   - default (caps): each panel shows the interpreted reference and all four cap maps (50/100/150/200)
@@ -40,7 +40,7 @@ def _load(name, path):
 
 scs = _load("scs", "build_changecap_sensitivity.py")       # cap paths, usable cells, reference base
 cc = _load("cc", "collapsed_5class_confusion.py")           # 5-class collapse maps and names
-C = _load("C", "compare_interpreted_vs_model.py")           # canonical class legend colours
+C = _load("C", "compare_interpreted_vs_model.py")           # canonical class legend colors
 bmc = scs.bmc
 
 TRUTH = "exports/truth_selections.csv"
@@ -54,7 +54,7 @@ OUT_EMB = "reports/sensitivity_changecap_5class/cap_vs_embedding_maps"
 TOP_N = 10
 AGREE_COLOR = "#0072B2"                                     # colorblind-friendly (Okabe-Ito)
 DISAGREE_COLOR = "#D55E00"
-# collapsed change classes reuse the 10-class legend colours; Stable is a neutral grey
+# collapsed change classes reuse the 10-class legend colors; Stable is a neutral grey
 _C10 = C.load_mappings()[2]
 CLASS_COLORS = {1: "#cccccc", 2: _C10[1], 3: _C10[2], 4: _C10[10], 5: _C10[9]}
 

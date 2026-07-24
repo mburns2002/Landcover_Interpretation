@@ -602,8 +602,8 @@ def _make_plots(names, versions):
     n_values = sorted(md.n.unique())
     wpal = {1: "#1f77b4", 3: "#2ca02c", 5: "#9467bd", 7: "#ff7f0e", 9: "#d62728"}
     vpal = {"v2": "#1f77b4", "v3": "#2ca02c", "v4": "#9467bd", "v5": "#ff7f0e", "v6": "#d62728"}
-    # per-class colours from the canonical legend; collapsed Stable is grey and the change classes
-    # reuse the 10-class legend colours (collapsed code -> 10-class code)
+    # per-class colors from the canonical legend; collapsed Stable is grey and the change classes
+    # reuse the 10-class legend colors (collapsed code -> 10-class code)
     class_colors_10 = C.load_mappings()[2]
     if COLLAPSE:
         _to10 = {2: 1, 3: 2, 4: 10, 5: 9}

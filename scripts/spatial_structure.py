@@ -349,7 +349,7 @@ def make_plots(sources, classes, names, colors, versions):
     plt.close(fig)
 
     # 1b) AREA-WEIGHTED ECDF: cumulative fraction of class AREA in patches of size <= x. same pooling,
-    # colours, and log x-range as the count ECDF above; single-pixel specks now collapse to the left
+    # colors, and log x-range as the count ECDF above; single-pixel specks now collapse to the left
     fig, ax = plt.subplots(figsize=(8, 5.5))
     for nm in order:
         p = by_name[nm]["pooled"]                     # patch sizes in px (area = pixel count)

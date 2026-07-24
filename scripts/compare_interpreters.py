@@ -163,7 +163,7 @@ def plot_pair(gid, revA, revB, arrA, arrB, codes, names, colors, m, out_path):
 
 
 def plot_confusion(cm, codes, names, out_path):
-    """Pooled inter-interpreter confusion in the shared PA/UA style: cells are raw counts, colour
+    """Pooled inter-interpreter confusion in the shared PA/UA style: cells are raw counts, color
     is the row proportion, with a PA column (row-conditional agreement) and reference support on
     the right, a UA row (column-conditional agreement) and predicted support on the bottom, and OA
     and kappa in the corner. There is no ground-truth axis here (both axes are interpreters), so PA
@@ -190,7 +190,7 @@ def plot_confusion(cm, codes, names, out_path):
     kappa = (oa - pe) / (1 - pe) if tot and (1 - pe) != 0 else np.nan
     blues, greens = plt.get_cmap("Blues"), plt.get_cmap("Greens")
 
-    # build an (n+1)x(n+1) rgba image: main block coloured by row proportion, margins by agreement
+    # build an (n+1)x(n+1) rgba image: main block colored by row proportion, margins by agreement
     img = np.ones((n + 1, n + 1, 4))
     for i in range(n):
         for j in range(n):
@@ -233,7 +233,7 @@ def plot_confusion(cm, codes, names, out_path):
     ax.grid(which="minor", color="white", lw=0.6); ax.tick_params(which="minor", length=0)
 
     ax.set_title("Inter-interpreter confusion (pooled over all pairs)\n"
-                 "cells = raw counts; colour = row proportion. PA = agreement given Reviewer A's "
+                 "cells = raw counts; color = row proportion. PA = agreement given Reviewer A's "
                  "label, UA = agreement given Reviewer B's label; n = Reviewer A support on PA "
                  "(row totals), Reviewer B support on UA (column totals)", fontsize=9, pad=28)
     fig.tight_layout()

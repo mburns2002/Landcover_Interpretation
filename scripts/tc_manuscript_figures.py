@@ -36,8 +36,8 @@ NAMES = {1: "Harvest", 2: "Development", 3: "Forest", 4: "Urban", 5: "Water",
 # the four GLKN-derived change classes (the rest are stable land cover)
 CHANGE = {1, 2, 9, 10}
 
-# explicitly chosen colourblind-safe palette (Paul Tol bright/muted + black), one per class.
-# each colour is individually distinguishable under deuteranopia/protanopia; the lighter
+# explicitly chosen colorblind-safe palette (Paul Tol bright/muted + black), one per class.
+# each color is individually distinguishable under deuteranopia/protanopia; the lighter
 # entries are avoided so points stay legible over the light-grey background layer.
 PAL = {
     1: "#CC6677",   # rose
@@ -116,7 +116,7 @@ def _panel_axes(share_y=True):
 
 
 def scatter_single_date(df, ycol, xcol, ylabel, xlabel, stem):
-    # single-date TC position: one class per panel in its colour over the full pooled cloud (grey)
+    # single-date TC position: one class per panel in its color over the full pooled cloud (grey)
     fig, axes = _panel_axes()
     bx, by = df[xcol].to_numpy(), df[ycol].to_numpy()      # identical background in every panel
     for ax, c in zip(axes, ORDER):
@@ -227,7 +227,7 @@ def jm_matrix(df):
 def jm_heatmap(JM, stem):
     labels = [NAMES[c] for c in ORDER]
     fig, ax = plt.subplots(figsize=(6.3, 5.4))
-    # cividis is a perceptually-uniform, colourblind-safe sequential map
+    # cividis is a perceptually-uniform, colorblind-safe sequential map
     im = ax.imshow(JM, cmap="cividis", vmin=0, vmax=2, aspect="equal")
     ax.set_xticks(range(len(labels))); ax.set_yticks(range(len(labels)))
     ax.set_xticklabels(labels, rotation=45, ha="right")

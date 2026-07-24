@@ -122,7 +122,7 @@ def metrics(cms):
 
 
 def render_cm(B, mt, source, path):
-    """2x2 count heatmap in the PA/UA-margin style: cells coloured by row proportion, PA column with
+    """2x2 count heatmap in the PA/UA-margin style: cells colored by row proportion, PA column with
     support, UA row, OA and kappa in the corner."""
     import matplotlib
     matplotlib.use("Agg")

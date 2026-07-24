@@ -40,14 +40,14 @@ def _load(name, path):
 
 scs = _load("scs", "build_changecap_sensitivity.py")     # cap sensitivity helpers (usable cells, paths)
 cc = _load("cc", "collapsed_5class_confusion.py")         # 5-class collapse, metrics, PA/UA figure
-C = _load("C", "compare_interpreted_vs_model.py")         # canonical class legend colours
+C = _load("C", "compare_interpreted_vs_model.py")         # canonical class legend colors
 bmc = scs.bmc                                             # confusion-matrix base (reference selection)
 
 CAPS = scs.CAPS
 LABELS5 = cc.LABELS5
 NAMES5 = cc.NAMES5
 CHANGE5 = [2, 3, 4, 5]                                    # harvest, development, insect_disease, beaver
-# change classes reuse the canonical 10-class legend colours (collapsed code -> 10-class code):
+# change classes reuse the canonical 10-class legend colors (collapsed code -> 10-class code):
 # harvest 2->1, development 3->2, insect/disease 4->10, beaver 5->9
 _CLASS_COLORS = C.load_mappings()[2]
 CHANGE5_COLOR = {c: _CLASS_COLORS[t] for c, t in {2: 1, 3: 2, 4: 10, 5: 9}.items()}
