@@ -302,14 +302,14 @@ def main():
     print(f"\noutputs -> {OUT}/")
 
 
-def _caption(fig, text, top=1.0, width=125):
+def _caption(fig, text, top=1.0, width=125, fontsize=8, color="0.35"):
     """Add a wrapped descriptive caption below the figure, reserving space for it (and leaving room
     above for a suptitle when top < 1)."""
     import textwrap
     wrapped = "\n".join(textwrap.wrap(text, width))
     nlines = wrapped.count("\n") + 1
     fig.tight_layout(rect=[0, 0.02 + 0.035 * nlines, 1, top])
-    fig.text(0.5, 0.01, wrapped, ha="center", va="bottom", fontsize=8, color="0.35")
+    fig.text(0.5, 0.01, wrapped, ha="center", va="bottom", fontsize=fontsize, color=color)
 
 
 def make_plots(sources, classes, names, colors, versions):
@@ -366,18 +366,21 @@ def make_plots(sources, classes, names, colors, versions):
                 mec="white", mew=0.8, zorder=4)
     ax.axhline(0.5, color="0.6", lw=0.8, ls=":", zorder=1)   # 0.5 reference for the median-by-area
     ax.set_xscale("log"); ax.set_xlim(xlim)
-    ax.set_xlabel("patch size (ha, log scale)")
-    ax.set_ylabel("cumulative fraction of class area")
-    ax.set_title("Area-weighted patch-size distribution: model variants vs. interpreted (reference)")
-    ax.legend()
+    ax.set_xlabel("Patch Size (ha, Log Scale)", fontsize=12)
+    ax.set_ylabel("Cumulative Fraction of Class Area", fontsize=12)
+    ax.set_title("Area-Weighted Patch-Size Distribution: Model Variants vs. Interpreted Reference",
+                 fontsize=15, fontweight="bold")
+    ax.tick_params(labelsize=11)
+    ax.legend(fontsize=11)
     ax.grid(False)
     _caption(fig, "Cumulative fraction of class area held in patches at or below a given size "
                   "(hectares, log scale), the same patches as the count ECDF but weighted by pixel "
                   "area, so single-pixel specks collapse to the left and the grain of the landscape "
                   "shows. The dot marks each source's median-by-area patch size, where half of its "
                   "class area sits in smaller patches. Sources further right hold their area in larger, "
-                  "more contiguous patches; the interpreted reference (solid black) is the coarsest.")
-    fig.savefig(os.path.join(OUT, "patch_size_ecdf_area_weighted.png"), dpi=140, bbox_inches="tight")
+                  "more contiguous patches; the interpreted reference (solid black) is the coarsest.",
+             width=115, fontsize=9, color="0.3")
+    fig.savefig(os.path.join(OUT, "patch_size_ecdf_area_weighted.png"), dpi=300, bbox_inches="tight")
     plt.close(fig)
 
     # 2) small multiples: each variant's histogram vs interpreted
@@ -428,15 +431,21 @@ def make_plots(sources, classes, names, colors, versions):
            color=[palette.get(nm) for nm in order])
     ref_i = by_name["interpreted"]["morans"].mean() if by_name["interpreted"]["morans"].size else np.nan
     ax.axhline(ref_i, ls="--", color="black", lw=1, label=f"interpreted ref ({ref_i:.2f})")
-    ax.set_ylabel("Moran's I (mean per cell)")
-    ax.set_title("Spatial autocorrelation of the class raster")
-    ax.legend(); ax.grid(alpha=0.3, axis="y")
+    ax.set_ylabel("Moran's I (Mean per Cell)", fontsize=12)
+    ax.set_title("Spatial Autocorrelation of the Class Raster (Moran's I by Source)",
+                 fontsize=15, fontweight="bold")
+    ax.tick_params(labelsize=11)
+    ax.legend(fontsize=11)
+    ax.grid(False)
     _caption(fig, "Mean per-cell Moran's I (queen contiguity over the class raster) for each source, "
                   "with error bars for the between-cell standard deviation and the interpreted "
-                  "reference value marked (dashed). Higher Moran's I means more spatial autocorrelation "
-                  "(smoother maps); v6 is near zero (salt-and-pepper speckle), while the smoother "
-                  "classifiers sit close to the interpreted reference.")
-    fig.savefig(os.path.join(OUT, "morans_i_by_source.png"), dpi=140, bbox_inches="tight")
+                  "reference value marked (dashed). Class codes are nominal, so read Moran's I as a "
+                  "spatial-smoothness diagnostic (structure vs. speckle), not a quantitative "
+                  "autocorrelation of a meaningful variable. Higher Moran's I means more spatial "
+                  "autocorrelation (smoother maps); v6 is near zero (salt-and-pepper speckle), while "
+                  "the smoother classifiers sit close to the interpreted reference.",
+             width=115, fontsize=9, color="0.3")
+    fig.savefig(os.path.join(OUT, "morans_i_by_source.png"), dpi=300, bbox_inches="tight")
     plt.close(fig)
 
 

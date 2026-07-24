@@ -66,6 +66,9 @@ ALLOWED = pcf.ALLOWED
 SRC_COLOR = pcf.SRC_COLOR
 # change classes only (5-class codes -> csv name)
 CHANGE = {2: "harvest", 3: "development", 4: "insect_disease", 5: "beaver"}
+# display names for panel titles (title case)
+CHANGE_DISPLAY = {"harvest": "Harvest", "development": "Development",
+                  "insect_disease": "Insect/Disease", "beaver": "Beaver"}
 
 
 def class_f1(M, k):
@@ -208,12 +211,12 @@ def make_figs(df, n_common, include):
         for sp in ("top", "right"):
             ax.spines[sp].set_visible(False)
 
-    def _caption(fig, text, top=1.0, width=125):
+    def _caption(fig, text, top=1.0, width=115):
         import textwrap
         wrapped = "\n".join(textwrap.wrap(text, width))
         nlines = wrapped.count("\n") + 1
         fig.tight_layout(rect=[0, 0.02 + 0.045 * nlines, 1, top])
-        fig.text(0.5, 0.01, wrapped, ha="center", va="bottom", fontsize=8, color="0.35")
+        fig.text(0.5, 0.01, wrapped, ha="center", va="bottom", fontsize=9, color="0.3")
 
     rng = np.random.default_rng(0)                         # fixed jitter for the strip overlay
     # a) per change class, six sources' per-cell F1 distributions
@@ -231,24 +234,25 @@ def make_figs(df, n_common, include):
                 ax.plot([i - 0.28, i + 0.28], [np.median(d), np.median(d)], color="black", lw=2, zorder=4)
                 ax.plot(i, np.mean(d), marker="D", color="black", ms=6, zorder=5)
         ax.set_xticks(range(len(SOURCES)))
-        ax.set_xticklabels([f"{s}\n(n={n})" for s, n in zip(SOURCES, ns)], fontsize=9)
-        ax.set_ylabel("per-cell F1")
+        ax.set_xticklabels([f"{s}\n(n={n})" for s, n in zip(SOURCES, ns)])
+        ax.tick_params(labelsize=11)
+        ax.set_ylabel("Per-Cell F1", fontsize=12)
         ax.set_ylim(-0.03, 1.03)
-        ax.set_title(cname, fontsize=12)
+        ax.set_title(CHANGE_DISPLAY[cname], fontsize=13, fontweight="bold")
         _style(ax)
     axes.flat[0].plot([], [], color="black", lw=2, label="median")
     axes.flat[0].plot([], [], marker="D", color="black", ls="", label="mean")
-    axes.flat[0].legend(fontsize=8, frameon=False, loc="upper right")
+    axes.flat[0].legend(fontsize=11, frameon=False, loc="upper right")
     inc_txt = ("reference or prediction" if include == "ref_or_pred" else "reference only")
-    fig.suptitle(f"Per-cell F1 by source, one panel per change class (common cell set, {n_common} cells)",
-                 fontsize=13)
+    fig.suptitle(f"Per-Cell F1 by Source and Change Class (Common Cell Set, {n_common} Cells)",
+                 fontsize=15, fontweight="bold")
     _caption(fig, "Distribution across cells of each change class's per-cell F1, one panel per class "
                   "and six sources per panel, with individual cells as points, the median as a bar, and "
                   "the mean as a diamond. A cell contributes to a class only where the class is present "
                   f"({inc_txt}), so the per-source N differs and is annotated under each source; a "
                   "distribution over a handful of cells is not comparable in size to one over many. A "
                   "spike at 0 means the class is mostly commission or omission there.", top=0.94)
-    fig.savefig(os.path.join(OUT, "change_f1_violins.png"), dpi=150, bbox_inches="tight")
+    fig.savefig(os.path.join(OUT, "change_f1_violins.png"), dpi=300, bbox_inches="tight")
     plt.close(fig)
 
     # b) mean per-cell F1 heatmap, change class x source, with N (median is 0 for every change class)

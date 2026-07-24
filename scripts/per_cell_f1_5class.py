@@ -242,7 +242,15 @@ def make_figs(df, common, n_ref_classes, include):
         fig.tight_layout(rect=[0, 0.02 + 0.045 * nlines, 1, top])
         fig.text(0.5, 0.01, wrapped, ha="center", va="bottom", fontsize=8, color="0.35")
 
-    def violins(subset, title, cap, path):
+    def _caption_pub(fig, text, top=1.0, width=115):
+        # publication caption: fontsize 9, color 0.3, space reserved via tight_layout rect
+        import textwrap
+        wrapped = "\n".join(textwrap.wrap(text, width))
+        nlines = wrapped.count("\n") + 1
+        fig.tight_layout(rect=[0, 0.03 + 0.028 * nlines, 1, top])
+        fig.text(0.5, 0.01, wrapped, ha="center", va="bottom", fontsize=9, color="0.3")
+
+    def violins(subset, title, cap, path, publication=False):
         data = [subset[subset.source == s].macro_f1.dropna().values for s in SOURCES]
         ns = [len(d) for d in data]
         fig, ax = plt.subplots(figsize=(10, 5.5))
@@ -256,27 +264,39 @@ def make_figs(df, common, n_ref_classes, include):
                 ax.plot(i, mean, marker="D", color="black", ms=6, zorder=5)
         ax.set_xticks(range(len(SOURCES)))
         ax.set_xticklabels([f"{s}\n(n={n})" for s, n in zip(SOURCES, ns)])
-        ax.set_ylabel("per-cell macro-F1 (5-class, over present classes)")
-        ax.set_ylim(0, 1)
-        ax.set_title(title, fontsize=11)
-        ax.plot([], [], color="black", lw=2, label="median")
-        ax.plot([], [], marker="D", color="black", ls="", label="mean")
-        ax.legend(fontsize=8, frameon=False, loc="upper right")
-        _style(ax)
-        _caption(fig, cap)
-        fig.savefig(path, dpi=150, bbox_inches="tight")
+        if publication:
+            ax.set_ylabel("Per-Cell Macro-F1 (5-Class, Over Present Classes)", fontsize=12)
+            ax.tick_params(labelsize=11)
+            ax.set_ylim(0, 1)
+            ax.set_title(title, fontsize=15, fontweight="bold")
+            ax.plot([], [], color="black", lw=2, label="median")
+            ax.plot([], [], marker="D", color="black", ls="", label="mean")
+            ax.legend(fontsize=11, frameon=False, loc="upper right")
+            _style(ax)
+            _caption_pub(fig, cap)
+            fig.savefig(path, dpi=300, bbox_inches="tight")
+        else:
+            ax.set_ylabel("per-cell macro-F1 (5-class, over present classes)")
+            ax.set_ylim(0, 1)
+            ax.set_title(title, fontsize=11)
+            ax.plot([], [], color="black", lw=2, label="median")
+            ax.plot([], [], marker="D", color="black", ls="", label="mean")
+            ax.legend(fontsize=8, frameon=False, loc="upper right")
+            _style(ax)
+            _caption(fig, cap)
+            fig.savefig(path, dpi=150, bbox_inches="tight")
         plt.close(fig)
 
     inc_txt = ("present in reference or prediction" if include == "ref_or_pred"
                else "present in the reference only")
     common_df = df[df.in_common_set]
-    violins(common_df, f"Per-cell macro-F1 by source, common cell set (N={len(common)})",
+    violins(common_df, f"Per-Cell Macro-F1 by Source (Common Cell Set, N = {len(common)})",
             "Per-cell 5-class macro-F1 for each source on the common cell set, one point per cell, "
             "with the median (bar) and mean (diamond) marked. A class is included in a cell's macro-F1 "
             f"if it is {inc_txt}. All six sources are scored on the identical cells, so the "
             "distributions are directly comparable; the change-class commission drags the macro-F1 "
             "down whenever a source over-predicts a change class the cell does not contain.",
-            os.path.join(OUT, "f1_violin_common.png"))
+            os.path.join(OUT, "f1_violin_common.png"), publication=True)
     violins(df, "Per-cell macro-F1 by source, per-source full set (N differs per source)",
             "Per-cell 5-class macro-F1 for each source on its own full set of usable cells, one point "
             "per cell, median (bar) and mean (diamond) marked. The sources have different N here (see "

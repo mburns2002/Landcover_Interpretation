@@ -19,6 +19,7 @@ Requires: rasterio, numpy, matplotlib
 import glob
 import importlib.util
 import os
+import textwrap
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -82,13 +83,13 @@ def main():
         bands = {v: s.read(b) for v, b in VBAND.items()}
         res = s.res[0]                                       # metres per pixel (10 m)
 
-    fig, axes = plt.subplots(1, 5, figsize=(13.5, 4.4))
+    fig, axes = plt.subplots(1, 5, figsize=(13.5, 5.4))
     for ax, v in zip(axes, VBAND):
         ax.imshow(bands[v], cmap=CMAP, vmin=0, vmax=10, interpolation="nearest")
-        ax.set_title(v, fontsize=13, fontweight="bold")
+        ax.set_title(v, fontsize=14, fontweight="bold")
         # neighbor-change value below the panel, clear of the legend
         ax.text(0.5, -0.05, f"neighbor-change {nc[v]:.3f}", transform=ax.transAxes,
-                ha="center", va="top", fontsize=9.5)
+                ha="center", va="top", fontsize=12)
         ax.set_xticks([]); ax.set_yticks([])
     # scale bar on the first panel: 1 km = 100 px at 10 m
     h, w = bands["v2"].shape
@@ -100,12 +101,26 @@ def main():
     # class legend for classes present in the crop, using the standard palette
     present = sorted({int(c) for v in VBAND for c in np.unique(bands[v]) if c > 0})
     handles = [Patch(facecolor=CLUT[c], edgecolor="0.4", label=NAME10[c]) for c in present]
-    fig.legend(handles=handles, loc="lower center", ncol=5, fontsize=8.5,
-               frameon=False, bbox_to_anchor=(0.5, 0.0))
+    # panels occupy the top band; legend and caption sit below without overlap
+    fig.subplots_adjust(left=0.02, right=0.98, top=0.88, bottom=0.34, wspace=0.05)
+    fig.legend(handles=handles, loc="lower center", ncol=5, fontsize=12,
+               frameon=False, bbox_to_anchor=(0.5, 0.18))
 
-    fig.suptitle(f"Same location (cell {CROP_CELL}) classified by each embedding configuration",
-                 fontsize=12, y=1.0)
-    fig.tight_layout(rect=[0, 0.15, 1, 0.94])
+    fig.suptitle(f"Same Location Classified by Each Embedding Configuration (Cell {CROP_CELL})",
+                 fontsize=15, fontweight="bold", y=0.97)
+
+    # descriptive caption band below the class legend
+    caption = (
+        f"The same NAIP grid cell (cell {CROP_CELL}) classified by each embedding configuration, v2 "
+        "through v6, with the standard land-cover class colors. Each panel is annotated with its "
+        "neighbor-change fraction, the share of horizontally adjacent pixel pairs assigned differing "
+        "classes pooled over all 180 cells, a per-pixel speckle measure. The scale bar is 1 km. The "
+        "dot-product configuration v6 fragments into salt-and-pepper speckle, while the "
+        "baseline-preserving configurations stay spatially coherent."
+    )
+    wrapped = "\n".join(textwrap.wrap(caption, 115))
+    fig.text(0.5, 0.015, wrapped, ha="center", va="bottom", fontsize=9, color="0.3")
+
     png = f"{OUT}/figure_2_9_speckle_crops.png"
     pdf = f"{OUT}/figure_2_9_speckle_crops.pdf"
     fig.savefig(png, dpi=300, bbox_inches="tight")

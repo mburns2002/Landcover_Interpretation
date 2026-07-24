@@ -135,12 +135,12 @@ def source_table(stack, boot, seed):
     return pd.DataFrame(rows), n
 
 
-def _caption(fig, text, top=1.0, width=118):
+def _caption(fig, text, top=1.0, width=115):
     import textwrap
     wrapped = "\n".join(textwrap.wrap(text, width))
     nlines = wrapped.count("\n") + 1
     fig.tight_layout(rect=[0, 0.02 + 0.05 * nlines, 1, top])
-    fig.text(0.5, 0.01, wrapped, ha="center", va="bottom", fontsize=8, color="0.35")
+    fig.text(0.5, 0.01, wrapped, ha="center", va="bottom", fontsize=9, color="0.3")
 
 
 def forest_overlay(model_df, interp_df, source, color, n_cells, path):
@@ -169,29 +169,30 @@ def forest_overlay(model_df, interp_df, source, color, n_cells, path):
     ax.set_yticks(y)
     ax.set_yticklabels([f"{NAMES5[c]}\n(n={int(md.loc[c].n_cells) if c in md.index else 0} cells)"
                         for c in ORDER])
+    ax.tick_params(labelsize=11)
     ax.invert_yaxis()                                       # Stable at top
     ax.axvline(HIGH, ls="--", lw=0.8, color="gray"); ax.axvline(MOD, ls="--", lw=0.8, color="gray")
     ax.set_xlim(0, 1)
-    ax.set_xlabel("per-class F1 (95% CI)")
+    ax.set_xlabel("Per-Class F1 (95% CI)", fontsize=12)
     ax.set_ylim(len(ORDER) - 0.5, -0.5)
     ax.grid(False)
     for sp in ("top", "right"):
         ax.spines[sp].set_visible(False)
-    ax.set_title(f"{source}: per-class F1 vs the inter-interpreter agreement ceiling\n"
-                 f"(5-class scheme, N = {n_cells} cells; dashed: Low/Moderate/High thresholds)",
-                 fontsize=11)
+    ax.set_title(f"{source}: Per-Class F1 vs the Inter-Interpreter Agreement Ceiling",
+                 fontsize=15, fontweight="bold")
     handles = [Line2D([], [], color=color, marker="o", ls="", ms=8, label=f"{source} vs reference"),
                Line2D([], [], color="0.35", marker="D", ls="", ms=8, label="interpreter agreement")]
-    ax.legend(handles=handles, loc="lower right", fontsize=9, frameon=True, framealpha=0.9)
-    _caption(fig, f"Per-class F1 in the 5-class collapsed scheme for {source} (colored circle) scored "
-                  "against the adjudicated interpreted reference, next to the inter-interpreter agreement "
-                  "for the same class (grey diamond), each with its 95% bootstrap confidence interval. "
-                  "The model uses a cluster (cell) bootstrap and the interpreter a cluster (pair) "
-                  "bootstrap. The interpreter bar is the reliability ceiling: where two humans barely "
-                  "agree, such as Development, Insect/Disease, and Beaver, the model score is bounded by "
-                  "reference noise rather than model error alone, so the gap to the grey diamond, not the "
-                  "absolute F1, is the reducible part.")
-    fig.savefig(path, dpi=150, bbox_inches="tight")
+    ax.legend(handles=handles, loc="lower right", fontsize=11, frameon=True, framealpha=0.9)
+    _caption(fig, f"Per-class F1 in the 5-class collapsed scheme (N = {n_cells} cells) for {source} "
+                  "(colored circle) scored against the adjudicated interpreted reference, next to the "
+                  "inter-interpreter agreement for the same class (grey diamond), each with its 95% "
+                  "bootstrap confidence interval. The model uses a cluster (cell) bootstrap and the "
+                  "interpreter a cluster (pair) bootstrap. Dashed vertical lines mark the Low, Moderate, "
+                  "and High reliability thresholds. The interpreter bar is the reliability ceiling: where "
+                  "two humans barely agree, such as Development, Insect/Disease, and Beaver, the model "
+                  "score is bounded by reference noise rather than model error alone, so the gap to the "
+                  "grey diamond, not the absolute F1, is the reducible part.")
+    fig.savefig(path, dpi=300, bbox_inches="tight")
     plt.close(fig)
 
 
