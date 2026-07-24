@@ -210,34 +210,41 @@ def plot_confusion(cm, codes, names, out_path):
         for j in range(n):
             c = int(M[i, j])
             if c:
-                ax.text(j, i, f"{c:,}", ha="center", va="center", fontsize=6, color=txtcolor(rn[i, j]))
+                ax.text(j, i, f"{c:,}", ha="center", va="center", fontsize=8, color=txtcolor(rn[i, j]))
     for i in range(n):                                     # PA column + reviewer A support
         t = f"{pa[i]*100:.0f}%" if np.isfinite(pa[i]) else "-"
-        ax.text(n, i, f"{t}\nn={int(row[i]):,}", ha="center", va="center", fontsize=5.5,
+        ax.text(n, i, f"{t}\nn={int(row[i]):,}", ha="center", va="center", fontsize=7.5,
                 color=txtcolor(pa[i]))
     for j in range(n):                                     # UA row + reviewer B support
         t = f"{ua[j]*100:.0f}%" if np.isfinite(ua[j]) else "-"
-        ax.text(j, n, f"{t}\nn={int(col[j]):,}", ha="center", va="center", fontsize=5.5,
+        ax.text(j, n, f"{t}\nn={int(col[j]):,}", ha="center", va="center", fontsize=7.5,
                 color=txtcolor(ua[j]))
     ax.text(n, n, f"OA {oa*100:.0f}%\nκ {kappa:.2f}", ha="center", va="center",
-            fontsize=6.5, color=txtcolor(oa))
+            fontsize=9, color=txtcolor(oa))
 
-    ax.set_xticks(range(n + 1)); ax.set_xticklabels(labels + ["PA"], rotation=45, ha="left", fontsize=8)
-    ax.set_yticks(range(n + 1)); ax.set_yticklabels(labels + ["UA"], fontsize=8)
+    ax.set_xticks(range(n + 1)); ax.set_xticklabels(labels + ["PA"], rotation=45, ha="left", fontsize=10)
+    ax.set_yticks(range(n + 1)); ax.set_yticklabels(labels + ["UA"], fontsize=10)
     ax.xaxis.tick_top(); ax.xaxis.set_label_position("top")
-    ax.set_xlabel("Reviewer B (columns)", fontsize=9)
-    ax.set_ylabel("Reviewer A (rows)", fontsize=9)
+    ax.set_xlabel("Reviewer B (columns)", fontsize=12)
+    ax.set_ylabel("Reviewer A (rows)", fontsize=12)
     ax.axhline(n - 0.5, color="0.4", lw=1.0); ax.axvline(n - 0.5, color="0.4", lw=1.0)
     ax.set_xticks(np.arange(-0.5, n + 1, 1), minor=True)
     ax.set_yticks(np.arange(-0.5, n + 1, 1), minor=True)
     ax.grid(which="minor", color="white", lw=0.6); ax.tick_params(which="minor", length=0)
+    ax.set_title("Inter-interpreter agreement (pooled over all pairs)", fontsize=15,
+                 fontweight="bold", pad=30)
 
-    ax.set_title("Inter-interpreter confusion (pooled over all pairs)\n"
-                 "cells = raw counts; color = row proportion. PA = agreement given Reviewer A's "
-                 "label, UA = agreement given Reviewer B's label; n = Reviewer A support on PA "
-                 "(row totals), Reviewer B support on UA (column totals)", fontsize=9, pad=28)
-    fig.tight_layout()
-    fig.savefig(out_path, dpi=150, bbox_inches="tight")
+    import textwrap
+    cap = ("Inter-interpreter confusion pooled over all double-interpreted pairs. Cells are raw pixel "
+           "counts colored by the row proportion. There is no ground-truth axis here, since both axes "
+           "are interpreters, so PA is agreement given Reviewer A's label (with Reviewer A support n) "
+           "and UA is agreement given Reviewer B's label (with Reviewer B support n); the corner gives "
+           "overall agreement and Cohen's kappa.")
+    wrapped = "\n".join(textwrap.wrap(cap, 108))
+    nlines = wrapped.count("\n") + 1
+    fig.tight_layout(rect=[0, 0.03 + 0.028 * nlines, 1, 1])
+    fig.text(0.5, 0.012, wrapped, ha="center", va="bottom", fontsize=9, color="0.3")
+    fig.savefig(out_path, dpi=300, bbox_inches="tight")
     plt.close(fig)
 
 

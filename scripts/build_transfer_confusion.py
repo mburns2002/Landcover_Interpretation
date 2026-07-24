@@ -131,78 +131,117 @@ def grids_match(a, b, atol=1e-6):
     return True, ""
 
 
-def render_cm_png(M, mt, variant, bracket, path):
-    """Heatmap of one 10x10 matrix: cells are raw counts, color is the row proportion (so the
-    diagonal shade is producer's accuracy), with a PA column (producer's / recall) and support on
-    the right, a UA row (user's / precision) on the bottom, and OA and kappa in the corner.
+# descriptive titles per source; the bracket or cap detail goes in the caption below, not the title
+DISPLAY = {"harvest": "Harvest", "development": "Development", "forest": "Forest", "urban": "Urban",
+           "water": "Water", "ag": "Agriculture", "grass_shrub": "Grass/Shrub", "wetland": "Wetland",
+           "beaver": "Beaver", "insect_disease": "Insect/Disease"}
+LABELS_DISPLAY = [DISPLAY[NAMES[c]] for c in range(1, 11)]
+LABELS5 = ["Stable", "Harvest", "Development", "Insect/Disease", "Beaver"]
+VARIANT_TITLE = {
+    "v2": "AlphaEarth Embedding v2, baseline + delta",
+    "v3": "AlphaEarth Embedding v3, stacked years",
+    "v4": "AlphaEarth Embedding v4, delta only",
+    "v5": "AlphaEarth Embedding v5, baseline + dot",
+    "v6": "AlphaEarth Embedding v6, dot only",
+    "spec_all": "Spectral Composite, all sensors all indices",
+    "specall": "Spectral Composite, all sensors all indices",
+    "cap50": "Change-cap, 50 training points per change class",
+    "cap100": "Change-cap, 100 training points per change class",
+    "cap150": "Change-cap, 150 training points per change class",
+    "cap200": "Change-cap, 200 training points per change class",
+}
+
+
+def _cm_caption(variant, bracket, k):
+    scheme = "Ten-class" if k == 10 else "Five-class"
+    if str(variant).startswith("cap"):
+        ctx = f"pooled over 180 cells, change-class training cap of {str(variant)[3:]} points"
+    elif bracket == "pooled":
+        ctx = "pooled over all cells"
+    elif bracket in BRACKETS:
+        ctx = f"NAIP bracket {bracket.replace('_', '-')}" + (
+            " (in-sample control)" if bracket == CONTROL else "")
+    else:
+        ctx = str(bracket)
+    return (f"{scheme} confusion matrix, {ctx}, against the interpreted reference. Reference classes "
+            "are on the rows and predicted classes on the columns. Cells are raw pixel counts colored "
+            "by the row proportion, so the diagonal shade is the producer's accuracy. The PA column "
+            "is producer's accuracy (recall) with the reference support n; the UA row is user's "
+            "accuracy (precision) with the predicted support n; the corner gives overall accuracy and "
+            "Cohen's kappa.")
+
+
+def render_cm_png(M, mt, variant, bracket, path, labels=None):
+    """Heatmap of one confusion matrix (k=5 or 10): cells are raw counts colored by the row
+    proportion, with a PA column and reference support, a UA row and predicted support, and OA and
+    kappa in the corner. Descriptive title, a caption band below the matrix, and print-size fonts.
+    Metrics are computed from M, so mt may be None (kept for call compatibility).
     """
+    import textwrap
     import matplotlib
     matplotlib.use("Agg")
     import matplotlib.pyplot as plt
 
     M = M.astype(float)
-    row = M.sum(1)
-    col = M.sum(0)                                          # predicted support (column totals) for UA
-    with np.errstate(invalid="ignore"):
+    k = M.shape[0]
+    labels = labels if labels is not None else (LABELS_DISPLAY if k == 10 else LABELS5)
+    tp = np.diag(M); row = M.sum(1); col = M.sum(0); tot = M.sum()
+    with np.errstate(invalid="ignore", divide="ignore"):
         rn = M / np.where(row[:, None] > 0, row[:, None], np.nan)   # row proportion
-    pa, ua, sup = mt["recall"], mt["precision"], mt["support"]
-    oa, kappa = mt["OA"], mt["kappa"]
+        pa = np.where(row > 0, tp / row, np.nan)                    # producer's (recall)
+        ua = np.where(col > 0, tp / col, np.nan)                    # user's (precision)
+    oa = tp.sum() / tot if tot else np.nan
+    pe = (row * col).sum() / (tot * tot) if tot else np.nan
+    kappa = (oa - pe) / (1 - pe) if tot and (1 - pe) else np.nan
     blues, greens = plt.get_cmap("Blues"), plt.get_cmap("Greens")
 
-    # build an 11x11 rgba image: main block colored by row proportion, margins by accuracy
-    img = np.ones((11, 11, 4))
-    for i in range(10):
-        for j in range(10):
+    img = np.ones((k + 1, k + 1, 4))
+    for i in range(k):
+        for j in range(k):
             img[i, j] = blues(rn[i, j] if np.isfinite(rn[i, j]) else 0.0)
-    for i in range(10):
-        img[i, 10] = greens(pa[i] if np.isfinite(pa[i]) else 0.0)
-    for j in range(10):
-        img[10, j] = greens(ua[j] if np.isfinite(ua[j]) else 0.0)
-    img[10, 10] = greens(oa if np.isfinite(oa) else 0.0)
+        img[i, k] = greens(pa[i] if np.isfinite(pa[i]) else 0.0)
+    for j in range(k):
+        img[k, j] = greens(ua[j] if np.isfinite(ua[j]) else 0.0)
+    img[k, k] = greens(oa if np.isfinite(oa) else 0.0)
 
-    fig, ax = plt.subplots(figsize=(10, 9.2))
+    fig, ax = plt.subplots(figsize=(11, 10))
     ax.imshow(img, aspect="auto")
 
     def txtcolor(v):
         return "white" if (np.isfinite(v) and v > 0.5) else "black"
 
-    for i in range(10):
-        for j in range(10):
+    csz = 8.5 if k == 10 else 11
+    for i in range(k):
+        for j in range(k):
             c = int(M[i, j])
             if c:
-                ax.text(j, i, f"{c:,}", ha="center", va="center", fontsize=6,
-                        color=txtcolor(rn[i, j]))
-    for i in range(10):                                  # producer's accuracy column + support
+                ax.text(j, i, f"{c:,}", ha="center", va="center", fontsize=csz, color=txtcolor(rn[i, j]))
+    for i in range(k):                                   # PA column + reference support
         t = f"{pa[i]*100:.0f}%" if np.isfinite(pa[i]) else "-"
-        ax.text(10, i, f"{t}\nn={int(sup[i]):,}", ha="center", va="center", fontsize=5.5,
-                color=txtcolor(pa[i]))
-    for j in range(10):                                  # user's accuracy row + predicted support
+        ax.text(k, i, f"{t}\nn={int(row[i]):,}", ha="center", va="center", fontsize=8, color=txtcolor(pa[i]))
+    for j in range(k):                                   # UA row + predicted support
         t = f"{ua[j]*100:.0f}%" if np.isfinite(ua[j]) else "-"
-        ax.text(j, 10, f"{t}\nn={int(col[j]):,}", ha="center", va="center", fontsize=5.5,
-                color=txtcolor(ua[j]))
-    ax.text(10, 10, f"OA {oa*100:.0f}%\nκ {kappa:.2f}", ha="center", va="center",
-            fontsize=6.5, color=txtcolor(oa))
+        ax.text(j, k, f"{t}\nn={int(col[j]):,}", ha="center", va="center", fontsize=8, color=txtcolor(ua[j]))
+    ax.text(k, k, f"OA {oa*100:.0f}%\nκ {kappa:.2f}", ha="center", va="center", fontsize=9,
+            color=txtcolor(oa))
 
-    # right column (x=10) holds producer's accuracy per reference row; bottom row (y=10) holds
-    # user's accuracy per prediction column
-    ax.set_xticks(range(11)); ax.set_xticklabels(LABELS + ["PA"], rotation=45, ha="left", fontsize=8)
-    ax.set_yticks(range(11)); ax.set_yticklabels(LABELS + ["UA"], fontsize=8)
+    ax.set_xticks(range(k + 1)); ax.set_xticklabels(labels + ["PA"], rotation=45, ha="left", fontsize=11)
+    ax.set_yticks(range(k + 1)); ax.set_yticklabels(labels + ["UA"], fontsize=11)
     ax.xaxis.tick_top(); ax.xaxis.set_label_position("top")
-    ax.set_xlabel("prediction (columns)", fontsize=9)
-    ax.set_ylabel("reference (rows)", fontsize=9)
-    # separators between the matrix and the accuracy margins
-    ax.axhline(9.5, color="0.4", lw=1.0); ax.axvline(9.5, color="0.4", lw=1.0)
-    ax.set_xticks(np.arange(-0.5, 11, 1), minor=True)
-    ax.set_yticks(np.arange(-0.5, 11, 1), minor=True)
+    ax.set_xlabel("prediction (columns)", fontsize=12)
+    ax.set_ylabel("reference (rows)", fontsize=12)
+    ax.axhline(k - 0.5, color="0.4", lw=1.0); ax.axvline(k - 0.5, color="0.4", lw=1.0)
+    ax.set_xticks(np.arange(-0.5, k + 1, 1), minor=True)
+    ax.set_yticks(np.arange(-0.5, k + 1, 1), minor=True)
     ax.grid(which="minor", color="white", lw=0.6); ax.tick_params(which="minor", length=0)
+    ax.set_title(VARIANT_TITLE.get(variant, str(variant)), fontsize=15, fontweight="bold", pad=30)
 
-    ctrl = "  [in-sample control]" if bracket == CONTROL else ""
-    ax.set_title(f"{variant}  ·  {bracket}{ctrl}\n"
-                 f"cells = raw counts; color = row proportion (producer's). "
-                 f"PA = producer's accuracy (recall), UA = user's accuracy (precision); "
-                 f"n = reference support on PA (row totals), predicted support on UA (column totals)",
-                 fontsize=9, pad=28)
-    fig.savefig(path, dpi=150, bbox_inches="tight")
+    # caption band below the matrix
+    wrapped = "\n".join(textwrap.wrap(_cm_caption(variant, bracket, k), 108))
+    nlines = wrapped.count("\n") + 1
+    fig.tight_layout(rect=[0, 0.03 + 0.028 * nlines, 1, 1])
+    fig.text(0.5, 0.012, wrapped, ha="center", va="bottom", fontsize=9, color="0.3")
+    fig.savefig(path, dpi=300, bbox_inches="tight")
     plt.close(fig)
 
 
