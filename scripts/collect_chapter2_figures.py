@@ -22,8 +22,10 @@ STRAIGHT = {
     "reports/spatial_structure/with_spec_all/morans_i_by_source.png": "figure_2_8.png",
     "reports/sensitivity_changecap/change_classes_ua_pa_vs_cap.png": "figure_2_10.png",
 }
-# figure 2.11: representative source panel plus the full per-source set
-REP_2_11 = "reports/model_vs_interpreter_5class/forest_5class_v4.png"
+# figure 2.11: representative source panel plus the full per-source set. v2 (baseline + delta) is the
+# representative: highest 10-class OA and spatially coherent, so the headline panel is a good model
+# bounded by the interpreter ceiling, not the fragmented v4 outlier. all six stay in the per-source set.
+REP_2_11 = "reports/model_vs_interpreter_5class/forest_5class_v2.png"
 ALL_2_11 = ["forest_5class_v2.png", "forest_5class_v3.png", "forest_5class_v4.png",
             "forest_5class_v5.png", "forest_5class_v6.png", "forest_5class_spec_all.png"]
 # figure 2.12: unresolved; copy the draft-referenced confusion candidates only
