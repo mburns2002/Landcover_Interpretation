@@ -4,7 +4,7 @@
 Four horizontal bands, top to bottom: reference inputs, feature construction, classification, and
 evaluation, with boxes connected by directional arrows. The five embedding configurations are shaded
 by the baseline-versus-change distinction (the chapter thesis), reusing the Figure 2.3 tones. The
-CKIT-RF interpreted cells are marked as validation (dashed) and routed to evaluation, not training.
+interpreter-labeled reference cells are marked as validation (dashed) and routed to evaluation, not training.
 
 Run: python scripts/build_workflow_figure.py
 Requires: matplotlib
@@ -80,7 +80,7 @@ def main():
     box(ax, 5.0, 13.15, 2.5, 0.85, "NAIP-interpreted stable points", wrap=18)
     ax.text(5.0, 12.5, "6 stable classes", ha="center", va="top", fontsize=7, style="italic",
             color="0.4")
-    box(ax, 8.2, 13.15, 3.0, 0.85, "CKIT-RF interpreted cells (wall-to-wall reference)", wrap=24,
+    box(ax, 8.2, 13.15, 3.0, 0.85, "Interpreter-labeled reference cells (wall-to-wall)", wrap=24,
         ls=(0, (4, 2)), ec="#117733", lw=1.5)
     ax.text(8.2, 12.5, "validation; design in Ch. 3", ha="center", va="top", fontsize=7,
             style="italic", color="#117733")
@@ -138,8 +138,8 @@ def main():
     # training points feed the RF, skipping band 2, routed down the left margin
     line(ax, [2.0, 0.5, 0.5], [10.7, 10.7, 5.75], color="0.5", lw=1.3)
     arrow(ax, (0.5, 5.75), (1.65, 5.75), color="0.5", lw=1.3)
-    ax.text(0.32, 8.2, "training points (labels)", rotation=90, fontsize=7, va="center", ha="center",
-            color="0.4")
+    ax.text(0.32, 8.2, "training points (labels)", rotation=90, fontsize=9, va="center", ha="center",
+            color="0.3")
 
     # ---- band 4: evaluation ----
     ev_y, ev_h = 1.85, 1.7
@@ -157,7 +157,7 @@ def main():
         arrow(ax, (cx, dist_y), (cx, ev_y + ev_h / 2 + 0.02))
     # validation reference down the right margin into the bus
     line(ax, [8.2, 9.82, 9.82], [12.72, 12.72, dist_y], color="#117733", lw=1.3, ls=(0, (4, 2)))
-    ax.text(9.96, 8.0, "validation reference (CKIT-RF cells)", rotation=90, fontsize=7, va="center",
+    ax.text(9.96, 8.0, "validation reference", rotation=90, fontsize=9, va="center",
             ha="center", color="#117733")
 
     fig.tight_layout()
