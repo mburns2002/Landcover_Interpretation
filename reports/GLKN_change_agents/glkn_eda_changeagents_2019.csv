@@ -1,0 +1,5 @@
+system:index,agent,max_m2,mean_m2,median_m2,min_m2,n_polys,total_m2,year,.geo
+0,harvest,369000.0,54560.96784140145,32040.65011495829,8100.0,252,1.3749363896033166E7,2019,"{""type"":""MultiPoint"",""coordinates"":[]}"
+1,development,204300.0,24843.706395185778,13507.632226674144,8100.0,203,5043272.398222713,2019,"{""type"":""MultiPoint"",""coordinates"":[]}"
+2,beaver,16200.0,16200.0,16200.0,16200.0,1,16200.0,2019,"{""type"":""MultiPoint"",""coordinates"":[]}"
+3,insect_disease_mort,70200.0,29700.0,16200.0,9900.0,5,148500.0,2019,"{""type"":""MultiPoint"",""coordinates"":[]}"
