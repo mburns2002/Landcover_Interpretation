@@ -143,13 +143,13 @@ def main():
             color="0.3")
 
     # ---- band 4: evaluation ----
-    ev_y, ev_h = 1.55, 2.35
+    ev_y, ev_h = 1.5, 1.45
     evs = [(1.9, "Accuracy assessment: per-cell confusion matrices; OA, kappa, per-class "
             "PA/UA/F1/IoU (10-class and 5-class collapse)"),
            (5.0, "Spatial coherence: patch size and area-weighted ECDF, Moran's I, neighbor-change"),
            (8.1, "Reliability ceiling: model F1 vs inter-interpreter agreement")]
     for cx, txt in evs:
-        box(ax, cx, ev_y, 2.95, ev_h, txt, wrap=22, fs=10.5)
+        box(ax, cx, ev_y, 2.5, ev_h, txt, wrap=26)     # fs defaults to 8.5 to match the other boxes
     # distribution bus: classified maps and the validation reference feed all three eval boxes
     dist_y = 3.35
     line(ax, [1.9, 9.82], [dist_y, dist_y], color="0.45", lw=1.2)
