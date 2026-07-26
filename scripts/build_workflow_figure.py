@@ -75,7 +75,7 @@ def main():
 
     # ---- band 1: reference inputs ----
     box(ax, 1.95, 13.15, 2.9, 0.85, "GLKN attributed change polygons", wrap=20)
-    ax.text(1.95, 12.5, "4 change classes: harvest, development,\ninsect/disease, beaver",
+    ax.text(1.95, 12.5, "4 change classes:\nharvest, development,\ninsect/disease, beaver",
             ha="center", va="top", fontsize=7, style="italic", color="0.4")
     box(ax, 5.0, 13.15, 2.5, 0.85, "NAIP-interpreted stable points", wrap=18)
     ax.text(5.0, 12.5, "6 stable classes", ha="center", va="top", fontsize=7, style="italic",
@@ -86,8 +86,9 @@ def main():
             style="italic", color="#117733")
     box(ax, 3.45, 11.15, 4.0, 0.9, "Balanced training set: 200 points/class x 10 classes",
         note="deduplicated to one point per 10 m pixel", wrap=30)
-    arrow(ax, (1.95, 12.72), (2.85, 11.62))
-    arrow(ax, (5.0, 12.72), (4.05, 11.62))
+    # arrows leave each box from the inner-bottom corner so they clear the centered class-count notes
+    arrow(ax, (3.1, 12.72), (3.05, 11.62))
+    arrow(ax, (3.9, 12.72), (3.95, 11.62))
 
     # ---- band 2: feature construction ----
     ax.text(0.98, 10.0, "features sampled at the training points, which supply the labels",
