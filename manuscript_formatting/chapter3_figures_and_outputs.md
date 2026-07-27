@@ -65,25 +65,32 @@ Derived figures:
 
 ### Per-agent polygon-size summary
 
-Rendered table from the per-year change-agent files, aggregated per agent over 2017 to 2020,
-[`manuscript_formatting/tables/chapter3_table_polygon_size_by_agent.csv`](manuscript_formatting/tables/chapter3_table_polygon_size_by_agent.csv):
+Source CSV: [`reports/GLKN_change_agents/glkn_polygon_area_by_agent_2010_2020.csv`](reports/GLKN_change_agents/glkn_polygon_area_by_agent_2010_2020.csv).
+One row per agent with `n_polys`, `min_m2`, `median_m2`, `mean_m2`, `sd_m2`, `max_m2`, and `total_m2`.
+Watershed-scoped, 2010 to 2020, all four agents including beaver. Rendered table
+[`manuscript_formatting/tables/chapter3_table_polygon_size_by_agent.csv`](manuscript_formatting/tables/chapter3_table_polygon_size_by_agent.csv)
+(areas converted to hectares, total to square kilometers):
 
-| Agent | N polygons | Min (ha) | Mean (ha) | Max (ha) | Total (km²) |
-|:--|--:|--:|--:|--:|--:|
-| Harvest | 1,347 | 0.81 | 6.17 | 81.63 | 83.05 |
-| Development | 775 | 0.81 | 2.67 | 38.34 | 20.67 |
-| Beaver | 53 | 0.81 | 2.77 | 49.05 | 1.47 |
-| Insect/Disease | 30 | 0.81 | 2.16 | 7.02 | 0.65 |
+| Agent | N polygons | Min (ha) | Median (ha) | Mean (ha) | SD (ha) | Max (ha) | Total (km²) |
+|:--|--:|--:|--:|--:|--:|--:|--:|
+| Harvest | 7,032 | 0.80 | 2.36 | 7.65 | 13.27 | 221.69 | 537.81 |
+| Development | 2,360 | 0.80 | 1.52 | 2.78 | 3.96 | 47.01 | 65.52 |
+| Beaver | 678 | 0.80 | 1.30 | 1.88 | 2.49 | 48.93 | 12.74 |
+| Insect/Disease | 99 | 0.81 | 1.47 | 2.76 | 7.72 | 77.62 | 2.74 |
 
-N and total are summed over the years, min and max are the extremes across years, and mean is total
-area divided by N. The per-year export does not carry the underlying polygon areas, so a pooled
-median and standard deviation are not recoverable and are not shown. Rendered PNG and DOCX:
+Insect and disease rests on few polygons (99), so its distribution statistics are based on limited
+data. Rendered PNG and DOCX:
 [`chapter3_table_polygon_size_by_agent.png`](manuscript_formatting/tables/chapter3_table_polygon_size_by_agent.png).
 
-The dedicated per-agent polygon-size summary with standard deviation
-(`glkn_polygon_area_by_agent*`) and the per-polygon histogram data (`glkn_histograms_by_agent*`) are
-**not present in the repo**. A prior `glkn_polygon_area_by_agent_4_28_26.csv` was pulled earlier but
-removed as an outdated version that also lacked beaver.
+Per-polygon histogram data:
+[`reports/GLKN_change_agents/glkn_histograms_by_agent_2010_2020.csv`](reports/GLKN_change_agents/glkn_histograms_by_agent_2010_2020.csv),
+one row per polygon with `agent`, `area_ha`, `area_m2`, `log10_area_ha`, and `year` (10,169 polygons,
+all four agents, 2010 to 2020). Derived figure:
+
+- [`manuscript_formatting/chapter_3/polygon_size_distribution_by_agent.png`](manuscript_formatting/chapter_3/polygon_size_distribution_by_agent.png)
+  (and `.pdf`). One facet per change agent, histogram of polygon area on a log-10 hectare axis with a
+  free y axis, facet labels carrying the per-agent polygon count. Data basis: GLKN change polygons,
+  seven-watershed AOI, 2010 to 2020.
 
 ### GLKN dataset EDA (per-year agent counts and polygon areas)
 
@@ -107,17 +114,17 @@ encoded in these files, so it cannot be confirmed from the data here.
 - Detection rate at 112 px: harvest 59.9%, development 31.5%, beaver 9.3%, insect and disease 2.9%.
 - Complete cells with change at 112 px: harvest 398, development 209, beaver 62, insect and disease 19,
   of 664 complete cells.
-- Polygon counts 2017 to 2020: harvest 1,347, development 775, beaver 53, insect and disease 30.
-- Total change area 2017 to 2020: harvest 83.05 km², development 20.67 km², beaver 1.47 km²,
-  insect and disease 0.65 km².
+- Polygon counts 2010 to 2020: harvest 7,032, development 2,360, beaver 678, insect and disease 99.
+- Total change area 2010 to 2020: harvest 537.81 km², development 65.52 km², beaver 12.74 km²,
+  insect and disease 2.74 km².
+- Per-year EDA counts 2017 to 2020 (a subset window): harvest 1,347, development 775, beaver 53,
+  insect and disease 30.
 
 ### Missing, to generate, or to rerun (Area 1)
 
-- Per-agent polygon-size summary with standard deviation (`glkn_polygon_area_by_agent*`), including
-  beaver. Absent. Needed to restore SD and a pooled median to the polygon-size table.
-- Per-polygon histogram data (`glkn_histograms_by_agent*`). Absent.
-- Year window: only 2017 to 2020 is encoded (EDA files). Confirm whether a watershed-scoped 2010 to
-  2020 window exists and re-export the grid and polygon products with the year carried in the file.
+- Year window: the polygon-size and histogram products are 2010 to 2020 (watershed-scoped), and the
+  grid CSV is labeled 2010 to 2020 by assertion (it carries no year field). The per-year EDA files are
+  2017 to 2020, a subset. Confirm the grid CSV window and carry the year in the file.
 - Complete-cell count at 112 px reads 664 in the current CSV. Reconcile against the earlier grid doc
   value of 575.
 - EDA state scope (MN and WI versus three-state MN, WI, and MI). Confirm which was exported.
@@ -305,15 +312,14 @@ de-duplicated.
 
 ## Gaps and reruns (punch list)
 
-1. **Polygon-size summary with SD (Area 1).** `glkn_polygon_area_by_agent*` with a `sd_m2` column and
-   beaver is not in the repo; the prior version was removed as outdated and lacked beaver. Re-export a
-   per-agent summary computed over all polygons so the polygon-size table can carry a median and
-   standard deviation.
-2. **Polygon histogram data (Area 1).** `glkn_histograms_by_agent*` is absent.
-3. **Year window reconciliation (Area 1).** Only 2017 to 2020 is encoded (the per-year EDA files). The
-   watershed-scoped grid and polygon products are labeled 2010 to 2020 by assertion, but neither the
-   grid CSV nor the polygon products carry a year field. Confirm the intended window and re-export with
-   the year in the file.
+1. **Polygon-size summary with SD (Area 1). Resolved.** `glkn_polygon_area_by_agent_2010_2020.csv`
+   (with `sd_m2` and all four agents including beaver) is now in the repo, and the polygon-size table
+   carries median and standard deviation.
+2. **Polygon histogram data (Area 1). Resolved.** `glkn_histograms_by_agent_2010_2020.csv` is now in
+   the repo, and the polygon-size distribution figure is derived from it.
+3. **Year window (Area 1).** The polygon-size and histogram products are 2010 to 2020. The grid CSV is
+   labeled 2010 to 2020 by assertion but carries no year field, and the per-year EDA files are 2017 to
+   2020 (a subset). Confirm the grid CSV window and carry the year in the file.
 4. **575 versus 664 complete cells at 112 px (Area 1).** The current grid CSV reports 664 complete
    cells at 112 px; an earlier grid doc reported 575. Reconcile.
 5. **EDA state scope (Area 1).** Confirm whether the change-agent EDA is MN and WI only or the

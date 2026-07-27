@@ -12,6 +12,8 @@ CSVs stay in `reports/GLKN_change_agents/`; the figures and their generating scr
   polygon count per agent by year (2017 to 2020), colored by the canonical class legend. Made by
   `scripts/glkn_change_agents_figure.py` (reads the CSVs in `reports/GLKN_change_agents/`, writes
   here).
+- `polygon_size_distribution_by_agent.{pdf,png}` — per-agent histograms of polygon area (log-10
+  hectare axis, free y), 2010 to 2020. Made by `plot_polygon_size_distribution.R` (in this folder).
 
 ## Regenerate
 ```bash
