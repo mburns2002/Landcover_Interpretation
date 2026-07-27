@@ -4,7 +4,7 @@ polygon count per agent across the NAIP target years 2017 to 2020. Bars are colo
 class legend (harvest, development, beaver, insect/disease), grouped by year.
 
 Reads reports/GLKN_change_agents/glkn_eda_changeagents_<year>.csv; writes change_area_by_agent.png
-and change_count_by_agent.png next to them.
+and change_count_by_agent.png to manuscript_formatting/chapter_3/.
 
 Run: python scripts/glkn_change_agents_figure.py
 Requires: pandas, matplotlib
@@ -24,8 +24,9 @@ import pandas as pd
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import compare_interpreted_vs_model as C
 
-DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
-                   "reports", "GLKN_change_agents")
+_REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+DIR = os.path.join(_REPO, "reports", "GLKN_change_agents")            # input csvs stay in reports
+OUTDIR = os.path.join(_REPO, "manuscript_formatting", "chapter_3")    # figures go with chapter 3
 
 # change agent (as written in the CSV) -> canonical class code, for the legend color and display name
 AGENT_CLASS = {"harvest": 1, "development": 2, "beaver": 9, "insect_disease_mort": 10}
@@ -78,6 +79,7 @@ def grouped_bar(df, value_col, transform, ylabel, title, cap, out):
 
 
 def main():
+    os.makedirs(OUTDIR, exist_ok=True)
     df = load()
     grouped_bar(
         df, "total_m2", lambda m2: m2 / 1e4,               # square meters -> hectares
@@ -86,14 +88,14 @@ def main():
         "Total area of GLKN attributed change-agent polygons per year (2017 to 2020), one bar per "
         "change agent, colored by the canonical class legend. Area is summed over all attributed "
         "polygons for that agent and year and converted to hectares.",
-        os.path.join(DIR, "change_area_by_agent.png"))
+        os.path.join(OUTDIR, "change_area_by_agent.png"))
     grouped_bar(
         df, "n_polys", lambda n: n,
         "Number of Polygons",
         "GLKN Change-Agent Polygon Count by Year",
         "Count of GLKN attributed change-agent polygons per year (2017 to 2020), one bar per change "
         "agent, colored by the canonical class legend.",
-        os.path.join(DIR, "change_count_by_agent.png"))
+        os.path.join(OUTDIR, "change_count_by_agent.png"))
 
 
 if __name__ == "__main__":

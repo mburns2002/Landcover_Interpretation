@@ -9,9 +9,10 @@ suppressPackageStartupMessages({
   library(ggplot2)
 })
 
-root <- normalizePath(file.path(dirname(sub("--file=", "", grep("--file=", commandArgs(FALSE), value = TRUE))), ".."))
+# this script lives in manuscript_formatting/chapter_3/, so the repo root is two levels up
+root <- normalizePath(file.path(dirname(sub("--file=", "", grep("--file=", commandArgs(FALSE), value = TRUE))), "..", ".."))
 if (length(root) == 0 || is.na(root)) root <- normalizePath(".")
-figdir <- file.path(root, "manuscript_formatting", "figures")
+figdir <- file.path(root, "manuscript_formatting", "chapter_3")
 dir.create(figdir, showWarnings = FALSE, recursive = TRUE)
 
 # glob for the grid cell-size csv (per-agent, 4-agent). prefer the tracked reports copy.

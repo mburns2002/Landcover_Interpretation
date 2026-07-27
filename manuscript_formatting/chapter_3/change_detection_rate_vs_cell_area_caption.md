@@ -31,4 +31,4 @@ The year window of the polygons is not recorded in this export (the file name an
 year field), so it is not asserted here.
 
 Source: `reports/GLKN_change_agents/glkn_grid_proportions_per_agent_5070_4agent.csv` (EPSG:5070).
-Script: `scripts/plot_change_detection_rate.R`.
+Script: `manuscript_formatting/chapter_3/plot_change_detection_rate.R`.
