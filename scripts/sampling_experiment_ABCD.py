@@ -669,7 +669,8 @@ def _make_plots(names, versions):
         s = g[g.version == v]
         ax.plot(s.W, s.design_effect, "o-", color=vpal[v], label=v)
     ax.axhline(1, ls="--", color="k", lw=0.8); ax.set_xticks(WS)
-    ax.set_xlabel("window size W", fontsize=11); ax.set_ylabel("design effect  Var_obs / Var_binomial", fontsize=11)
+    ax.set_xlabel("window size W", fontsize=12)
+    ax.set_ylabel("design effect (observed variance /\nindependent-sampling variance)", fontsize=12)
     ax.tick_params(labelsize=9)
     fig.suptitle("Design Effect vs Window Size", fontsize=15, fontweight="bold")
     ax.legend(fontsize=9, frameon=False); _classic(ax)
