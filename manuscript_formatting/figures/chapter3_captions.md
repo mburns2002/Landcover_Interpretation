@@ -12,7 +12,7 @@ Distribution of GLKN change-polygon area by agent (log hectare axis), within the
 ### Figure 3.2
 Files: figure_3_2a_detection_rate_combined.png (vector: .pdf); figure_3_2b_detection_rate_by_agent.png (vector: .pdf)
 
-Change detection rate as a function of grid cell area, by agent, within the seven watersheds. The selected 112 px cell (11.29 km2) is marked. Detection rate increases with cell area for every agent, but harvest and development are detected far more often than beaver and insect and disease at every scale. Two-panel figure: panel a is the combined-axes view, and panel b is the per-agent facets. The panels need manual assembly into one figure; they are not auto-composited.
+Change detection rate as a function of grid cell area, by agent, within the seven watersheds. The selected 112 px cell (11.29 km2) is marked. Detection rate increases with cell area for every agent, but harvest and development are detected far more often than beaver and insect and disease at every scale. Two-panel figure using the linear-axis versions: panel a is the combined-axes view, and panel b is the per-agent facets. The panels need manual assembly into one figure; they are not auto-composited.
 
 ### Figure 3.3
 File: figure_3_3_agreement_forest_5class.png
@@ -82,10 +82,10 @@ Provisional supplementary set; a final renumber pass will assign S numbers.
 - `reports/Case_ABCD_sampling/sd_vs_n_OA.png` -> `manuscript_formatting/figures/figure_3_7_sd_vs_n.png`
 - `reports/Case_ABCD_sampling/design_effect_vs_W.png` -> `manuscript_formatting/figures/figure_3_8_design_effect_vs_W.png`
 - `reports/Case_ABCD_sampling/class_absence.png` -> `manuscript_formatting/figures/figure_3_9_class_absence.png`
-- `manuscript_formatting/chapter_3/figures/change_detection_rate_vs_cell_area_combined.png` -> `manuscript_formatting/figures/figure_3_2a_detection_rate_combined.png`
-- `manuscript_formatting/chapter_3/figures/change_detection_rate_vs_cell_area_combined.pdf` -> `manuscript_formatting/figures/figure_3_2a_detection_rate_combined.pdf`
-- `manuscript_formatting/chapter_3/figures/change_detection_rate_vs_cell_area_by_agent.png` -> `manuscript_formatting/figures/figure_3_2b_detection_rate_by_agent.png`
-- `manuscript_formatting/chapter_3/figures/change_detection_rate_vs_cell_area_by_agent.pdf` -> `manuscript_formatting/figures/figure_3_2b_detection_rate_by_agent.pdf`
+- `manuscript_formatting/chapter_3/figures/change_detection_rate_vs_cell_area_combined_linear.png` -> `manuscript_formatting/figures/figure_3_2a_detection_rate_combined.png`
+- `manuscript_formatting/chapter_3/figures/change_detection_rate_vs_cell_area_combined_linear.pdf` -> `manuscript_formatting/figures/figure_3_2a_detection_rate_combined.pdf`
+- `manuscript_formatting/chapter_3/figures/change_detection_rate_vs_cell_area_by_agent_linear.png` -> `manuscript_formatting/figures/figure_3_2b_detection_rate_by_agent.png`
+- `manuscript_formatting/chapter_3/figures/change_detection_rate_vs_cell_area_by_agent_linear.pdf` -> `manuscript_formatting/figures/figure_3_2b_detection_rate_by_agent.pdf`
 - `reports/interpreter_agreement/class_disagreement_top.png` -> `manuscript_formatting/figures/figure_3_4a_contested_class_pairs.png`
 - `reports/interpreter_agreement/geometry/area_ecdf_focus.png` -> `manuscript_formatting/figures/figure_3_4b_area_ecdf.png`
 - `reports/interpreter_agreement/geometry/shape_index_area_weighted_ecdf.png` -> `manuscript_formatting/figures/figure_3_4c_shape_index_ecdf.png`
@@ -108,7 +108,7 @@ Provisional supplementary set; a final renumber pass will assign S numbers.
 
 ### Combine decisions
 
-- Figure 3.2: FLAGGED for manual assembly. Copied as two panels, `figure_3_2a_detection_rate_combined.png` (combined-axes view) and `figure_3_2b_detection_rate_by_agent.png` (per-agent facets). Not auto-composited, since the two source figures carry their own titles and axes and a clean single figure needs panel relabeling. Assemble manually as panels a and b under one caption.
+- Figure 3.2: FLAGGED for manual assembly. Copied as two panels from the linear-axis versions, `figure_3_2a_detection_rate_combined.png` (combined-axes view) and `figure_3_2b_detection_rate_by_agent.png` (per-agent facets). Not auto-composited, since the two source figures carry their own titles and axes and a clean single figure needs panel relabeling. Assemble manually as panels a and b under one caption.
 - Figure 3.4: FLAGGED for manual assembly. Copied as three panels, `figure_3_4a_contested_class_pairs.png`, `figure_3_4b_area_ecdf.png`, and `figure_3_4c_shape_index_ecdf.png`. Not auto-composited, for the same reason. Assemble manually as panels a, b, and c under one caption.
 
 ### Supplementary figures (source -> destination)

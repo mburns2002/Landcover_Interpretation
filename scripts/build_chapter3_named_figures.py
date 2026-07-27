@@ -50,8 +50,9 @@ copy(f"{AB}/design_effect_vs_W.png", "figure_3_8_design_effect_vs_W.png")
 copy(f"{AB}/class_absence.png", "figure_3_9_class_absence.png")
 
 # ---- figure 3.2: two-panel, flagged for manual assembly (copy panels a and b) ----
-copy_png_pdf(f"{C3}/change_detection_rate_vs_cell_area_combined", "figure_3_2a_detection_rate_combined")
-copy_png_pdf(f"{C3}/change_detection_rate_vs_cell_area_by_agent", "figure_3_2b_detection_rate_by_agent")
+# use the linear-axis versions, not the log-scale ones
+copy_png_pdf(f"{C3}/change_detection_rate_vs_cell_area_combined_linear", "figure_3_2a_detection_rate_combined")
+copy_png_pdf(f"{C3}/change_detection_rate_vs_cell_area_by_agent_linear", "figure_3_2b_detection_rate_by_agent")
 
 # ---- figure 3.4: three-panel, flagged for manual assembly (copy panels a, b, and c) ----
 copy(f"{IA}/class_disagreement_top.png", "figure_3_4a_contested_class_pairs.png")
@@ -146,8 +147,9 @@ MAIN_ORDER = [
     ("3.1", ["figure_3_1_polygon_size_distribution.png (vector: .pdf)"], ""),
     ("3.2", ["figure_3_2a_detection_rate_combined.png (vector: .pdf)",
              "figure_3_2b_detection_rate_by_agent.png (vector: .pdf)"],
-     " Two-panel figure: panel a is the combined-axes view, and panel b is the per-agent facets. "
-     "The panels need manual assembly into one figure; they are not auto-composited."),
+     " Two-panel figure using the linear-axis versions: panel a is the combined-axes view, and panel "
+     "b is the per-agent facets. The panels need manual assembly into one figure; they are not "
+     "auto-composited."),
     ("3.3", ["figure_3_3_agreement_forest_5class.png"], ""),
     ("3.4", ["figure_3_4a_contested_class_pairs.png", "figure_3_4b_area_ecdf.png",
              "figure_3_4c_shape_index_ecdf.png"],
@@ -188,8 +190,8 @@ for src, dst in copies:
     lines.append(f"- `{src}` -> `manuscript_formatting/figures/{dst}`")
 lines.append("")
 lines.append("### Combine decisions\n")
-lines.append("- Figure 3.2: FLAGGED for manual assembly. Copied as two panels, "
-             "`figure_3_2a_detection_rate_combined.png` (combined-axes view) and "
+lines.append("- Figure 3.2: FLAGGED for manual assembly. Copied as two panels from the linear-axis "
+             "versions, `figure_3_2a_detection_rate_combined.png` (combined-axes view) and "
              "`figure_3_2b_detection_rate_by_agent.png` (per-agent facets). Not auto-composited, since "
              "the two source figures carry their own titles and axes and a clean single figure needs "
              "panel relabeling. Assemble manually as panels a and b under one caption.")
