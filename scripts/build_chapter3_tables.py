@@ -8,9 +8,9 @@ Tables (each written as a tidy csv, a viewing png, and an editable docx):
   B  counts of complete cells containing each agent, by grid cell size (the absolute-count companion)
   C  disturbance polygon size by agent (areas converted to hectares, total to square kilometers)
 
-Inputs (globbed from reports/GLKN_change_agents/):
+Inputs (globbed from reports/GLKN_change_agents/, from the current GLKN Drive folders only):
   glkn_grid_proportions_per_agent_5070_4agent.csv   grid cell-size analysis (four agents)
-  glkn_polygon_area_by_agent_4_28_26.csv            per-agent polygon-size summary (with sd)
+  glkn_eda_changeagents_<year>.csv                  per-year change-agent polygon-area summaries
 
 Run: python scripts/build_chapter3_tables.py
 Requires: pandas, matplotlib, python-docx
@@ -242,36 +242,41 @@ def main():
          "change polygons, 2010 to 2020.",
          b_headers, b_rows, b_aligns, pd.DataFrame(b_tidy), bold_rows=bold_idx)
 
-    # --- table C: disturbance polygon size by agent (from the polygon-size summary) ---
-    poly = pd.read_csv(find("glkn_polygon_area_by_agent_4_28_26.csv"))
-    poly_agents = list(poly["agent"])
-    beaver_missing = "beaver" not in poly_agents
-    poly = poly.sort_values("n_polys", ascending=False)
-    c_headers = ["Agent", "N\npolygons", "Min\n(ha)", "Median\n(ha)", "Mean\n(ha)", "SD\n(ha)", "Max\n(ha)", "Total\n(km²)"]
+    # --- table C: disturbance polygon size by agent, aggregated from the per-year change-agent files ---
+    eda = pd.concat([pd.read_csv(f) for f in sorted(glob.glob(os.path.join(INDIR, "glkn_eda_changeagents_*.csv")))],
+                    ignore_index=True)
+    yrs = sorted(int(y) for y in eda["year"].unique())
+    window = f"{yrs[0]} to {yrs[-1]}"
+    # aggregate over the change years: n and total are sums, min and max are the extremes across years,
+    # and mean is total area divided by n. the per-year files do not carry the underlying polygon areas,
+    # so a pooled median and standard deviation are not recoverable and are not shown.
+    agg = (eda.groupby("agent").agg(n_polys=("n_polys", "sum"), min_m2=("min_m2", "min"),
+                                    max_m2=("max_m2", "max"), total_m2=("total_m2", "sum")).reset_index())
+    agg["mean_m2"] = agg["total_m2"] / agg["n_polys"]
+    agg = agg.sort_values("n_polys", ascending=False)
+    c_headers = ["Agent", "N\npolygons", "Min\n(ha)", "Mean\n(ha)", "Max\n(ha)", "Total\n(km²)"]
     c_rows, c_tidy = [], []
-    for _, r in poly.iterrows():
+    for _, r in agg.iterrows():
         ha = lambda col: r[col] / 1e4                                  # square meters to hectares
         c_rows.append([DISPLAY.get(r.agent, r.agent), f"{int(r.n_polys):,}",
-                       f"{ha('min_m2'):,.2f}", f"{ha('median_m2'):,.2f}", f"{ha('mean_m2'):,.2f}",
-                       f"{ha('sd_m2'):,.2f}", f"{ha('max_m2'):,.2f}", f"{r.total_m2 / 1e6:,.2f}"])
-        c_tidy.append({"agent": r.agent, "n_polys": int(r.n_polys),
-                       "min_ha": round(ha("min_m2"), 2), "median_ha": round(ha("median_m2"), 2),
-                       "mean_ha": round(ha("mean_m2"), 2), "sd_ha": round(ha("sd_m2"), 2),
-                       "max_ha": round(ha("max_m2"), 2), "total_km2": round(r.total_m2 / 1e6, 2)})
-    c_aligns = ["l", "r", "r", "r", "r", "r", "r", "r"]
-    foot = ("Areas converted to hectares (min, median, mean, standard deviation, and max) and square "
-            "kilometers (total). Insect and disease rests on few polygons (99), so its distribution "
-            "statistics are based on limited data.")
-    if beaver_missing:
-        foot += (" Beaver is absent from the polygon-size export and is not shown here; rerun the GEE "
-                 "export to include it.")
+                       f"{ha('min_m2'):,.2f}", f"{ha('mean_m2'):,.2f}", f"{ha('max_m2'):,.2f}",
+                       f"{r.total_m2 / 1e6:,.2f}"])
+        c_tidy.append({"agent": r.agent, "n_polys": int(r.n_polys), "min_ha": round(ha("min_m2"), 2),
+                       "mean_ha": round(ha("mean_m2"), 2), "max_ha": round(ha("max_m2"), 2),
+                       "total_km2": round(r.total_m2 / 1e6, 2)})
+    c_aligns = ["l", "r", "r", "r", "r", "r"]
+    foot = ("Polygon counts, extents, and totals aggregated over the change years " + window + ": N and "
+            "total are summed, min and max are the extremes across years, and mean is total area divided "
+            "by N. The per-year export does not carry the underlying polygon areas, so a pooled median "
+            "and standard deviation are not recoverable and are not shown. Beaver and insect and disease "
+            "rest on few polygons (see the N column), so their statistics are based on limited data.")
     emit("chapter3_table_polygon_size_by_agent",
-         "Disturbance Polygon Size by Agent", "GLKN watersheds, 2010 to 2020",
+         "Disturbance Polygon Size by Agent", f"GLKN watersheds, {window}",
          None, c_headers, c_rows, c_aligns, pd.DataFrame(c_tidy), footnote=foot)
 
     print("\nsummary:")
     print(f"  grid agents present: {present_agents}" + (f"  MISSING: {missing}" if missing else ""))
-    print(f"  polygon-size agents: {poly_agents}" + ("  MISSING: beaver" if beaver_missing else ""))
+    print(f"  polygon-size agents (per-year files): {sorted(eda['agent'].unique())}, years {window}")
 
 
 if __name__ == "__main__":
