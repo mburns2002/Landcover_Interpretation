@@ -58,47 +58,55 @@ base_theme <- theme_classic(base_size = 13) +
     panel.grid = element_blank()                           # no background gridlines, keep axes
   )
 
-x_scale <- scale_x_log10(
+# log axis (default), and a linear axis that labels only the endpoints and the selected cell
+# (14, 112, and 224 px); on a linear scale the 28 and 56 px ticks crowd the origin
+x_log <- scale_x_log10(
   breaks = area_breaks, labels = area_labs,
   sec.axis = dup_axis(breaks = area_breaks, labels = px_labs, name = "grid cell side (px)")
 )
+keep <- sizes$cell_side_px %in% c(14, 112, 224)
+x_lin <- scale_x_continuous(
+  breaks = area_breaks[keep], labels = sprintf("%.2f", area_breaks[keep]),
+  sec.axis = dup_axis(breaks = area_breaks[keep], labels = as.character(sizes$cell_side_px[keep]),
+                      name = "grid cell side (px)")
+)
 
-# ---- figure 1: per-agent small multiples, free y so the rare agents stay visible ----
-p_facet <- ggplot(d, aes(area_km2, detection_rate, color = agent_f)) +
-  geom_vline(xintercept = sel_area, linetype = "dashed", color = "grey55", linewidth = 0.5) +
-  geom_line(linewidth = 1) +
-  geom_point(size = 2.4) +
-  facet_wrap(~agent_f, ncol = 2, scales = "free_y") +
-  scale_color_manual(values = pal) +
-  x_scale +
-  guides(color = "none") +
-  labs(title = "GLKN Change Detection Rate vs Grid Cell Area, by Agent",
-       x = expression("grid cell area (km"^2*", log scale)"),
-       y = "detection rate (fraction of complete cells with change)") +
-  base_theme
+# build and save both figures (per-agent facets and combined) for a given x scale and filename suffix
+build_and_save <- function(x_scale, xlab, suffix) {
+  p_facet <- ggplot(d, aes(area_km2, detection_rate, color = agent_f)) +
+    geom_vline(xintercept = sel_area, linetype = "dashed", color = "grey55", linewidth = 0.5) +
+    geom_line(linewidth = 1) +
+    geom_point(size = 2.4) +
+    facet_wrap(~agent_f, ncol = 2, scales = "free_y") +
+    scale_color_manual(values = pal) +
+    x_scale +
+    guides(color = "none") +
+    labs(title = "GLKN Change Detection Rate vs Grid Cell Area, by Agent",
+         x = xlab, y = "detection rate (fraction of complete cells with change)") +
+    base_theme
+  ggsave(file.path(figdir, paste0("change_detection_rate_vs_cell_area_by_agent", suffix, ".pdf")),
+         p_facet, width = 8.5, height = 6.5)
+  ggsave(file.path(figdir, paste0("change_detection_rate_vs_cell_area_by_agent", suffix, ".png")),
+         p_facet, width = 8.5, height = 6.5, dpi = 320)
 
-ggsave(file.path(figdir, "change_detection_rate_vs_cell_area_by_agent.pdf"),
-       p_facet, width = 8.5, height = 6.5)
-ggsave(file.path(figdir, "change_detection_rate_vs_cell_area_by_agent.png"),
-       p_facet, width = 8.5, height = 6.5, dpi = 320)
+  p_comb <- ggplot(d, aes(area_km2, detection_rate, color = agent_f)) +
+    geom_vline(xintercept = sel_area, linetype = "dashed", color = "grey55", linewidth = 0.5) +
+    annotate("text", x = sel_area, y = max(d$detection_rate), label = "selected: 112 px",
+             angle = 90, vjust = -0.4, hjust = 1, size = 3.3, color = "grey45") +
+    geom_line(linewidth = 1) +
+    geom_point(size = 2.6) +
+    scale_color_manual(values = pal, name = NULL) +
+    x_scale +
+    labs(title = "GLKN Change Detection Rate vs Grid Cell Area",
+         x = xlab, y = "detection rate (fraction of complete cells with change)") +
+    base_theme
+  ggsave(file.path(figdir, paste0("change_detection_rate_vs_cell_area_combined", suffix, ".pdf")),
+         p_comb, width = 8, height = 5.6)
+  ggsave(file.path(figdir, paste0("change_detection_rate_vs_cell_area_combined", suffix, ".png")),
+         p_comb, width = 8, height = 5.6, dpi = 320)
+}
 
-# ---- figure 2: combined panel, all four agents on shared axes ----
-p_comb <- ggplot(d, aes(area_km2, detection_rate, color = agent_f)) +
-  geom_vline(xintercept = sel_area, linetype = "dashed", color = "grey55", linewidth = 0.5) +
-  annotate("text", x = sel_area, y = max(d$detection_rate), label = "selected: 112 px",
-           angle = 90, vjust = -0.4, hjust = 1, size = 3.3, color = "grey45") +
-  geom_line(linewidth = 1) +
-  geom_point(size = 2.6) +
-  scale_color_manual(values = pal, name = NULL) +
-  x_scale +
-  labs(title = "GLKN Change Detection Rate vs Grid Cell Area",
-       x = expression("grid cell area (km"^2*", log scale)"),
-       y = "detection rate (fraction of complete cells with change)") +
-  base_theme
+build_and_save(x_log, expression("grid cell area (km"^2*", log scale)"), "")          # current log versions
+build_and_save(x_lin, expression("grid cell area (km"^2*")"), "_linear")             # new linear versions
 
-ggsave(file.path(figdir, "change_detection_rate_vs_cell_area_combined.pdf"),
-       p_comb, width = 8, height = 5.6)
-ggsave(file.path(figdir, "change_detection_rate_vs_cell_area_combined.png"),
-       p_comb, width = 8, height = 5.6, dpi = 320)
-
-message("wrote change_detection_rate_vs_cell_area_{by_agent,combined}.{pdf,png} -> ", figdir)
+message("wrote log and _linear versions of by_agent and combined (pdf+png) -> ", figdir)
