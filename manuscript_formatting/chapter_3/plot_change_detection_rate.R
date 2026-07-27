@@ -91,8 +91,6 @@ build_and_save <- function(x_scale, xlab, suffix) {
 
   p_comb <- ggplot(d, aes(area_km2, detection_rate, color = agent_f)) +
     geom_vline(xintercept = sel_area, linetype = "dashed", color = "grey55", linewidth = 0.5) +
-    annotate("text", x = sel_area, y = max(d$detection_rate), label = "selected: 112 px",
-             angle = 90, vjust = -0.4, hjust = 1, size = 3.3, color = "grey45") +
     geom_line(linewidth = 1) +
     geom_point(size = 2.6) +
     scale_color_manual(values = pal, name = NULL) +
@@ -100,6 +98,11 @@ build_and_save <- function(x_scale, xlab, suffix) {
     labs(title = "GLKN Change Detection Rate vs Grid Cell Area",
          x = xlab, y = "detection rate (fraction of complete cells with change)") +
     base_theme
+  if (suffix == "") {                                          # the label overlaps a line on the linear x axis, keep it only on the log version
+    p_comb <- p_comb + annotate("text", x = sel_area, y = max(d$detection_rate),
+                                label = "selected: 112 px", angle = 90, vjust = -0.4, hjust = 1,
+                                size = 3.3, color = "grey45")
+  }
   ggsave(file.path(figdir, paste0("change_detection_rate_vs_cell_area_combined", suffix, ".pdf")),
          p_comb, width = 8, height = 5.6)
   ggsave(file.path(figdir, paste0("change_detection_rate_vs_cell_area_combined", suffix, ".png")),
