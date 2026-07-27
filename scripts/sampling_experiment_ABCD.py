@@ -700,10 +700,10 @@ def _make_plots(names, versions):
     for cls in s.cls.unique():
         sc = s[s.cls == cls].sort_values("n")
         ax.plot(sc.n, sc.frac_absent, "o-", label=cls, color=ccol.get(cls), ms=4)
-    ax.set_xlabel("n (windows)", fontsize=11)
-    ax.set_ylabel("fraction of iterations where class is entirely absent", fontsize=11); _logscale(ax, "x")
-    _nticks(ax, n_values)
-    ax.tick_params(labelsize=9)
+    ax.set_xlabel("n (windows, log scale)", fontsize=12)
+    ax.set_ylabel("fraction of iterations where class is entirely absent", fontsize=12); _logscale(ax, "x")
+    _nticks(ax, n_values, label_all=True)                     # label every tick; the log axis is noted in the x label
+    ax.tick_params(labelsize=10)
     fig.suptitle("Class Absence vs Sample Size", fontsize=15, fontweight="bold")
     ax.legend(fontsize=8, frameon=False, ncol=2); _classic(ax)
     fig.tight_layout()
