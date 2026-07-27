@@ -12,7 +12,7 @@ suppressPackageStartupMessages({
 # this script lives in manuscript_formatting/chapter_3/, so the repo root is two levels up
 root <- normalizePath(file.path(dirname(sub("--file=", "", grep("--file=", commandArgs(FALSE), value = TRUE))), "..", ".."))
 if (length(root) == 0 || is.na(root)) root <- normalizePath(".")
-figdir <- file.path(root, "manuscript_formatting", "chapter_3")
+figdir <- file.path(root, "manuscript_formatting", "chapter_3", "figures")
 
 cands <- list.files(root, pattern = "glkn_histograms_by_agent.*\\.csv$", recursive = TRUE, full.names = TRUE)
 cands <- cands[!grepl("/\\.git/|/data/raw/", cands)]           # prefer the tracked reports copy

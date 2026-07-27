@@ -33,7 +33,7 @@ from docx.shared import Pt, RGBColor
 
 REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 INDIR = os.path.join(REPO, "reports", "GLKN_change_agents")
-OUTDIR = os.path.join(REPO, "manuscript_formatting", "tables")
+OUTDIR = os.path.join(REPO, "manuscript_formatting", "chapter_3", "tables")
 
 AGENTS = ["harvest", "development", "beaver", "insect_disease_mort"]     # four change classes
 DISPLAY = {"harvest": "Harvest", "development": "Development",

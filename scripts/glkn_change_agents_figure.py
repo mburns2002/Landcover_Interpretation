@@ -4,7 +4,7 @@ polygon count per agent across the NAIP target years 2017 to 2020. Bars are colo
 class legend (harvest, development, beaver, insect/disease), grouped by year.
 
 Reads reports/GLKN_change_agents/glkn_eda_changeagents_<year>.csv; writes change_area_by_agent.png
-and change_count_by_agent.png to manuscript_formatting/chapter_3/.
+and change_count_by_agent.png to manuscript_formatting/chapter_3/figures/.
 
 Run: python scripts/glkn_change_agents_figure.py
 Requires: pandas, matplotlib
@@ -26,7 +26,7 @@ import compare_interpreted_vs_model as C
 
 _REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DIR = os.path.join(_REPO, "reports", "GLKN_change_agents")            # input csvs stay in reports
-OUTDIR = os.path.join(_REPO, "manuscript_formatting", "chapter_3")    # figures go with chapter 3
+OUTDIR = os.path.join(_REPO, "manuscript_formatting", "chapter_3", "figures")  # figures go with chapter 3
 
 # change agent (as written in the CSV) -> canonical class code, for the legend color and display name
 AGENT_CLASS = {"harvest": 1, "development": 2, "beaver": 9, "insect_disease_mort": 10}
