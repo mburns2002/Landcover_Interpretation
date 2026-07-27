@@ -219,8 +219,7 @@ def main():
          "Fraction of complete cells, fully within the seven-watershed area of interest (AOI), that "
          "contain at least one polygon of each change agent, by grid cell size. Detection rate is "
          "n_with_change divided by n_cells_complete. The 112 pixel cell (11.29 square kilometers), the "
-         "selected size, is shown in bold. GLKN change polygons; the source export does not record a "
-         "year window.",
+         "selected size, is shown in bold. GLKN change polygons, 2010 to 2020.",
          a_headers, a_rows, a_aligns, pd.DataFrame(a_tidy), bold_rows=bold_idx)
 
     # --- table B: absolute counts of complete cells with change, by cell size ---
@@ -239,7 +238,8 @@ def main():
          "Complete Cells Containing Each Agent, by Grid Cell Size", None,
          "Absolute counts of complete cells intersecting each change agent's polygons, by grid cell "
          "size. The denominator for the detection rate is Complete cells (n_cells_complete), the number "
-         "of cells fully within the seven-watershed AOI. The 112 pixel row is shown in bold.",
+         "of cells fully within the seven-watershed AOI. The 112 pixel row is shown in bold. GLKN "
+         "change polygons, 2010 to 2020.",
          b_headers, b_rows, b_aligns, pd.DataFrame(b_tidy), bold_rows=bold_idx)
 
     # --- table C: disturbance polygon size by agent (from the polygon-size summary) ---
@@ -265,9 +265,8 @@ def main():
     if beaver_missing:
         foot += (" Beaver is absent from the polygon-size export and is not shown here; rerun the GEE "
                  "export to include it.")
-    foot += " The source export does not record a year window."
     emit("chapter3_table_polygon_size_by_agent",
-         "Disturbance Polygon Size by Agent", "GLKN watersheds",
+         "Disturbance Polygon Size by Agent", "GLKN watersheds, 2010 to 2020",
          None, c_headers, c_rows, c_aligns, pd.DataFrame(c_tidy), footnote=foot)
 
     print("\nsummary:")

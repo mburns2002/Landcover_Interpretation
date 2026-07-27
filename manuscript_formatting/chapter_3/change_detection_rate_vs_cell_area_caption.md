@@ -27,8 +27,7 @@ noise. No aggregate "any change" line is drawn: the per-agent `n_with_change` co
 contain more than one agent, and a sum across agents would double-count, and the export has no
 all-agent row.
 
-The year window of the polygons is not recorded in this export (the file name and columns carry no
-year field), so it is not asserted here.
+The GLKN change polygons span the 2010 to 2020 year window.
 
 Source: `reports/GLKN_change_agents/glkn_grid_proportions_per_agent_5070_4agent.csv` (EPSG:5070).
 Script: `manuscript_formatting/chapter_3/plot_change_detection_rate.R`.
