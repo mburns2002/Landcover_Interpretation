@@ -25,13 +25,13 @@ recomputed; every number is quoted from the file named beside it.
 
 ### Grid cell-size analysis (nested grid, detection rate by cell size)
 
-Source CSV: [`reports/GLKN_change_agents/glkn_grid_proportions_per_agent_5070_4agent.csv`](reports/GLKN_change_agents/glkn_grid_proportions_per_agent_5070_4agent.csv).
+Source CSV: [`reports/GLKN_change_agents/glkn_grid_proportions_per_agent_5070_4agent.csv`](../../reports/GLKN_change_agents/glkn_grid_proportions_per_agent_5070_4agent.csv).
 Long format, one row per (cell size, agent): `cell_side_px`, `cell_side_m`, `agent`,
 `n_cells_total`, `n_cells_complete`, `n_with_change`. EPSG:5070. This CSV **includes beaver** (all four
 change agents: harvest, development, beaver, and insect_disease_mort).
 
 Derived detection-rate table (five cell sizes, four agents), from
-[`manuscript_formatting/tables/chapter3_table_detection_rate_by_cell_size.csv`](manuscript_formatting/tables/chapter3_table_detection_rate_by_cell_size.csv):
+[`manuscript_formatting/tables/chapter3_table_detection_rate_by_cell_size.csv`](../../manuscript_formatting/tables/chapter3_table_detection_rate_by_cell_size.csv):
 
 | Cell (px) | Side (m) | Area (km²) | Complete cells | Harvest % | Development % | Beaver % | Insect/Disease % |
 |:--|--:|--:|--:|--:|--:|--:|--:|
@@ -44,31 +44,36 @@ Derived detection-rate table (five cell sizes, four agents), from
 Detection rate is `n_with_change / n_cells_complete`, the fraction of complete cells (fully within the
 seven-watershed area of interest) containing at least one polygon of the agent. The 112 px cell
 (11.29 km²) is the selected assessment unit. The absolute-count companion is
-[`chapter3_table_complete_cell_counts_by_cell_size.csv`](manuscript_formatting/tables/chapter3_table_complete_cell_counts_by_cell_size.csv)
+[`chapter3_table_complete_cell_counts_by_cell_size.csv`](../../manuscript_formatting/tables/chapter3_table_complete_cell_counts_by_cell_size.csv)
 (same rows, columns `n_with_change` per agent alongside `n_cells_complete`).
 
 Rendered tables (PNG plus editable DOCX, clean thesis style):
-- [`chapter3_table_detection_rate_by_cell_size.png`](manuscript_formatting/tables/chapter3_table_detection_rate_by_cell_size.png) / `.docx`
-- [`chapter3_table_complete_cell_counts_by_cell_size.png`](manuscript_formatting/tables/chapter3_table_complete_cell_counts_by_cell_size.png) / `.docx`
+- [`chapter3_table_detection_rate_by_cell_size.png`](../../manuscript_formatting/tables/chapter3_table_detection_rate_by_cell_size.png) / `.docx`
+- [`chapter3_table_complete_cell_counts_by_cell_size.png`](../../manuscript_formatting/tables/chapter3_table_complete_cell_counts_by_cell_size.png) / `.docx`
 
 Derived figures:
 
-- [`manuscript_formatting/chapter_3/change_detection_rate_vs_cell_area_by_agent.png`](manuscript_formatting/chapter_3/change_detection_rate_vs_cell_area_by_agent.png) (and `.pdf`).
+- [`manuscript_formatting/chapter_3/change_detection_rate_vs_cell_area_by_agent.png`](../../manuscript_formatting/chapter_3/change_detection_rate_vs_cell_area_by_agent.png) (and `.pdf`).
   Small multiples, one panel per change agent, plotting detection rate against grid cell area on a
   base-10 log x axis (0.18 to 45.16 km²) with a pixel secondary axis (14 to 224 px). The y axis is
   free per panel so the rare agents stay visible, and the dashed vertical line marks the selected
   112 px cell. Data basis: GLKN change polygons, seven-watershed AOI.
-- [`manuscript_formatting/chapter_3/change_detection_rate_vs_cell_area_combined.png`](manuscript_formatting/chapter_3/change_detection_rate_vs_cell_area_combined.png) (and `.pdf`).
+- [`manuscript_formatting/chapter_3/change_detection_rate_vs_cell_area_combined.png`](../../manuscript_formatting/chapter_3/change_detection_rate_vs_cell_area_combined.png) (and `.pdf`).
   The four agents on one shared set of axes, one colored line and points per agent, colorblind-safe
   palette, with the 112 px cell marked. Same axes and data basis as the per-agent panels.
-- Full caption: [`change_detection_rate_vs_cell_area_caption.md`](manuscript_formatting/chapter_3/change_detection_rate_vs_cell_area_caption.md).
+- Linear-axis companions of both figures:
+  [`change_detection_rate_vs_cell_area_by_agent_linear.png`](../../manuscript_formatting/chapter_3/change_detection_rate_vs_cell_area_by_agent_linear.png)
+  and [`change_detection_rate_vs_cell_area_combined_linear.png`](../../manuscript_formatting/chapter_3/change_detection_rate_vs_cell_area_combined_linear.png)
+  (each with `.pdf`). Same data on a linear rather than log x axis; only the endpoint and selected-cell
+  ticks are labeled (14, 112, and 224 px) since the smaller cells crowd the origin on a linear scale.
+- Full caption: [`change_detection_rate_vs_cell_area_caption.md`](../../manuscript_formatting/chapter_3/change_detection_rate_vs_cell_area_caption.md).
 
 ### Per-agent polygon-size summary
 
-Source CSV: [`reports/GLKN_change_agents/glkn_polygon_area_by_agent_2010_2020.csv`](reports/GLKN_change_agents/glkn_polygon_area_by_agent_2010_2020.csv).
+Source CSV: [`reports/GLKN_change_agents/glkn_polygon_area_by_agent_2010_2020.csv`](../../reports/GLKN_change_agents/glkn_polygon_area_by_agent_2010_2020.csv).
 One row per agent with `n_polys`, `min_m2`, `median_m2`, `mean_m2`, `sd_m2`, `max_m2`, and `total_m2`.
 Watershed-scoped, 2010 to 2020, all four agents including beaver. Rendered table
-[`manuscript_formatting/tables/chapter3_table_polygon_size_by_agent.csv`](manuscript_formatting/tables/chapter3_table_polygon_size_by_agent.csv)
+[`manuscript_formatting/tables/chapter3_table_polygon_size_by_agent.csv`](../../manuscript_formatting/tables/chapter3_table_polygon_size_by_agent.csv)
 (areas converted to hectares, total to square kilometers):
 
 | Agent | N polygons | Min (ha) | Median (ha) | Mean (ha) | SD (ha) | Max (ha) | Total (km²) |
@@ -80,29 +85,29 @@ Watershed-scoped, 2010 to 2020, all four agents including beaver. Rendered table
 
 Insect and disease rests on few polygons (99), so its distribution statistics are based on limited
 data. Rendered PNG and DOCX:
-[`chapter3_table_polygon_size_by_agent.png`](manuscript_formatting/tables/chapter3_table_polygon_size_by_agent.png).
+[`chapter3_table_polygon_size_by_agent.png`](../../manuscript_formatting/tables/chapter3_table_polygon_size_by_agent.png).
 
 Per-polygon histogram data:
-[`reports/GLKN_change_agents/glkn_histograms_by_agent_2010_2020.csv`](reports/GLKN_change_agents/glkn_histograms_by_agent_2010_2020.csv),
+[`reports/GLKN_change_agents/glkn_histograms_by_agent_2010_2020.csv`](../../reports/GLKN_change_agents/glkn_histograms_by_agent_2010_2020.csv),
 one row per polygon with `agent`, `area_ha`, `area_m2`, `log10_area_ha`, and `year` (10,169 polygons,
 all four agents, 2010 to 2020). Derived figure:
 
-- [`manuscript_formatting/chapter_3/polygon_size_distribution_by_agent.png`](manuscript_formatting/chapter_3/polygon_size_distribution_by_agent.png)
+- [`manuscript_formatting/chapter_3/polygon_size_distribution_by_agent.png`](../../manuscript_formatting/chapter_3/polygon_size_distribution_by_agent.png)
   (and `.pdf`). One facet per change agent, histogram of polygon area on a log-10 hectare axis with a
   free y axis, facet labels carrying the per-agent polygon count. Data basis: GLKN change polygons,
   seven-watershed AOI, 2010 to 2020.
 
 ### GLKN dataset EDA (per-year agent counts and polygon areas)
 
-Source: [`reports/GLKN_change_agents/glkn_eda_changeagents_2017.csv`](reports/GLKN_change_agents/glkn_eda_changeagents_2017.csv)
+Source: [`reports/GLKN_change_agents/glkn_eda_changeagents_2017.csv`](../../reports/GLKN_change_agents/glkn_eda_changeagents_2017.csv)
 through `..._2020.csv` (one file per year). Columns per file: `agent`, `n_polys`, `min_m2`,
 `median_m2`, `mean_m2`, `max_m2`, `total_m2`, `year`. One row per agent per year, all four agents
 present including beaver. Supporting figures:
 
-- [`manuscript_formatting/chapter_3/change_area_by_agent.png`](manuscript_formatting/chapter_3/change_area_by_agent.png).
+- [`manuscript_formatting/chapter_3/change_area_by_agent.png`](../../manuscript_formatting/chapter_3/change_area_by_agent.png).
   Grouped bar chart of total change-agent polygon area (hectares) per agent by year (2017 to 2020),
   colored by the canonical class legend.
-- [`manuscript_formatting/chapter_3/change_count_by_agent.png`](manuscript_formatting/chapter_3/change_count_by_agent.png).
+- [`manuscript_formatting/chapter_3/change_count_by_agent.png`](../../manuscript_formatting/chapter_3/change_count_by_agent.png).
   Grouped bar chart of polygon count per agent by year (2017 to 2020), same coloring.
 
 The state scope of the EDA (MN and WI only, versus a three-state MN, WI, and MI version) is not
@@ -135,31 +140,31 @@ encoded in these files, so it cannot be confirmed from the data here.
 
 Monte Carlo sampling-design experiment. These are draws from designs whose statistical properties are
 characterized, not accuracy estimates. Reference:
-[`reports/Case_ABCD_sampling/reference.txt`](reports/Case_ABCD_sampling/reference.txt) records the
+[`reports/Case_ABCD_sampling/reference.txt`](../../reports/Case_ABCD_sampling/reference.txt) records the
 adjudicated reviewer per location, per-bracket predictions as the map field, and
 `numpy.SeedSequence(42)`. A full description of the population, the two designs (simple random and
 stratified Horvitz-Thompson), and the four approaches (A per-pixel, B dominant pair, C plurality, D
-proportions) is in [`reports/Case_ABCD_sampling/README.md`](reports/Case_ABCD_sampling/README.md).
+proportions) is in [`reports/Case_ABCD_sampling/README.md`](../../reports/Case_ABCD_sampling/README.md).
 
 ### Found figures (10-class, `reports/Case_ABCD_sampling/`)
 
-- [`sd_vs_n_OA.png`](reports/Case_ABCD_sampling/sd_vs_n_OA.png). Standard deviation of the sampled
+- [`sd_vs_n_OA.png`](../../reports/Case_ABCD_sampling/sd_vs_n_OA.png). Standard deviation of the sampled
   overall accuracy (approach A, simple random) against sample size n on log-log axes, one line per
   window size W, one panel per variant v2 to v6, with a 1/sqrt(n) reference line.
-- [`bias_vs_n_OA.png`](reports/Case_ABCD_sampling/bias_vs_n_OA.png). Mean sampled OA minus census OA
+- [`bias_vs_n_OA.png`](../../reports/Case_ABCD_sampling/bias_vs_n_OA.png). Mean sampled OA minus census OA
   against n for v2 at W=3, comparing simple random, stratified weighted, and stratified unweighted.
-- [`design_effect_vs_W.png`](reports/Case_ABCD_sampling/design_effect_vs_W.png). Design effect
+- [`design_effect_vs_W.png`](../../reports/Case_ABCD_sampling/design_effect_vs_W.png). Design effect
   (observed variance over binomial variance) against window size W, one line per variant, averaged
   over n.
-- [`strat_efficiency.png`](reports/Case_ABCD_sampling/strat_efficiency.png). Per-class ratio of
+- [`strat_efficiency.png`](../../reports/Case_ABCD_sampling/strat_efficiency.png). Per-class ratio of
   stratified to simple-random standard deviation for v2 at W=1 and the largest n.
-- [`class_absence.png`](reports/Case_ABCD_sampling/class_absence.png). Fraction of Monte Carlo
+- [`class_absence.png`](../../reports/Case_ABCD_sampling/class_absence.png). Fraction of Monte Carlo
   iterations in which a class is entirely absent from the sample against n (simple random, v2, W=1),
   one line per class.
-- [`d_corr_vs_n.png`](reports/Case_ABCD_sampling/d_corr_vs_n.png). Approach D per-class correlation of
+- [`d_corr_vs_n.png`](../../reports/Case_ABCD_sampling/d_corr_vs_n.png). Approach D per-class correlation of
   map versus reference area proportions against n (v2, W=5, simple random), one line per class.
-- [`variant_comparison.png`](reports/Case_ABCD_sampling/variant_comparison.png) and
-  [`variant_separation_scatter.png`](reports/Case_ABCD_sampling/variant_separation_scatter.png).
+- [`variant_comparison.png`](../../reports/Case_ABCD_sampling/variant_comparison.png) and
+  [`variant_separation_scatter.png`](../../reports/Case_ABCD_sampling/variant_separation_scatter.png).
   Cross-variant comparison panels (from `scripts/sampling_variant_comparison.py`).
 
 ### Found figures (5-class collapse, `reports/Case_ABCD_sampling_5class/`)
@@ -167,9 +172,9 @@ proportions) is in [`reports/Case_ABCD_sampling/README.md`](reports/Case_ABCD_sa
 Same core set as above (`sd_vs_n_OA.png`, `bias_vs_n_OA.png`, `design_effect_vs_W.png`,
 `strat_efficiency.png`, `class_absence.png`, `d_corr_vs_n.png`), plus the collapse-specific panels:
 
-- [`change_convergence.png`](reports/Case_ABCD_sampling_5class/change_convergence.png),
-  [`collapse_summary.png`](reports/Case_ABCD_sampling_5class/collapse_summary.png), and
-  [`recall_precision_convergence.png`](reports/Case_ABCD_sampling_5class/recall_precision_convergence.png)
+- [`change_convergence.png`](../../reports/Case_ABCD_sampling_5class/change_convergence.png),
+  [`collapse_summary.png`](../../reports/Case_ABCD_sampling_5class/collapse_summary.png), and
+  [`recall_precision_convergence.png`](../../reports/Case_ABCD_sampling_5class/recall_precision_convergence.png)
   (from `scripts/sampling_collapse_comparison.py`).
 
 ### Found tables
@@ -197,9 +202,9 @@ Present in both `reports/Case_ABCD_sampling/` and `reports/Case_ABCD_sampling_5c
   (`reports/Case_ABCD_sampling/README.md`).
 - Simple random misses the rare change classes at small n; only the weighted stratified estimator
   returns to the census, and the unweighted stratified estimator stays biased (README).
-- 5-class collapse OA and kappa, [`collapsed_kappa.csv`](reports/Case_ABCD_sampling_5class/collapsed_kappa.csv):
+- 5-class collapse OA and kappa, [`collapsed_kappa.csv`](../../reports/Case_ABCD_sampling_5class/collapsed_kappa.csv):
   v2 OA 0.883, kappa 0.025; v3 0.806, 0.010; v4 0.941, 0.059; v5 0.767, 0.007; v6 0.750, 0.006.
-- 5-class exclusion, [`exclusion.txt`](reports/Case_ABCD_sampling_5class/exclusion.txt): Unknown
+- 5-class exclusion, [`exclusion.txt`](../../reports/Case_ABCD_sampling_5class/exclusion.txt): Unknown
   excluded, 4,139 pixels, 0.0202% of 20,443,094 reference pixels.
 
 ### Missing, to generate, or to rerun (Area 2)
@@ -211,20 +216,20 @@ Present in both `reports/Case_ABCD_sampling/` and `reports/Case_ABCD_sampling_5c
 
 ## Area 3: reference reliability (inter-interpreter, five diagnostics)
 
-Outputs under [`reports/interpreter_agreement/`](reports/interpreter_agreement/). The unit is the
+Outputs under [`reports/interpreter_agreement/`](../../reports/interpreter_agreement/). The unit is the
 interpreter pair over 72 double-interpreted cells (8,178,653 pooled valid pixels,
-[`global_metrics.txt`](reports/interpreter_agreement/global_metrics.txt)); pairs are not
+[`global_metrics.txt`](../../reports/interpreter_agreement/global_metrics.txt)); pairs are not
 de-duplicated.
 
 ### D1: per-class agreement
 
-- Tables: [`per_class_agreement_table.md`](reports/interpreter_agreement/per_class_agreement_table.md)
-  and `.tex` (10-class), [`per_class_agreement_table_5class.md`](reports/interpreter_agreement/per_class_agreement_table_5class.md)
+- Tables: [`per_class_agreement_table.md`](../../reports/interpreter_agreement/per_class_agreement_table.md)
+  and `.tex` (10-class), [`per_class_agreement_table_5class.md`](../../reports/interpreter_agreement/per_class_agreement_table_5class.md)
   and `.tex` (5-class). Underlying CIs in `per_class_agreement_ci.csv` and
   `per_class_agreement_ci_5class.csv`. A row is a class with its pairs, support pixels, F1 and IoU
   point estimates with 95% cluster (pair) bootstrap CIs, and a reliability tier.
-- Figures: [`per_class_agreement_forest.png`](reports/interpreter_agreement/per_class_agreement_forest.png)
-  (10-class) and [`per_class_agreement_forest_5class.png`](reports/interpreter_agreement/per_class_agreement_forest_5class.png)
+- Figures: [`per_class_agreement_forest.png`](../../reports/interpreter_agreement/per_class_agreement_forest.png)
+  (10-class) and [`per_class_agreement_forest_5class.png`](../../reports/interpreter_agreement/per_class_agreement_forest_5class.png)
   (5-class). Forest plots of per-class agreement F1 with 95% CIs, dashed reliability thresholds at
   0.50 and 0.70. Data basis: 72 pairs.
 
@@ -240,44 +245,44 @@ de-duplicated.
 
 ### D2: disagreement geometry
 
-- [`class_disagreement_top.png`](reports/interpreter_agreement/class_disagreement_top.png). The most
+- [`class_disagreement_top.png`](../../reports/interpreter_agreement/class_disagreement_top.png). The most
   contested class pairs by disagreeing pixels, from
-  [`class_disagreement_ranked.csv`](reports/interpreter_agreement/class_disagreement_ranked.csv)
+  [`class_disagreement_ranked.csv`](../../reports/interpreter_agreement/class_disagreement_ranked.csv)
   (columns `class_a`, `class_b`, `disagree_px`, `pct_of_all_disagreement`; top pair Forest versus
   Wetland at 21.76% of all disagreement).
-- [`geometry/area_ecdf_focus.png`](reports/interpreter_agreement/geometry/area_ecdf_focus.png).
+- [`geometry/area_ecdf_focus.png`](../../reports/interpreter_agreement/geometry/area_ecdf_focus.png).
   Empirical CDF of contested-patch area.
-- [`geometry/shape_index_area_weighted_ecdf.png`](reports/interpreter_agreement/geometry/shape_index_area_weighted_ecdf.png).
+- [`geometry/shape_index_area_weighted_ecdf.png`](../../reports/interpreter_agreement/geometry/shape_index_area_weighted_ecdf.png).
   Area-weighted empirical CDF of patch shape index.
-- [`geometry/gs_wetland_top10.png`](reports/interpreter_agreement/geometry/gs_wetland_top10.png) with
-  [`gs_wetland_top10.csv`](reports/interpreter_agreement/geometry/gs_wetland_top10.csv) (columns
+- [`geometry/gs_wetland_top10.png`](../../reports/interpreter_agreement/geometry/gs_wetland_top10.png) with
+  [`gs_wetland_top10.csv`](../../reports/interpreter_agreement/geometry/gs_wetland_top10.csv) (columns
   `cell_id`, `lid`, `area_px`, `area_ha`, `shape_index`, `width_px`, `extent`). The ten largest
   grass/shrub versus wetland contested patches.
 
 ### D3: training-conflict overlay
 
-- [`geometry/gs_wetland_training_overlay.png`](reports/interpreter_agreement/geometry/gs_wetland_training_overlay.png)
-  with [`gs_wetland_training_overlay.csv`](reports/interpreter_agreement/geometry/gs_wetland_training_overlay.csv)
+- [`geometry/gs_wetland_training_overlay.png`](../../reports/interpreter_agreement/geometry/gs_wetland_training_overlay.png)
+  with [`gs_wetland_training_overlay.csv`](../../reports/interpreter_agreement/geometry/gs_wetland_training_overlay.csv)
   (columns include `rank`, `cell_id`, `area_ha`, `reviewer_a`, `a_pts_in_zone`, `a_classes_in_zone`,
   `reviewer_b`, `b_pts_in_zone`, `b_classes_in_zone`, `category`). Training points falling inside the
   grass/shrub versus wetland contested zones, per reviewer, with the conflicting class labels.
 
 ### D4: reviewer directional bias
 
-- [`reviewer_overassignment_heatmap.png`](reports/interpreter_agreement/reviewer_overassignment_heatmap.png).
+- [`reviewer_overassignment_heatmap.png`](../../reports/interpreter_agreement/reviewer_overassignment_heatmap.png).
   Heatmap of per-reviewer class over-assignment.
-- [`reviewer_class_overassignment.csv`](reports/interpreter_agreement/reviewer_class_overassignment.csv)
+- [`reviewer_class_overassignment.csv`](../../reports/interpreter_agreement/reviewer_class_overassignment.csv)
   (columns `reviewer`, `cls`, `code`, `claim_self_ha`, `claim_partner_ha`, `log2_index`, `ci_lo`,
   `ci_hi`, `significant`, `n_pairs`). One row per reviewer and class: how much of a class a reviewer
   claims relative to partners, with a log2 index and CI.
-- [`reviewer_directed_classpairs.csv`](reports/interpreter_agreement/reviewer_directed_classpairs.csv)
+- [`reviewer_directed_classpairs.csv`](../../reports/interpreter_agreement/reviewer_directed_classpairs.csv)
   (columns `reviewer`, `says`, `partner_says`, `px_R_over`, `px_partner_over`, `area_R_over_ha`,
   `log2_ratio`). Directed class-pair over-assignment per reviewer.
 
 ### D5: spatial tolerance
 
-- [`spatial_tolerance_delta.png`](reports/interpreter_agreement/spatial_tolerance_delta.png) with
-  [`spatial_tolerance_delta.csv`](reports/interpreter_agreement/spatial_tolerance_delta.csv). Per class
+- [`spatial_tolerance_delta.png`](../../reports/interpreter_agreement/spatial_tolerance_delta.png) with
+  [`spatial_tolerance_delta.csv`](../../reports/interpreter_agreement/spatial_tolerance_delta.csv). Per class
   and direction (AtoB, BtoA), strict versus relaxed agreement at 3-pixel and 5-pixel tolerance, the
   raw delta, a null delta, and the net delta with CI. Columns `direction`, `cls`, `code`, `denom_px`,
   `strict_3`, `relaxed_3`, `delta_3`, `null_delta_3`, `delta_net_3`, `net_lo_3`, `net_hi_3`, and the
@@ -285,7 +290,7 @@ de-duplicated.
 
 ### Supporting outputs (not one of the five diagnostics)
 
-- [`global_confusion_matrix.png`](reports/interpreter_agreement/global_confusion_matrix.png) and
+- [`global_confusion_matrix.png`](../../reports/interpreter_agreement/global_confusion_matrix.png) and
   `.csv`: pooled inter-interpreter confusion over all pairs.
 - `global_metrics.txt`, `per_pair_metrics.csv`, `by_reviewer_pair.csv`, `lowest_agreement_pairs.csv`,
   `flagged_pairs_for_review.csv`, `per_class_contested.csv`.
