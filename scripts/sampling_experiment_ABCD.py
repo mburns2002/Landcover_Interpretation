@@ -626,17 +626,15 @@ def _make_plots(names, versions):
             nn = np.array(n_values, float)
             ax.plot(nn, sd0 * np.sqrt(n0 / nn), "k--", lw=1, zorder=1,
                     label="independent (slope −0.5)")
-        ax.set_xlabel("n (windows)"); ax.set_title(v); _logscale(ax, "xy"); _nticks(ax, n_values)
+        ax.set_xlabel("n (windows)", fontsize=11); ax.set_title(v, fontsize=12)
+        _logscale(ax, "xy"); _nticks(ax, n_values)
+        ax.tick_params(labelsize=9)
         if ax is axes[0]:
-            ax.set_ylabel("SD of OA (approach A)")
-        ax.legend(fontsize=6.5, frameon=False); _classic(ax)
-    fig.suptitle("Precision vs sample size (simple random): SD of sampled OA falls with n\n"
-                 "dashed = 1/√n slope reference anchored at W=1 (independent single-pixel sampling); "
-                 "every line is parallel to it (SD ∝ 1/√n). The gap between W=1 and larger-W lines is "
-                 "the design effect — large for the autocorrelated v2–v5, small for the near-independent "
-                 "v6. Draws from a design, not accuracy estimates.", fontsize=10)
-    fig.tight_layout(rect=[0, 0, 1, 0.9]); fig.savefig(os.path.join(OUT, "sd_vs_n_OA.png"), dpi=140,
-                                                       bbox_inches="tight"); plt.close(fig)
+            ax.set_ylabel("SD of OA (approach A)", fontsize=11)
+        ax.legend(fontsize=7.5, frameon=False); _classic(ax)
+    fig.suptitle("Sampling Precision vs Sample Size", fontsize=15, fontweight="bold")
+    fig.tight_layout(rect=[0, 0, 1, 0.95]); fig.savefig(os.path.join(OUT, "sd_vs_n_OA.png"), dpi=140,
+                                                        bbox_inches="tight"); plt.close(fig)
 
     # 2) bias vs n (v2, W=3): simple vs stratified weighted vs stratified unweighted
     fig, ax = plt.subplots(figsize=(8, 5))
@@ -646,16 +644,13 @@ def _make_plots(names, versions):
         s = md[(md.design == design) & (md.metric == metric) & (md.version == "v2") & (md.W == 3)].sort_values("n")
         ax.plot(s.n, s.bias, "o-", color=c, label=lab)
     ax.axhline(0, ls="--", color="k", lw=0.8)
-    ax.set_xlabel("n (windows)"); ax.set_ylabel("mean sampled OA − census OA"); _logscale(ax, "x")
+    ax.set_xlabel("n (windows)", fontsize=11); ax.set_ylabel("mean sampled OA − census OA", fontsize=11)
+    _logscale(ax, "x")
     _nticks(ax, n_values)
-    ax.set_title("Bias vs n (v2, W=3): weighted stratified recovers census; unweighted does not")
-    ax.legend(fontsize=8, frameon=False); _classic(ax)
-    _caption(fig, "Mean sampled OA minus the census OA versus sample size for three designs "
-                  "(v2, W=3): simple random, stratified with weighting, and stratified without "
-                  "weighting. A point on the dashed zero line is unbiased. Weighted stratified "
-                  "sampling recovers the census OA at every n, while unweighted stratified sampling "
-                  "stays biased, since it over-samples the rare strata without reweighting them back "
-                  "to their true frequencies.")
+    ax.tick_params(labelsize=9)
+    fig.suptitle("Estimator Bias vs Sample Size", fontsize=15, fontweight="bold")
+    ax.legend(fontsize=9, frameon=False); _classic(ax)
+    fig.tight_layout()
     fig.savefig(os.path.join(OUT, "bias_vs_n_OA.png"), dpi=140, bbox_inches="tight")
     plt.close(fig)
 
@@ -666,16 +661,11 @@ def _make_plots(names, versions):
         s = g[g.version == v]
         ax.plot(s.W, s.design_effect, "o-", color=vpal[v], label=v)
     ax.axhline(1, ls="--", color="k", lw=0.8); ax.set_xticks(WS)
-    ax.set_xlabel("window size W"); ax.set_ylabel("design effect  Var_obs / Var_binomial")
-    ax.set_title("Cost of autocorrelation: design effect vs W (≈1 at W=1)")
-    ax.legend(fontsize=8, frameon=False); _classic(ax)
-    _caption(fig, "Design effect, the observed sampling variance of OA divided by the binomial "
-                  "variance expected under independent sampling, averaged over n, versus window size "
-                  "W, one line per variant. A value of 1 (dashed) means a window behaves like an "
-                  "independent sample, and higher means the window's pixels are redundant, so the "
-                  "effective sample size is smaller than the pixel count. The effect grows with W and "
-                  "is largest for the spatially autocorrelated variants v2 to v5 and smallest for the "
-                  "near-independent v6.")
+    ax.set_xlabel("window size W", fontsize=11); ax.set_ylabel("design effect  Var_obs / Var_binomial", fontsize=11)
+    ax.tick_params(labelsize=9)
+    fig.suptitle("Design Effect vs Window Size", fontsize=15, fontweight="bold")
+    ax.legend(fontsize=9, frameon=False); _classic(ax)
+    fig.tight_layout()
     fig.savefig(os.path.join(OUT, "design_effect_vs_W.png"), dpi=140, bbox_inches="tight")
     plt.close(fig)
 
@@ -687,15 +677,11 @@ def _make_plots(names, versions):
     ax.bar(order.cls, order.strat_efficiency,
            color=["#2ca02c" if x < 1 else "#d62728" for x in order.strat_efficiency])
     ax.axhline(1, ls="--", color="k", lw=0.8)
-    ax.set_ylabel("SD_stratified / SD_simple  (<1 = stratification helps)")
-    ax.set_title(f"Stratification efficiency by class (v2, W=1, n={nmax}): helps rare, hurts common")
-    ax.set_xticks(range(len(order))); ax.set_xticklabels(order.cls, rotation=45, ha="right"); _classic(ax)
-    _caption(fig, f"Ratio of the stratified to simple-random sampling standard deviation per class "
-                  f"(v2, W=1, n={nmax}). Bars below the dashed line at 1 (green) mean stratification "
-                  "reduces sampling variance for that class, above 1 (red) mean it increases it. "
-                  "Stratification helps the rare change classes, on the left, and hurts the common "
-                  "stable classes, on the right, since allocating samples to the rare strata trades "
-                  "precision on the abundant classes for precision on the scarce ones.")
+    ax.set_ylabel("SD_stratified / SD_simple  (<1 = stratification helps)", fontsize=11)
+    fig.suptitle("Stratification Efficiency by Class", fontsize=15, fontweight="bold")
+    ax.set_xticks(range(len(order))); ax.set_xticklabels(order.cls, rotation=45, ha="right")
+    ax.tick_params(labelsize=9); _classic(ax)
+    fig.tight_layout()
     fig.savefig(os.path.join(OUT, "strat_efficiency.png"), dpi=140, bbox_inches="tight")
     plt.close(fig)
 
@@ -705,15 +691,13 @@ def _make_plots(names, versions):
     for cls in s.cls.unique():
         sc = s[s.cls == cls].sort_values("n")
         ax.plot(sc.n, sc.frac_absent, "o-", label=cls, color=ccol.get(cls), ms=4)
-    ax.set_xlabel("n (windows)")
-    ax.set_ylabel("fraction of iterations where class is entirely absent"); _logscale(ax, "x")
+    ax.set_xlabel("n (windows)", fontsize=11)
+    ax.set_ylabel("fraction of iterations where class is entirely absent", fontsize=11); _logscale(ax, "x")
     _nticks(ax, n_values)
-    ax.set_title("Simple random fails for rare classes (v2, W=1): absence vs n")
-    ax.legend(fontsize=7, frameon=False, ncol=2); _classic(ax)
-    _caption(fig, "Fraction of Monte Carlo iterations in which a class is entirely absent from the "
-                  "sample versus sample size (simple random, v2, W=1), one line per class. Simple "
-                  "random sampling routinely misses the rare change classes at small n, which is why "
-                  "a stratified design is needed to guarantee those classes appear in the sample.")
+    ax.tick_params(labelsize=9)
+    fig.suptitle("Class Absence vs Sample Size", fontsize=15, fontweight="bold")
+    ax.legend(fontsize=8, frameon=False, ncol=2); _classic(ax)
+    fig.tight_layout()
     fig.savefig(os.path.join(OUT, "class_absence.png"), dpi=140, bbox_inches="tight")
     plt.close(fig)
 
@@ -723,16 +707,13 @@ def _make_plots(names, versions):
     for cls in s.cls.unique():
         sc = s[s.cls == cls].sort_values("n")
         ax.plot(sc.n, sc.mean_corr, "o-", label=cls, color=ccol.get(cls), ms=4)
-    ax.set_xlabel("n (windows)")
-    ax.set_ylabel("mean per-class corr(prop_map, prop_ref)"); _logscale(ax, "x")
+    ax.set_xlabel("n (windows)", fontsize=11)
+    ax.set_ylabel("mean per-class corr(prop_map, prop_ref)", fontsize=11); _logscale(ax, "x")
     _nticks(ax, n_values, label_all=True)
-    ax.set_title("Approach D: per-class proportion correlation vs n (v2, W=5, simple)")
-    ax.legend(fontsize=7, frameon=False, ncol=2); _classic(ax)
-    _caption(fig, "Mean correlation between the map's and the interpreted reference's per-class area "
-                  "proportions across sampled windows versus sample size (v2, W=5, simple), one line "
-                  "per class. Higher is better agreement. The common classes stabilize quickly, while "
-                  "the rare change classes stay low and noisy, so per-class proportion estimates for "
-                  "the rare classes remain unreliable even at the largest n.")
+    ax.tick_params(labelsize=9)
+    fig.suptitle("Per-Class Proportion Correlation vs Sample Size", fontsize=15, fontweight="bold")
+    ax.legend(fontsize=8, frameon=False, ncol=2); _classic(ax)
+    fig.tight_layout()
     fig.savefig(os.path.join(OUT, "d_corr_vs_n.png"), dpi=140, bbox_inches="tight")
     plt.close(fig)
 

@@ -262,23 +262,16 @@ def forest_plot(df, path):
         ax.plot([r.f1_lo, r.f1_hi], [i, i], color=color[r.reliability], lw=2, zorder=1)
         ax.scatter(r.f1, i, color=color[r.reliability], s=45, zorder=2)
     ax.set_yticks(y); ax.set_yticklabels([f"{r.cls} (n={r.n_pairs})" for r in d.itertuples()])
+    ax.tick_params(axis="both", labelsize=11)
     ax.axvline(HIGH, ls="--", lw=0.8, color="gray"); ax.axvline(MOD, ls="--", lw=0.8, color="gray")
-    ax.set_xlabel("inter-interpreter F1 (95% CI)")
+    ax.set_xlabel("inter-interpreter F1 (95% CI)", fontsize=12)
     ax.set_xlim(0, 1)
-    ax.set_title("Per-class inter-interpreter agreement\n(dashed: Low/Moderate/High thresholds)")
+    # single clean title only; descriptive caption lives in the manuscript captions file
+    ax.set_title("Per-Class Inter-Interpreter Agreement", fontsize=15, fontweight="bold")
     from matplotlib.patches import Patch
     ax.legend(handles=[Patch(color=color[t], label=t) for t in ["High", "Moderate", "Low"]],
-              loc="lower right", fontsize=8)
-    # name a couple of the least-reliable classes so the caption fits either scheme
-    weak = [r.cls for r in df.sort_values("f1").itertuples() if r.reliability in ("Low", "Moderate")][:2]
-    weak_txt = (" such as " + " and ".join(weak)) if len(weak) == 2 else ""
-    _caption(fig, "Forest plot of per-class inter-interpreter agreement F1 for each land-cover "
-                  "class, where each dot is the pooled point estimate and its horizontal bar is "
-                  "the 95% cluster (pair) bootstrap confidence interval. F1 is the balanced "
-                  "probability that the two interpreters concur given one assigned the class, and "
-                  "the dashed vertical lines mark the Low, Moderate, and High reliability "
-                  "thresholds at 0.50 and 0.70. Dots colored orange or red identify classes"
-                  f"{weak_txt} where the human reference itself is unreliable.")
+              loc="lower right", fontsize=10)
+    fig.tight_layout()
     fig.savefig(path, dpi=150, bbox_inches="tight")
     plt.close(fig)
 

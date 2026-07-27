@@ -201,25 +201,17 @@ def plot(df, path):
         ax.bar(x - wbar / 2, sub.delta_net_3, wbar, yerr=err3, capsize=2, color="#1f77b4", label="3x3")
         ax.bar(x + wbar / 2, sub.delta_net_5, wbar, yerr=err5, capsize=2, color="#ff7f0e", label="5x5")
         ax.axhline(0, color="k", lw=0.8)
-        ax.set_xticks(x); ax.set_xticklabels(sub.cls, rotation=45, ha="right")
-        ax.set_title(f"{direction[0]} → {direction[-1]}  (dilate {'B' if direction=='AtoB' else 'A'})")
-        ax.set_ylabel("agreement recovered above null  (relaxed - strict) - null")
-        ax.legend(frameon=False)
+        ax.set_xticks(x); ax.set_xticklabels(sub.cls, rotation=45, ha="right", fontsize=11)
+        ax.tick_params(axis="y", labelsize=11)
+        ax.set_title(f"{direction[0]} → {direction[-1]}  (dilate {'B' if direction=='AtoB' else 'A'})",
+                     fontsize=12)
+        ax.set_ylabel("agreement recovered above null  (relaxed - strict) - null", fontsize=12)
+        ax.legend(frameon=False, fontsize=11)
         ax.spines["top"].set_visible(False); ax.spines["right"].set_visible(False)
         ax.grid(False)
-    fig.suptitle("Spatial-tolerance diagnostic: per-class agreement recovered under 3x3 / 5x5 "
-                 "matching, above the heterogeneity null\n"
-                 "(high = boundary-misregistration; ~0 = conceptual; still rising at 5x5 = "
-                 "misregistered > 1 px). NOT a corrected accuracy.", fontsize=11)
-    _caption(fig, "For each land-cover class, the bars show how much inter-interpreter agreement is "
-             "recovered when a pixel is allowed to match any occurrence of its class within a 3x3 "
-             "(blue) or 5x5 (orange) neighborhood, above a heterogeneity null estimated by shifting "
-             "the dilated masks, with 95 percent cluster-bootstrap error bars. The left panel dilates "
-             "reviewer B (A to B) and the right dilates reviewer A (B to A), and classes are sorted "
-             "by the 3x3 recovery. A tall bar means the disagreement is boundary misregistration, a "
-             "bar near zero means conceptual disagreement, and a 5x5 bar much taller than the 3x3 "
-             "means misregistration beyond one pixel; this is a diagnostic, not a corrected "
-             "accuracy.", top=0.9)
+    # clean single-line title only; descriptive caption lives in chapter3_captions.md
+    fig.suptitle("Agreement Recovery Under Spatial Tolerance", fontsize=15, fontweight="bold")
+    fig.tight_layout(rect=[0, 0, 1, 0.95])
     fig.savefig(path, dpi=140, bbox_inches="tight"); plt.close(fig)
 
 

@@ -156,7 +156,9 @@ MAIN_ORDER = [
      " Three-panel figure: panel a is the contested class pairs, panel b is the contested-patch area "
      "ECDF, and panel c is the shape-index ECDF. The panels need manual assembly into one figure; "
      "they are not auto-composited."),
-    ("3.5", ["figure_3_5_training_conflict_overlay.png"], ""),
+    ("3.5", ["figure_3_5_training_conflict_overlay.png"],
+     " The figure shows the top three contested patches. Reviewers are anonymized to letters; the "
+     "letter-to-reviewer key is kept in reports/interpreter_agreement/geometry/reviewer_letter_key.csv."),
     ("3.6", ["figure_3_6_spatial_tolerance.png"], ""),
     ("3.7", ["figure_3_7_sd_vs_n.png"], ""),
     ("3.8", ["figure_3_8_design_effect_vs_W.png"], ""),

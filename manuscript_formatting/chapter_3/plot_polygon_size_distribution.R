@@ -42,11 +42,9 @@ p <- ggplot(d, aes(area_ha, fill = agent_f)) +
   scale_x_log10() +
   guides(fill = "none") +
   labs(title = "GLKN Change-Agent Polygon Size Distribution",
-       subtitle = "GLKN watersheds, 2010 to 2020",
        x = "polygon area (ha, log scale)", y = "number of polygons") +
   theme_classic(base_size = 13) +
   theme(plot.title = element_text(face = "bold", size = 15),
-        plot.subtitle = element_text(size = 11, color = "grey25"),
         strip.text = element_text(face = "bold"),
         panel.grid = element_blank())
 

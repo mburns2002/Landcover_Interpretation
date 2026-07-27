@@ -266,20 +266,18 @@ def make_plots(df, names, colors):
         ax.set_title("Beaver ↔ anything", fontsize=10)
         ax.set_xlabel(xlabel); ax.set_ylabel("cumulative fraction")
         ax.legend(fontsize=6.5, frameon=False); classic(ax)
-        fig.suptitle(title, fontsize=12)
-        _caption(fig, caption, top=0.93)
+        fig.suptitle(title, fontsize=15, fontweight="bold")
+        if caption:                                             # descriptive caption lives in the manuscript caption file
+            _caption(fig, caption, top=0.93)
+        else:
+            fig.tight_layout()
         fig.savefig(os.path.join(OUT, fname), dpi=140, bbox_inches="tight")
         plt.close(fig)
 
+    # area_ecdf_focus is Chapter 3 figure 3.4b; clean title, no in-figure caption (caption is in the
+    # manuscript caption file). other panels() figures below keep their descriptive captions.
     panels("area_ha", "patch area (ha, log)", True, "area_ecdf_focus.png",
-           "Disagreement patch area by directed class pair (vs. agreement reference)",
-           "Each panel plots the empirical cumulative distribution of disagreement-patch area, on "
-           "a log scale in hectares, for one high-disagreement class boundary, with solid and "
-           "dashed lines for the two directed orderings of the pair and a dotted gray reference "
-           "curve for the agreement patches of those classes. A curve shifted to the left means "
-           "the disagreement patches are smaller than the agreed features, indicating thin "
-           "boundary slivers rather than whole misclassified features. The sixth panel pools all "
-           "Beaver disagreement patches against the same agreement reference.")
+           "Contested-Patch Area Distribution", "")
     panels("shape_index", "shape index  P / (2√(πA))", False, "shape_index_ecdf_focus.png",
            "Disagreement patch shape index by directed class pair (vs. agreement reference)",
            "Each panel plots the empirical cumulative distribution of the disagreement-patch "

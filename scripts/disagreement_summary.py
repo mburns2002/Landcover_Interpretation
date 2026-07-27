@@ -71,16 +71,15 @@ def plot_top_pairs(pair_df, out_path, top=12):
     labels = [f"{a} ↔ {b}" for a, b in zip(d.class_a, d.class_b)]
     fig, ax = plt.subplots(figsize=(9, 0.45 * len(d) + 1.5))
     ax.barh(labels, d.pct_of_all_disagreement, color="#d62728")
-    ax.set_xlabel("% of all reviewer-disagreement pixels")
-    ax.set_title(f"Top {top} class boundaries driving reviewer disagreement")
+    # print-legible fonts: axis label ~12 pt, tick labels ~11 pt
+    ax.set_xlabel("% of all reviewer-disagreement pixels", fontsize=12)
+    ax.tick_params(axis="both", labelsize=11)
+    # single clean title only; descriptive caption lives in the manuscript caption file
+    ax.set_title("Most Contested Class Pairs by Disagreeing Pixels",
+                 fontsize=15, fontweight="bold")
     for y, v in enumerate(d.pct_of_all_disagreement):
         ax.text(v + 0.2, y, f"{v:.1f}%", va="center", fontsize=8)
-    _caption(fig, "Horizontal bars rank the unordered class-boundary pairs that drive the most "
-                  "disagreement between reviewers, pooled over all reviewer pairs. Each bar's "
-                  "length is that boundary's share of all reviewer-disagreement pixels, with the "
-                  "percentage annotated at the bar tip and the longest bars at the top. Read it to "
-                  "see which pairs of land-cover classes, such as Grass/Shrub versus Wetland, "
-                  "account for the bulk of inter-interpreter disagreement.")
+    fig.tight_layout()
     fig.savefig(out_path, dpi=140, bbox_inches="tight")
     plt.close(fig)
 

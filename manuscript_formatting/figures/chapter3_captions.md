@@ -27,7 +27,7 @@ Geometry of inter-interpreter disagreement. The most contested class pairs by di
 ### Figure 3.5
 File: figure_3_5_training_conflict_overlay.png
 
-Conflicting training labels on shared ground. In the largest grass/shrub versus wetland contested zones, both interpreters placed training points but assigned them to different classes, one labeling the ground grass/shrub and the other wetland. The disagreement is conceptual, residing in the interpreters' class assignments rather than in boundary delineation.
+Conflicting training labels on shared ground. In the largest grass/shrub versus wetland contested zones, both interpreters placed training points but assigned them to different classes, one labeling the ground grass/shrub and the other wetland. The disagreement is conceptual, residing in the interpreters' class assignments rather than in boundary delineation. The figure shows the top three contested patches. Reviewers are anonymized to letters; the letter-to-reviewer key is kept in reports/interpreter_agreement/geometry/reviewer_letter_key.csv.
 
 ### Figure 3.6
 File: figure_3_6_spatial_tolerance.png

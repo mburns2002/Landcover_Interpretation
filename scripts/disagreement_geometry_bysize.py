@@ -175,16 +175,9 @@ def aw_ecdf_plot(df, path):
         ax.set_title(ttl, fontsize=10)
         ax.set_xlabel("shape index"); ax.set_ylabel("cumulative fraction")
         ax.set_xlim(1.0, 3.5); ax.legend(fontsize=7, frameon=False); DG.classic(ax)
-    fig.suptitle("Shape index: area-weighted vs. count-weighted "
-                 "(dashed = 1x1-pixel value 1.128)", fontsize=12)
-    _caption(fig, "Each panel compares two cumulative distributions of the disagreement-patch "
-                  "shape index for one high-disagreement class boundary, the area-weighted curve "
-                  "in blue and the count-weighted curve as a dotted gray line. The area-weighted "
-                  "curve reflects the patches that actually hold the disagreement area rather than "
-                  "the many single-pixel specks, and the dashed vertical line at 1.128 marks the "
-                  "shape index of a single pixel. A large gap between the two curves shows that "
-                  "single-pixel specks dominate patch counts while larger, more complex patches "
-                  "hold most of the disagreement area.", top=0.93)
+    # chapter 3 figure 3.4c; clean title, no in-figure caption (caption is in the manuscript caption file)
+    fig.suptitle("Contested-Patch Shape Complexity", fontsize=15, fontweight="bold")
+    fig.tight_layout()
     fig.savefig(path, dpi=140, bbox_inches="tight"); plt.close(fig)
 
 

@@ -126,19 +126,18 @@ def main():
         print(df[["rank", "cell_id", "area_ha", "a_pts_in_zone", "a_dist_m",
                   "b_pts_in_zone", "b_dist_m", "category"]].to_string(index=False))
 
-    make_render(render, os.path.join(OUT, "gs_wetland_training_overlay.png"))
-    print(f"\noutputs -> {OUT}/gs_wetland_training_overlay.csv/png")
+    # the figure shows only the top three patches; anonymize reviewers to stable letters (sorted by
+    # name) and keep a letter-to-reviewer key file for reference, so no names appear on the figure
+    render_top = render[:3]
+    shown = sorted({t[6] for t in render_top} | {t[8] for t in render_top})
+    letter = {rev: chr(ord("A") + i) for i, rev in enumerate(shown)}
+    pd.DataFrame([{"letter": lt, "reviewer": rev} for rev, lt in letter.items()]).to_csv(
+        os.path.join(OUT, "reviewer_letter_key.csv"), index=False)
+    make_render(render_top, letter, os.path.join(OUT, "gs_wetland_training_overlay.png"))
+    print(f"\noutputs -> {OUT}/gs_wetland_training_overlay.csv/png, reviewer_letter_key.csv")
 
 
-def _caption(fig, text, top=1.0, width=90):
-    import textwrap
-    wrapped = "\n".join(textwrap.wrap(text, width))
-    nlines = wrapped.count("\n") + 1
-    fig.tight_layout(rect=[0, 0.02 + 0.02 * nlines, 1, top])
-    fig.text(0.5, 0.008, wrapped, ha="center", va="bottom", fontsize=8, color="0.35")
-
-
-def make_render(render, path):
+def make_render(render, letter, path):
     import matplotlib
     matplotlib.use("Agg")
     import matplotlib.pyplot as plt
@@ -164,7 +163,8 @@ def make_render(render, path):
         return cols, rows
 
     n = len(render)
-    fig, axes = plt.subplots(n, 2, figsize=(7.6, 3.5 * n))
+    fig, axes = plt.subplots(n, 2, figsize=(8, 3.7 * n))
+    axes = np.atleast_2d(axes)
     for i, (rank, r, a, b, patch, transform, ra, ptsA, rb, ptsB, cols_, nm) in enumerate(render):
         for j, (arr, rev, pts) in enumerate([(a, ra, ptsA), (b, rb, ptsB)]):
             ax = axes[i, j]
@@ -175,23 +175,15 @@ def make_render(render, path):
                 pc = [colors.get(int(l), "#000000") for l in pts["labelId"]]
                 ax.scatter(cc, rr, s=1.2, c=pc, edgecolors="k", linewidths=0.05)
             ax.set_xticks([]); ax.set_yticks([])
-            ax.set_title(f"{rev} training" + (f"  [#{rank} {r.area_ha}ha {r.cell_id}]" if j == 0 else ""),
-                         fontsize=8)
+            ax.set_title(f"Reviewer {letter[rev]}", fontsize=12, fontweight="bold")   # anonymized
+        axes[i, 0].set_ylabel(f"Patch {rank}\n{r.area_ha:.0f} ha", fontsize=11)
     handles = [Patch(facecolor=colors[c], edgecolor="k", label=names[c]) for c in (GS, WET)]
     handles += [Patch(facecolor="0.7", edgecolor="k", label="other classes (training pts)"),
                 Patch(edgecolor="red", facecolor="none", label="disagreement patch")]
-    fig.legend(handles=handles, loc="lower center", ncol=4, fontsize=8, bbox_to_anchor=(0.5, 0.03))
-    fig.suptitle("Grass/Shrub <-> Wetland disagreement patches with each reviewer's training points\n"
-                 "(map faded; points colored by trained class; patch outlined red)", fontsize=11)
-    _caption(fig, "Each row is one of the largest Grass/Shrub versus Wetland disagreement patches, "
-             "with the two reviewers' classified maps side by side, faded, and overlaid with their "
-             "interpreter training points colored by the trained class; the disagreement patch is "
-             "outlined in red. This asks whether a patch is driven by conflicting training labels "
-             "inside the zone, by both models extrapolating where neither reviewer trained, or by "
-             "only one reviewer training there. Read the training points inside each red outline to "
-             "see which reviewer placed Grass/Shrub versus Wetland labels, and where the outline "
-             "holds no points, both maps are extrapolating.", top=0.96)
-    fig.savefig(path, dpi=130, bbox_inches="tight")
+    fig.legend(handles=handles, loc="lower center", ncol=4, fontsize=10, bbox_to_anchor=(0.5, 0.01))
+    fig.suptitle("Grass/Shrub versus Wetland Training-Label Conflicts", fontsize=15, fontweight="bold")
+    fig.tight_layout(rect=[0, 0.05, 1, 0.97])
+    fig.savefig(path, dpi=200, bbox_inches="tight")
     plt.close(fig)
 
 
