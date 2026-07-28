@@ -107,8 +107,9 @@ def render_png(path, title, subtitle, caption, headers, rows, aligns, bold_rows=
         y += row_in
     ax.plot([left, right], [y, y], color="0.1", lw=1.4)                # bottom rule
     if footnote:
-        y += 0.16
-        ax.text(left, y, "\n".join(textwrap.wrap(footnote, capw)), fontsize=8.5, va="top", color="0.35")
+        y += 0.18                                              # caption / note below the table, centered
+        ax.text((left + right) / 2, y, "\n".join(textwrap.wrap(footnote, capw)), fontsize=9,
+                va="top", ha="center", color="0.3")
 
     fig.savefig(path, dpi=300, bbox_inches="tight")
     plt.close(fig)
@@ -215,12 +216,12 @@ def main():
     bold_idx = [i for i, s in sizes.iterrows() if int(s.cell_side_px) == SEL_PX]
     a_aligns = ["l", "r", "r"] + ["r" for _ in present_agents]
     emit("chapter3_table_detection_rate_by_cell_size",
-         "Per-Agent Change Detection Rate by Grid Cell Size", None,
-         "Fraction of complete cells, fully within the seven-watershed area of interest (AOI), that "
-         "contain at least one polygon of each change agent, by grid cell size. Detection rate is "
-         "n_with_change divided by n_cells_complete. The 112 pixel cell (11.29 square kilometers), the "
-         "selected size, is shown in bold. GLKN change polygons, 2010 to 2020.",
-         a_headers, a_rows, a_aligns, pd.DataFrame(a_tidy), bold_rows=bold_idx)
+         "Per-Agent Change Detection Rate by Grid Cell Size", None, None,     # caption goes below the table
+         a_headers, a_rows, a_aligns, pd.DataFrame(a_tidy), bold_rows=bold_idx,
+         footnote="Fraction of complete cells, fully within the seven-watershed area of interest "
+         "(AOI), that contain at least one polygon of each change agent, by grid cell size. Detection "
+         "rate is n_with_change divided by n_cells_complete. The 112 pixel cell (11.29 square "
+         "kilometers), the selected size, is shown in bold. GLKN change polygons, 2010 to 2020.")
 
     # --- table B: absolute counts of complete cells with change, by cell size ---
     b_headers = ["Cell (px)", "Side (m)", "Area (km²)", "Complete\ncells"] + [DISPLAY[a] for a in present_agents]
