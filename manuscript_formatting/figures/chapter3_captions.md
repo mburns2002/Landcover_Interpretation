@@ -20,9 +20,9 @@ File: figure_3_3_agreement_forest_5class.png
 Per-class inter-interpreter agreement F1 with 95% cluster bootstrap confidence intervals (five-class collapse), with reliability thresholds at 0.50 and 0.70. The change classes on which the classifiers of Chapter 2 performed worst are the same classes on which independent interpreters least agree.
 
 ### Figure 3.4
-Files: figure_3_4a_contested_class_pairs.png; figure_3_4b_area_ecdf.png; figure_3_4c_shape_index_ecdf.png
+File: figure_3_4_disagreement_geometry.png
 
-Geometry of inter-interpreter disagreement. The most contested class pairs by disagreeing pixels are dominated by forest-wetland and grass/shrub-wetland; the area-weighted distributions of contested-patch size and shape complexity show that the disagreed-upon area resides in large, geometrically complex zones rather than thin boundary strips. Three-panel figure: panel a is the contested class pairs, panel b is the contested-patch area ECDF, and panel c is the shape-index ECDF. The panels need manual assembly into one figure; they are not auto-composited.
+Geometry of inter-interpreter disagreement. The most contested class pairs by disagreeing pixels are dominated by forest-wetland and grass/shrub-wetland; the area-weighted distributions of contested-patch size and shape complexity show that the disagreed-upon area resides in large, geometrically complex zones rather than thin boundary strips. Combined two-panel figure (built by scripts/combine_figure_3_4.py): panel A is the most contested class pairs, and panel B is the contested-patch area distribution. The shape-complexity panel (figure_3_4c_shape_index_ecdf.png) is available separately.
 
 ### Figure 3.5
 File: figure_3_5_training_conflict_overlay.png
@@ -54,7 +54,7 @@ Fraction of Monte Carlo iterations in which a class is entirely absent from the 
 Provisional supplementary set; a final renumber pass will assign S numbers.
 
 - `figure_S_agreement_forest_10class.png`: Per-class inter-interpreter agreement F1 with 95% cluster bootstrap confidence intervals, ten-class schema, with reliability thresholds at 0.50 and 0.70.
-- `figure_S_reviewer_overassignment.png`: Heatmap of per-reviewer class over-assignment (diagnostic D4), showing which classes each reviewer claims more or less than partners.
+- `figure_S_reviewer_overassignment.png`: Heatmap of per-reviewer class over-assignment (diagnostic D4), showing which classes each reviewer claims more or less than partners. Reviewers are anonymized to letters (see reports/interpreter_agreement/geometry/reviewer_letter_key.csv).
 - `figure_S_bias_vs_n.png`: Mean sampled overall accuracy minus the census against sample size (v2, W=3), comparing simple random, stratified weighted, and stratified unweighted designs.
 - `figure_S_strat_efficiency.png`: Per-class ratio of stratified to simple-random sampling standard deviation (v2, W=1, largest n); below one means stratification reduces variance for that class.
 - `figure_S_d_corr_vs_n.png`: Approach D per-class correlation of map versus reference area proportions against sample size (v2, W=5, simple random), one line per class.

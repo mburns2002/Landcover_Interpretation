@@ -67,7 +67,8 @@ SUPP = [
      "ten-class schema, with reliability thresholds at 0.50 and 0.70."),
     (f"{IA}/reviewer_overassignment_heatmap.png", "figure_S_reviewer_overassignment.png",
      "Heatmap of per-reviewer class over-assignment (diagnostic D4), showing which classes each "
-     "reviewer claims more or less than partners."),
+     "reviewer claims more or less than partners. Reviewers are anonymized to letters (see "
+     "reports/interpreter_agreement/geometry/reviewer_letter_key.csv)."),
     (f"{AB}/bias_vs_n_OA.png", "figure_S_bias_vs_n.png",
      "Mean sampled overall accuracy minus the census against sample size (v2, W=3), comparing simple "
      "random, stratified weighted, and stratified unweighted designs."),
@@ -152,11 +153,10 @@ MAIN_ORDER = [
      "b is the per-agent facets. The panels need manual assembly into one figure; they are not "
      "auto-composited."),
     ("3.3", ["figure_3_3_agreement_forest_5class.png"], ""),
-    ("3.4", ["figure_3_4a_contested_class_pairs.png", "figure_3_4b_area_ecdf.png",
-             "figure_3_4c_shape_index_ecdf.png"],
-     " Three-panel figure: panel a is the contested class pairs, panel b is the contested-patch area "
-     "ECDF, and panel c is the shape-index ECDF. The panels need manual assembly into one figure; "
-     "they are not auto-composited."),
+    ("3.4", ["figure_3_4_disagreement_geometry.png"],
+     " Combined two-panel figure (built by scripts/combine_figure_3_4.py): panel A is the most "
+     "contested class pairs, and panel B is the contested-patch area distribution. The "
+     "shape-complexity panel (figure_3_4c_shape_index_ecdf.png) is available separately."),
     ("3.5", ["figure_3_5_training_conflict_overlay.png"],
      " The figure shows the top three contested patches. Reviewers are anonymized to letters; the "
      "letter-to-reviewer key is kept in reports/interpreter_agreement/geometry/reviewer_letter_key.csv."),
@@ -218,3 +218,7 @@ with open(os.path.join(FIG, "chapter3_captions.md"), "w") as fh:
     fh.write("\n".join(lines))
 
 print(f"copied {len(copies)} file(s); {len(missing)} missing; wrote chapter3_captions.md -> {FIG}")
+
+# build the combined figure 3.4 (panels A and B stacked)
+import combine_figure_3_4  # noqa: E402
+combine_figure_3_4.main()

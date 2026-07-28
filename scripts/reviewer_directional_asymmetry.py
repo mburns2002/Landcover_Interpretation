@@ -166,7 +166,9 @@ def heatmap(df, reviewers, path):
     fig, ax = plt.subplots(figsize=(1.0 * len(col_order) + 2, 0.7 * len(piv) + 2))
     im = ax.imshow(M, cmap="RdBu_r", vmin=-vmax, vmax=vmax)
     ax.set_xticks(range(len(col_order))); ax.set_xticklabels(col_order, rotation=45, ha="right")
-    ax.set_yticks(range(len(piv.index))); ax.set_yticklabels(piv.index)
+    # anonymize reviewers to letters (alphabetical), matching figure 3.5's reviewer_letter_key.csv
+    letters = {rev: chr(ord("A") + i) for i, rev in enumerate(sorted(piv.index))}
+    ax.set_yticks(range(len(piv.index))); ax.set_yticklabels([letters[r] for r in piv.index])
     for i in range(M.shape[0]):
         for j in range(M.shape[1]):
             if not np.isnan(M[i, j]):
