@@ -58,28 +58,29 @@ base_theme <- theme_classic(base_size = 13) +
     panel.grid = element_blank()                           # no background gridlines, keep axes
   )
 
-# log axis (default), and a linear axis that labels only the endpoints and the selected cell
-# (14, 112, and 224 px); on a linear scale the 28 and 56 px ticks crowd the origin
+# log axis (default, all ticks). linear axis: the narrow facets show only the endpoints and the
+# selected cell (14, 112, 224 px); the wider combined panel can also show 56 px (2.82 km2)
 x_log <- scale_x_log10(
   breaks = area_breaks, labels = area_labs,
   sec.axis = dup_axis(breaks = area_breaks, labels = px_labs, name = "grid cell side (px)")
 )
-keep <- sizes$cell_side_px %in% c(14, 112, 224)
-x_lin <- scale_x_continuous(
-  breaks = area_breaks[keep], labels = sprintf("%.2f", area_breaks[keep]),
-  sec.axis = dup_axis(breaks = area_breaks[keep], labels = as.character(sizes$cell_side_px[keep]),
-                      name = "grid cell side (px)")
-)
+x_lin <- function(px_keep) {                                 # linear scale labeling the given px sizes
+  k <- sizes$cell_side_px %in% px_keep
+  scale_x_continuous(
+    breaks = area_breaks[k], labels = sprintf("%.2f", area_breaks[k]),
+    sec.axis = dup_axis(breaks = area_breaks[k], labels = as.character(sizes$cell_side_px[k]),
+                        name = "grid cell side (px)"))
+}
 
-# build and save both figures (per-agent facets and combined) for a given x scale and filename suffix
-build_and_save <- function(x_scale, xlab, suffix) {
+# build and save both figures (per-agent facets and combined) for the given x scales and suffix
+build_and_save <- function(x_facet, x_comb, xlab, suffix) {
   p_facet <- ggplot(d, aes(area_km2, detection_rate, color = agent_f)) +
     geom_vline(xintercept = sel_area, linetype = "dashed", color = "grey55", linewidth = 0.5) +
     geom_line(linewidth = 1) +
     geom_point(size = 2.4) +
     facet_wrap(~agent_f, ncol = 2, scales = "free_y") +
     scale_color_manual(values = pal) +
-    x_scale +
+    x_facet +
     guides(color = "none") +
     labs(title = "GLKN Change Detection Rate vs Grid Cell Area, by Agent",
          x = xlab, y = "detection rate (fraction of complete cells with change)") +
@@ -94,7 +95,7 @@ build_and_save <- function(x_scale, xlab, suffix) {
     geom_line(linewidth = 1) +
     geom_point(size = 2.6) +
     scale_color_manual(values = pal, name = NULL) +
-    x_scale +
+    x_comb +
     labs(title = "GLKN Change Detection Rate vs Grid Cell Area",
          x = xlab, y = "detection rate (fraction of complete cells with change)") +
     base_theme
@@ -109,7 +110,9 @@ build_and_save <- function(x_scale, xlab, suffix) {
          p_comb, width = 8, height = 5.6, dpi = 320)
 }
 
-build_and_save(x_log, expression("grid cell area (km"^2*", log scale)"), "")          # current log versions
-build_and_save(x_lin, expression("grid cell area (km"^2*")"), "_linear")             # new linear versions
+# log: both panels label all ticks. linear: facets 14/112/224 px, combined also 56 px (2.82 km2)
+build_and_save(x_log, x_log, expression("grid cell area (km"^2*", log scale)"), "")
+build_and_save(x_lin(c(14, 112, 224)), x_lin(c(14, 56, 112, 224)),
+               expression("grid cell area (km"^2*")"), "_linear")
 
 message("wrote log and _linear versions of by_agent and combined (pdf+png) -> ", figdir)
