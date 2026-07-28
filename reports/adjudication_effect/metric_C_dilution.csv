@@ -1,0 +1,5 @@
+scheme,metric,class,interpreter,numerator,denominator,percentage
+ten_class,dilution_72cell,NA,NA,1850926,8173577,22.6452
+ten_class,dilution_180cell,NA,NA,1850926,20437650,9.0565
+five_class,dilution_72cell,NA,NA,113825,8173577,1.3926
+five_class,dilution_180cell,NA,NA,113825,20437650,0.5569

@@ -1,0 +1,13 @@
+scheme,metric,class,interpreter,numerator,denominator,percentage
+ten_class,one_sided_unknown,Urban,NA,360,5602,6.426
+ten_class,one_sided_unknown,Agriculture,NA,644,5602,11.496
+ten_class,one_sided_unknown,Grass/Shrub,NA,1016,5602,18.136
+ten_class,one_sided_unknown,Forest,NA,271,5602,4.838
+ten_class,one_sided_unknown,Water,NA,70,5602,1.25
+ten_class,one_sided_unknown,Wetland,NA,1216,5602,21.707
+ten_class,one_sided_unknown,Other,NA,1369,5602,24.438
+ten_class,one_sided_unknown,Harvest,NA,210,5602,3.749
+ten_class,one_sided_unknown,Development,NA,446,5602,7.961
+five_class,one_sided_unknown,Stable,NA,4946,5602,88.29
+five_class,one_sided_unknown,Harvest,NA,210,5602,3.749
+five_class,one_sided_unknown,Development,NA,446,5602,7.961
