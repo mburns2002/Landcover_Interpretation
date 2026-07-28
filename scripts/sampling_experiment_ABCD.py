@@ -655,7 +655,8 @@ def _make_plots(names, versions):
         plt.close(fig)
 
     _sd_vs_n("sd_vs_n_OA.png", plain_y=False)
-    _sd_vs_n("sd_vs_n_OA_v2.png", plain_y=True)
+    if not COLLAPSE:                                          # the plain-tick v2 is only for the 10-class figure 3.7
+        _sd_vs_n("sd_vs_n_OA_v2.png", plain_y=True)
 
     # 2) bias vs n (v2, W=3): simple vs stratified weighted vs stratified unweighted
     fig, ax = plt.subplots(figsize=(8, 5))

@@ -174,16 +174,10 @@ def heatmap(df, reviewers, path):
                 ax.text(j, i, f"{M[i,j]:+.2f}{star}", ha="center", va="center", fontsize=7,
                         color="black" if abs(M[i, j]) < 0.6 * vmax else "white")
     ax.set_xlabel("class"); ax.set_ylabel("reviewer")
-    ax.set_title("Reviewer over-assignment index (log2)\n+ = over-assigns class vs. partners; "
-                 "* = 95% CI excludes 0")
+    # single clean title only; descriptive caption lives in chapter3_captions.md
+    ax.set_title("Reviewer Class Over-Assignment", fontsize=15, fontweight="bold")
     fig.colorbar(im, fraction=0.046, pad=0.04, label="log2 over-assignment")
-    _caption(fig, "Heatmap of the log2 over-assignment index for each reviewer (rows) and "
-                  "land-cover class (columns), pooled in pixels over every double-interpreted "
-                  "pair that reviewer took part in. Red cells with a positive value mark classes a "
-                  "reviewer over-assigns relative to their partners, blue cells mark classes they "
-                  "under-assign, and a trailing asterisk flags cells whose 95% cluster bootstrap "
-                  "confidence interval excludes zero. Read across a row to see one reviewer's "
-                  "systematic labeling leanings, and down a column to compare reviewers on a class.")
+    fig.tight_layout()
     fig.savefig(path, dpi=140, bbox_inches="tight"); plt.close(fig)
 
 

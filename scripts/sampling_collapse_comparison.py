@@ -34,14 +34,6 @@ VPAL = {"v2": "#1f77b4", "v3": "#2ca02c", "v4": "#9467bd", "v5": "#ff7f0e", "v6"
 LABELED_N = (20, 100, 500, 2000, 5000)
 
 
-def _caption(fig, text, top=1.0, width=125):
-    import textwrap
-    wrapped = "\n".join(textwrap.wrap(text, width))
-    nlines = wrapped.count("\n") + 1
-    fig.tight_layout(rect=[0, 0.02 + 0.035 * nlines, 1, top])
-    fig.text(0.5, 0.01, wrapped, ha="center", va="bottom", fontsize=8, color="0.35")
-
-
 def _classic(ax):
     ax.grid(False)
     for s in ("top", "right"):
@@ -103,17 +95,8 @@ def main():
         if ax is axes[0]:
             ax.set_ylabel("stratified SD of per-class F1 (v2, W=1)")
         ax.legend(fontsize=8, frameon=False); _classic(ax)
-    fig.suptitle("Does collapsing improve change-class convergence? Stratified SD of per-class F1 vs n\n"
-                 "5-class doubles each change stratum (n/5 vs n/10) → converges FASTER at small n; but it "
-                 "under-samples Stable (n/5 vs 6·n/10), so for the rarest classes (Development, Beaver) F1 "
-                 "PRECISION suffers and 10-class passes it at large n. Recall gain vs precision cost. "
-                 "Draws from a design, not accuracy estimates.", fontsize=9.5)
-    _caption(fig, "Each of the four panels is one change class and plots the stratified standard deviation of its "
-                  "per-class F1 for version v2 at W of 1 against the number of windows n, on logarithmic axes. The "
-                  "solid line is the 5-class collapse and the dashed line is the 10-class scheme, so a lower line "
-                  "means faster convergence. The 5-class arm doubles each change stratum's allocation and converges "
-                  "faster at small n, but it under-samples the Stable class, so for the rarest classes the 10-class "
-                  "line catches up at large n, showing the recall gain against the precision cost.", top=0.9)
+    fig.suptitle("Change-Class Convergence, 5-Class vs 10-Class", fontsize=15, fontweight="bold")
+    fig.tight_layout(rect=[0, 0, 1, 0.95])
     fig.savefig(os.path.join(D5, "change_convergence.png"), dpi=140, bbox_inches="tight")
     plt.close(fig)
 
@@ -142,14 +125,8 @@ def main():
     ax.axhline(1, ls=":", color="k", lw=0.8); ax.set_xticks(sorted(de5.W.unique()))
     ax.set_xlabel("window size W"); ax.set_ylabel("design effect (solid=5-class, dashed=10-class)")
     ax.set_title("Design effect: 5-class vs 10-class"); ax.legend(fontsize=6.5, frameon=False, ncol=2); _classic(ax)
-    fig.suptitle("5-class collapse vs 10-class: OA/macro-F1 precision and design effect "
-                 "(macro-F1 not comparable as a level — 5 vs 10 classes)", fontsize=11)
-    _caption(fig, "The left and middle panels plot the standard deviation of overall accuracy and of macro F1 at W of "
-                  "1 against the number of windows n on logarithmic axes, with one color per version, where solid "
-                  "lines are the 5-class collapse and dashed lines are the 10-class scheme. The right panel plots "
-                  "design effect against window size W, again solid for 5-class and dashed for 10-class, with a dotted "
-                  "reference line at 1. Macro F1 averages over five classes here versus ten in the other scheme, so "
-                  "the two are comparable only as convergence behavior, not as levels.", top=0.93)
+    fig.suptitle("Five-Class Collapse Summary", fontsize=15, fontweight="bold")
+    fig.tight_layout(rect=[0, 0, 1, 0.94])
     fig.savefig(os.path.join(D5, "collapse_summary.png"), dpi=140, bbox_inches="tight")
     plt.close(fig)
 
@@ -176,17 +153,8 @@ def main():
             if r == 1:
                 ax.set_xlabel("n (windows)")
             ax.legend(fontsize=7, frameon=False); _classic(ax)
-    fig.suptitle("Recall (producer's) vs precision (user's) convergence, 5-class vs 10-class — shown, "
-                 "not inferred from F1\ncollapse doubles each change stratum (helps RECALL) but "
-                 "under-samples Stable (hurts change-class PRECISION). Draws from a design, not accuracy "
-                 "estimates.", fontsize=10)
-    _caption(fig, "The top row is producer's recall and the bottom row is user's precision, with one change class per "
-                  "column. Each panel plots the stratified standard deviation of that metric for version v2 at W of 1 "
-                  "against the number of windows n on logarithmic axes, solid for the 5-class collapse and dashed for "
-                  "the 10-class scheme, where lower means faster convergence. Collapsing doubles each change stratum "
-                  "and helps recall in the top row, but it under-samples the Stable class and hurts change-class "
-                  "precision in the bottom row, so the mechanism behind the F1 crossover is shown directly rather than "
-                  "inferred.", top=0.93)
+    fig.suptitle("Per-Class Recall and Precision vs Sample Size", fontsize=15, fontweight="bold")
+    fig.tight_layout(rect=[0, 0, 1, 0.95])
     fig.savefig(os.path.join(D5, "recall_precision_convergence.png"), dpi=140, bbox_inches="tight")
     plt.close(fig)
 
