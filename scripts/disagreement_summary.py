@@ -69,16 +69,17 @@ def plot_top_pairs(pair_df, out_path, top=12):
     import matplotlib.pyplot as plt
     d = pair_df.head(top).iloc[::-1]
     labels = [f"{a} ↔ {b}" for a, b in zip(d.class_a, d.class_b)]
-    fig, ax = plt.subplots(figsize=(9, 0.45 * len(d) + 1.5))
+    fig, ax = plt.subplots(figsize=(9, 0.5 * len(d) + 1.5))
     ax.barh(labels, d.pct_of_all_disagreement, color="#d62728")
-    # print-legible fonts: axis label ~12 pt, tick labels ~11 pt
-    ax.set_xlabel("% of all reviewer-disagreement pixels", fontsize=12)
-    ax.tick_params(axis="both", labelsize=11)
+    # print-legible fonts
+    ax.set_xlabel("% of all reviewer-disagreement pixels", fontsize=15)
+    ax.tick_params(axis="both", labelsize=14)
+    ax.set_xlim(0, d.pct_of_all_disagreement.max() * 1.18)     # headroom so the value labels clear the bars
     # single clean title only; descriptive caption lives in the manuscript caption file
     ax.set_title("Most Contested Class Pairs by Disagreeing Pixels",
-                 fontsize=15, fontweight="bold")
+                 fontsize=17, fontweight="bold")
     for y, v in enumerate(d.pct_of_all_disagreement):
-        ax.text(v + 0.2, y, f"{v:.1f}%", va="center", fontsize=8)
+        ax.text(v + 0.3, y, f"{v:.1f}%", va="center", fontsize=13)
     fig.tight_layout()
     fig.savefig(out_path, dpi=140, bbox_inches="tight")
     plt.close(fig)

@@ -233,7 +233,7 @@ def make_plots(df, names, colors):
     focus = FOCUS_LABELS()
 
     def panels(value_col, xlabel, logx, fname, title, caption):
-        fig, axes = plt.subplots(2, 3, figsize=(14, 8))
+        fig, axes = plt.subplots(2, 3, figsize=(15, 9))
         axes = axes.ravel()
         for ax, (ttl, ca, cb) in zip(axes, focus):
             for A, B, style in [(ca, cb, "-"), (cb, ca, "--")]:
@@ -247,9 +247,10 @@ def make_plots(df, names, colors):
                 ax.plot(xs, ys, color="0.4", lw=1.4, ls=":", label=f"agreement ref (n={len(ref)})")
             if logx:
                 ax.set_xscale("log")
-            ax.set_title(ttl, fontsize=10)
-            ax.set_xlabel(xlabel); ax.set_ylabel("cumulative fraction")
-            ax.legend(fontsize=6.5, frameon=False)
+            ax.set_title(ttl, fontsize=13)
+            ax.set_xlabel(xlabel, fontsize=13); ax.set_ylabel("cumulative fraction", fontsize=13)
+            ax.tick_params(labelsize=11)
+            ax.legend(fontsize=9.5, frameon=False)
             classic(ax)
         # 6th panel: Beaver <-> anything
         ax = axes[5]
@@ -263,10 +264,11 @@ def make_plots(df, names, colors):
                                                     label=f"agreement Beaver (n={len(refb)})")
         if logx:
             ax.set_xscale("log")
-        ax.set_title("Beaver ↔ anything", fontsize=10)
-        ax.set_xlabel(xlabel); ax.set_ylabel("cumulative fraction")
-        ax.legend(fontsize=6.5, frameon=False); classic(ax)
-        fig.suptitle(title, fontsize=15, fontweight="bold")
+        ax.set_title("Beaver ↔ anything", fontsize=13)
+        ax.set_xlabel(xlabel, fontsize=13); ax.set_ylabel("cumulative fraction", fontsize=13)
+        ax.tick_params(labelsize=11)
+        ax.legend(fontsize=9.5, frameon=False); classic(ax)
+        fig.suptitle(title, fontsize=17, fontweight="bold")
         if caption:                                             # descriptive caption lives in the manuscript caption file
             _caption(fig, caption, top=0.93)
         else:
