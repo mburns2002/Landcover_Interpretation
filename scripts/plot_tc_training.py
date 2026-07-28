@@ -38,7 +38,7 @@ def _caption(fig, text, top=1.0, width=125):
     wrapped = "\n".join(textwrap.wrap(text, width))
     nlines = wrapped.count("\n") + 1
     fig.tight_layout(rect=[0, 0.02 + 0.035 * nlines, 1, top])
-    fig.text(0.5, 0.01, wrapped, ha="center", va="bottom", fontsize=8, color="0.35")
+    fig.text(0.5, 0.01, wrapped, ha="center", va="bottom", fontsize=9, color="0.3")
 
 
 def _classic(ax):
@@ -62,9 +62,7 @@ def scatter_deltas(df):
         ax.axhline(0, color="0.6", lw=0.7); ax.axvline(0, color="0.6", lw=0.7)
         ax.set_xlabel(DLAB[xa]); ax.set_ylabel(DLAB[ya]); _classic(ax)
     axes[0].legend(fontsize=8, frameon=False, title="change class", title_fontsize=8, loc="upper left")
-    fig.suptitle("Tasseled Cap change space (2018→2020): where the disturbance classes live\n"
-                 "grey = the six stable land-cover classes; harvest/development brighten and dry, "
-                 "insect-disease loses greenness", fontsize=12)
+    fig.suptitle("Tasseled Cap Change Space, 2018 to 2020", fontsize=15, fontweight="bold")
     _caption(fig, "Pairwise scatter of the three Tasseled Cap deltas (2018 to 2020), showing "
              "brightness against greenness, brightness against wetness, and greenness against "
              "wetness. Grey points are the six stable land-cover classes, and each colored series "
@@ -88,9 +86,7 @@ def boxplots_deltas(df):
         ax.set_ylabel(DLAB[d]); _classic(ax)
     axes[-1].set_xticks(range(len(labs)))
     axes[-1].set_xticklabels([f"{l} {NAMES[l]}" for l in labs], rotation=30, ha="right")
-    fig.suptitle("Per-class Tasseled Cap deltas (2018→2020) — spread, not just the mean\n"
-                 "filled = the four change classes; faint = stable classes (deltas near zero)",
-                 fontsize=12)
+    fig.suptitle("Per-Class Tasseled Cap Deltas, 2018 to 2020", fontsize=15, fontweight="bold")
     _caption(fig, "Per-class distribution of each Tasseled Cap delta (2018 to 2020), with one "
              "stacked panel for the brightness, greenness, and wetness deltas and the ten classes "
              "along the shared x axis. Each box shows the median and interquartile spread, filled "
@@ -113,8 +109,7 @@ def mean_delta_heatmap(df):
         for j in range(3):
             ax.text(j, i, f"{M[i, j]:.3f}", ha="center", va="center", fontsize=8,
                     color="black" if abs(M[i, j]) < vmax * 0.6 else "white")
-    ax.set_title("Mean TC delta per class (2018→2020)\nthe spectral-change signature the "
-                 "classifier keys on", fontsize=11)
+    ax.set_title("Mean Tasseled Cap Delta per Class, 2018 to 2020", fontsize=14, fontweight="bold")
     fig.colorbar(im, ax=ax, fraction=0.046, pad=0.04, label="mean Δ (reflectance units)")
     _caption(fig, "Compact signature of each class as its mean Tasseled Cap delta (2018 to 2020), "
              "with the ten classes down the rows and the brightness, greenness, and wetness deltas "
@@ -125,33 +120,36 @@ def mean_delta_heatmap(df):
     _save(fig, "tc_mean_delta_heatmap.png")
 
 
-def _repel_labels(anchors, xlim, ylim, iters=400):
-    """Push label positions off each other and off every anchor so all ten stay readable.
+def _repel_labels(targets, avoid, xlim, ylim, iters=700):
+    """Push label positions off each other and off every plotted point so all ten stay readable.
 
-    Works in axis-normalized [0,1] coords (so brightness and greenness get equal weight), then
-    maps back to data coords. Deterministic — starts each label just up-right of its anchor.
+    Each label points at its target (the 2020 arrowhead) but is repelled from all `avoid` points
+    (both the 2018 and 2020 centroids), so labels clear the arrows and dots. Works in axis-normalized
+    [0,1] coords (so brightness and greenness get equal weight), then maps back to data coords.
+    Deterministic — starts each label just up-right of its target.
     """
     (x0, x1), (y0, y1) = xlim, ylim
     Wx, Wy = x1 - x0, y1 - y0
-    a = np.column_stack([(anchors[:, 0] - x0) / Wx, (anchors[:, 1] - y0) / Wy])
-    lab = a + np.array([0.025, 0.025])
+    t = np.column_stack([(targets[:, 0] - x0) / Wx, (targets[:, 1] - y0) / Wy])
+    av = np.column_stack([(avoid[:, 0] - x0) / Wx, (avoid[:, 1] - y0) / Wy])
+    lab = t + np.array([0.035, 0.035])
     for _ in range(iters):
         disp = np.zeros_like(lab)
         for i in range(len(lab)):
             dl = lab[i] - lab                                   # repel from other labels
             dist = np.hypot(dl[:, 0], dl[:, 1])
             for j in range(len(lab)):
-                if i != j and dist[j] < 0.11:
-                    disp[i] += dl[j] / (dist[j] + 1e-6) * (0.11 - dist[j]) * 0.5
-            da = lab[i] - a                                     # repel from all anchor dots
+                if i != j and dist[j] < 0.14:
+                    disp[i] += dl[j] / (dist[j] + 1e-6) * (0.14 - dist[j]) * 0.5
+            da = lab[i] - av                                    # repel from every plotted centroid
             dda = np.hypot(da[:, 0], da[:, 1])
-            for j in range(len(lab)):
-                if dda[j] < 0.05:
-                    disp[i] += da[j] / (dda[j] + 1e-6) * (0.05 - dda[j]) * 0.4
-            sp = a[i] - lab[i]                                  # spring back toward own anchor
-            if np.hypot(*sp) > 0.07:
-                disp[i] += sp * 0.12
-        lab = np.clip(lab + disp, 0.01, 0.99)
+            for j in range(len(av)):
+                if dda[j] < 0.07:
+                    disp[i] += da[j] / (dda[j] + 1e-6) * (0.07 - dda[j]) * 0.5
+            sp = t[i] - lab[i]                                  # spring back toward own target
+            if np.hypot(*sp) > 0.11:
+                disp[i] += sp * 0.10
+        lab = np.clip(lab + disp, 0.02, 0.98)
     return np.column_stack([lab[:, 0] * Wx + x0, lab[:, 1] * Wy + y0])
 
 
@@ -175,7 +173,9 @@ def trajectory(df):
                     arrowprops=dict(arrowstyle="->", color=PAL[l], lw=lw))
         ax.scatter([b0[i]], [g0[i]], s=34, color=PAL[l], edgecolors="k", zorder=3)
 
-    pos = _repel_labels(np.column_stack([b1, g1]), xlim, ylim)
+    # labels point at the 2020 arrowheads but avoid both the 2018 and 2020 centroids
+    avoid = np.vstack([np.column_stack([b0, g0]), np.column_stack([b1, g1])])
+    pos = _repel_labels(np.column_stack([b1, g1]), avoid, xlim, ylim)
     for i, l in enumerate(labs):
         ax.annotate(NAMES[l], xy=(b1[i], g1[i]), xytext=(pos[i, 0], pos[i, 1]),
                     fontsize=9, color=PAL[l], ha="center", va="center",
@@ -183,8 +183,7 @@ def trajectory(df):
                     arrowprops=dict(arrowstyle="-", color=PAL[l], lw=0.6, alpha=0.55,
                                     shrinkA=2, shrinkB=6))
     ax.set_xlabel("brightness"); ax.set_ylabel("greenness")
-    ax.set_title("Class centroids move in brightness–greenness space, 2018→2020\n"
-                 "dot = 2018, arrowhead = 2020; bold arrows = the four change classes", fontsize=12)
+    ax.set_title("Class-Centroid Movement in Brightness-Greenness Space", fontsize=14, fontweight="bold")
     _classic(ax)
     _caption(fig, "Movement of each class centroid in brightness-greenness space from 2018 to "
              "2020, with brightness on the x axis and greenness on the y axis. Each arrow starts at "
@@ -232,8 +231,7 @@ def lda_projection(df):
                    edgecolors="none", alpha=0.85 if big else 0.4,
                    label=f"{lab} {NAMES[lab]}")
     ax.set_xlabel("LD1"); ax.set_ylabel("LD2")
-    ax.set_title("Linear discriminant projection of the training points (6 TC features)\n"
-                 "how separable the 10 classes are in the space the classifier sees", fontsize=12)
+    ax.set_title("Linear Discriminant Projection of the Training Points", fontsize=14, fontweight="bold")
     ax.legend(fontsize=8, frameon=False, ncol=2, markerscale=1.5)
     _classic(ax)
     _caption(fig, "Two-component linear discriminant projection of the training points from the "
