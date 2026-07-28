@@ -1,0 +1,16 @@
+adjudicated,alternative_class,events,denominator,percentage
+Insect/Disease,Forest,30701,38203,80.363
+Insect/Disease,Grass/Shrub,2424,38203,6.345
+Insect/Disease,Water,1673,38203,4.379
+Insect/Disease,Beaver,1548,38203,4.052
+Insect/Disease,Agriculture,777,38203,2.034
+Insect/Disease,Wetland,637,38203,1.667
+Insect/Disease,Harvest,354,38203,0.927
+Insect/Disease,Urban,89,38203,0.233
+Beaver,Forest,1088,1918,56.726
+Beaver,Water,623,1918,32.482
+Beaver,Wetland,124,1918,6.465
+Beaver,Harvest,69,1918,3.597
+Beaver,Grass/Shrub,8,1918,0.417
+Beaver,Urban,5,1918,0.261
+Beaver,Insect/Disease,1,1918,0.052
