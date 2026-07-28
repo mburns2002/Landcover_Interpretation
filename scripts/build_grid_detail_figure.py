@@ -34,6 +34,7 @@ CELLS = f"{ROOT}/exports/gee/interpreted_cells_by_bracket.csv"
 NE = f"{ROOT}/data/raw/naturalearth"
 OUT = f"{ROOT}/manuscript_formatting/figures/figure_grid_detail"
 
+INSET = [0.66, 0.60, 0.335, 0.38]                         # locator inset box, axes fraction (top-right)
 STATE = "#efece6"; STATE_EDGE = "#b9b3a7"                  # shared study-area palette
 LAKE = "#cfe3ef"; LAKE_EDGE = "#9dc4d8"
 GRIDLINE = "#5a5a5a"; INTERP = "#111111"; ZOOMBOX = "#d7191c"
@@ -85,14 +86,19 @@ def pick_window(grid, interp_keys):
     is_i = grid.key.isin(interp_keys).values
     np.add.at(tot, (ix, iy), 1.0)
     np.add.at(itp, (ix, iy), is_i.astype(float))
-    # sliding WIN x WIN sums via integral image
-    def winsum(a):
+    # sliding w x w sums via integral image
+    def winsum(a, w):
         c = np.zeros((a.shape[0] + 1, a.shape[1] + 1))
         c[1:, 1:] = a.cumsum(0).cumsum(1)
-        s = (c[WIN:, WIN:] - c[:-WIN, WIN:] - c[WIN:, :-WIN] + c[:-WIN, :-WIN])
-        return s
-    st, si = winsum(tot), winsum(itp)
-    score = si * 1e6 + st                                 # interpreted cells first, then density
+        return c[w:, w:] - c[:-w, w:] - c[w:, :-w] + c[:-w, :-w]
+    st, si = winsum(tot, WIN), winsum(itp, WIN)
+    # count of interpreted cells in the top-right CxC corner of each window (high ix, high iy),
+    # so we can keep that corner empty for the locator inset that sits there
+    C = 3
+    cc = winsum(itp, C)                                   # shape (nx-C+1, ny-C+1)
+    corner = cc[WIN - C:, WIN - C:]                       # aligns to the WIN-window grid (== si shape)
+    # prefer windows with an empty top-right corner, then more interpreted cells, then density
+    score = (corner == 0) * 1e12 + si * 1e6 + st
     bx, by = np.unravel_index(np.argmax(score), score.shape)
     sel = (ix >= bx) & (ix < bx + WIN) & (iy >= by) & (iy < by + WIN)
     return grid.iloc[sel].copy()
@@ -143,6 +149,12 @@ def main():
     label_rows = pd.concat([zs[zs.interp], plain.iloc[:: max(1, len(plain) // 6)]]).drop_duplicates("key")
     ckey = lambda l, t: (int(round(l)), int(round(t)))
     is_interp = {ckey(r.left, r.top): bool(r.interp) for r in zs.itertuples()}
+    ix0, iy0, iw, ih = INSET
+    def under_inset(cx, cy):                               # cell center falls under the locator inset
+        fx = (cx - xlim[0]) / (xlim[1] - xlim[0]); fy = (cy - ylim[0]) / (ylim[1] - ylim[0])
+        return ix0 - 0.02 <= fx <= ix0 + iw + 0.02 and iy0 - 0.02 <= fy <= iy0 + ih + 0.02
+    label_rows = label_rows[~label_rows.apply(
+        lambda r: under_inset((r.left + r.right) / 2, (r.top + r.bottom) / 2), axis=1)]
     labeled = {ckey(r.left, r.top) for r in label_rows.itertuples()}
     for r in label_rows.itertuples():
         cxx = (r.left + r.right) / 2; cyy = (r.top + r.bottom) / 2
@@ -156,6 +168,8 @@ def main():
     cc, cr = lefts[len(lefts) // 2], tops[1] if len(tops) > 2 else tops[0]
     def clear(r):
         k = ckey(r.left, r.top)
+        if under_inset((r.left + r.right) / 2, (r.top + r.bottom) / 2):   # keep clear of the inset
+            return False
         below = (k[0], k[1] - int(round(CELL_M)))
         if below not in is_interp or is_interp[below] or below in labeled:
             return False
@@ -189,7 +203,7 @@ def main():
     north_arrow(ax, x=0.028)
 
     # locator inset (top-right): whole study area, full fishnet, zoom window marked
-    axin = ax.inset_axes([0.66, 0.60, 0.335, 0.38])
+    axin = ax.inset_axes(INSET)
     gminx, gminy, gmaxx, gmaxy = grid.total_bounds
     ib = box(gminx, gminy, gmaxx, gmaxy).buffer(0.05 * (gmaxx - gminx))
     states.clip(ib).plot(ax=axin, facecolor=STATE, edgecolor=STATE_EDGE, linewidth=0.3, zorder=1)
