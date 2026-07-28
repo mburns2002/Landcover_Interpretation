@@ -236,12 +236,12 @@ def main():
         b_rows.append(base + counts); b_tidy.append(trow)
     b_aligns = ["l", "r", "r", "r"] + ["r" for _ in present_agents]
     emit("chapter3_table_complete_cell_counts_by_cell_size",
-         "Complete Cells Containing Each Agent, by Grid Cell Size", None,
-         "Absolute counts of complete cells intersecting each change agent's polygons, by grid cell "
-         "size. The denominator for the detection rate is Complete cells (n_cells_complete), the number "
-         "of cells fully within the seven-watershed AOI. The 112 pixel row is shown in bold. GLKN "
-         "change polygons, 2010 to 2020.",
-         b_headers, b_rows, b_aligns, pd.DataFrame(b_tidy), bold_rows=bold_idx)
+         "Complete Cells Containing Each Agent, by Grid Cell Size", None, None,   # caption goes below the table
+         b_headers, b_rows, b_aligns, pd.DataFrame(b_tidy), bold_rows=bold_idx,
+         footnote="Absolute counts of complete cells intersecting each change agent's polygons, by "
+         "grid cell size. The denominator for the detection rate is Complete cells (n_cells_complete), "
+         "the number of cells fully within the seven-watershed AOI. The 112 pixel row is shown in "
+         "bold. GLKN change polygons, 2010 to 2020.")
 
     # --- table C: disturbance polygon size by agent, from the per-agent polygon-size summary ---
     poly = pd.read_csv(find("glkn_polygon_area_by_agent_2010_2020.csv"))       # watershed-scoped, 2010-2020
