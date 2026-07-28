@@ -565,12 +565,13 @@ def _caption(fig, text, width=120):
     fig.text(0.5, 0.01, wrapped, ha="center", va="bottom", fontsize=8, color="0.35")
 
 
-def _nticks(ax, n_values, label_all=False):
+def _nticks(ax, n_values, label_all=False, labeled=None):
     """Put ticks at the actual n values. Label only a subset by default (no sci-notation / minor
-    clutter); pass label_all=True to label every n value."""
+    clutter); pass label_all=True to label every n value, or labeled=... to override the subset."""
+    labeled = LABELED_N if labeled is None else labeled
     nv = sorted(n_values)
     ax.set_xticks(nv)
-    ax.set_xticklabels([str(n) if (label_all or n in LABELED_N) else "" for n in nv])
+    ax.set_xticklabels([str(n) if (label_all or n in labeled) else "" for n in nv])
     ax.minorticks_off()
 
 
@@ -668,7 +669,7 @@ def _make_plots(names, versions):
     ax.axhline(0, ls="--", color="k", lw=0.8)
     ax.set_xlabel("n (windows)", fontsize=11); ax.set_ylabel("mean sampled OA − census OA", fontsize=11)
     _logscale(ax, "x")
-    _nticks(ax, n_values)
+    _nticks(ax, n_values, labeled=(20, 200, 500, 1000, 2000, 5000))   # drop 100, label 200 and 1000
     ax.tick_params(labelsize=9)
     fig.suptitle("Estimator Bias vs Sample Size", fontsize=15, fontweight="bold")
     ax.legend(fontsize=9, frameon=False); _classic(ax)
