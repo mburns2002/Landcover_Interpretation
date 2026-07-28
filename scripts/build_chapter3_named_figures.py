@@ -46,6 +46,7 @@ copy(f"{IA}/per_class_agreement_forest_5class.png", "figure_3_3_agreement_forest
 copy(f"{IA}/geometry/gs_wetland_training_overlay.png", "figure_3_5_training_conflict_overlay.png")
 copy(f"{IA}/spatial_tolerance_delta.png", "figure_3_6_spatial_tolerance.png")
 copy(f"{AB}/sd_vs_n_OA.png", "figure_3_7_sd_vs_n.png")
+copy(f"{AB}/sd_vs_n_OA_v2.png", "figure_3_7_sd_vs_n_v2.png")   # alternate with plain-number y ticks
 copy(f"{AB}/design_effect_vs_W.png", "figure_3_8_design_effect_vs_W.png")
 copy(f"{AB}/class_absence.png", "figure_3_9_class_absence.png")
 
@@ -160,7 +161,9 @@ MAIN_ORDER = [
      " The figure shows the top three contested patches. Reviewers are anonymized to letters; the "
      "letter-to-reviewer key is kept in reports/interpreter_agreement/geometry/reviewer_letter_key.csv."),
     ("3.6", ["figure_3_6_spatial_tolerance.png"], ""),
-    ("3.7", ["figure_3_7_sd_vs_n.png"], ""),
+    ("3.7", ["figure_3_7_sd_vs_n.png"],
+     " Version 2, figure_3_7_sd_vs_n_v2.png, is the same figure with plain-number y-axis ticks "
+     "instead of powers of ten."),
     ("3.8", ["figure_3_8_design_effect_vs_W.png"], ""),
     ("3.9", ["figure_3_9_class_absence.png"], ""),
 ]

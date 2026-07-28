@@ -612,37 +612,50 @@ def _make_plots(names, versions):
         ccol = {nm: class_colors_10[c] for c, nm in names.items()}
 
     # 1) SD of A_oa vs n (log-log), line per W, panel per version + 1/sqrt(n) reference.
-    # 2x3 layout: two variants on top, three on the bottom, one shared legend in the empty top cell
-    fig, axes = plt.subplots(2, 3, figsize=(11, 7), sharey=True)
-    cells = [(0, 0), (0, 1), (1, 0), (1, 1), (1, 2)]           # panel cells; (0, 2) holds the legend
-    handles_labels = None
-    for (rr, cc), v in zip(cells, versions):
-        ax = axes[rr, cc]
-        s = md[(md.metric == "A_oa") & (md.design == "simple") & (md.version == v)]
-        for W in sorted(s.W.unique()):
-            sw = s[s.W == W].sort_values("n")
-            ax.plot(sw.n, sw.sd, "o-", color=wpal[W], label=f"W={W}", ms=4)
-        # 1/sqrt(n) reference anchored at the W=1 line's smallest-n SD (slope -0.5)
-        w1 = s[s.W == 1].sort_values("n")
-        if len(w1):
-            n0, sd0 = float(w1.n.iloc[0]), float(w1.sd.iloc[0])
-            nn = np.array(n_values, float)
-            ax.plot(nn, sd0 * np.sqrt(n0 / nn), "k--", lw=1, zorder=1,
-                    label="independent (slope −0.5)")
-        ax.set_xlabel("n (windows)", fontsize=12); ax.set_title(v, fontsize=13)
-        _logscale(ax, "xy"); _nticks(ax, n_values)
-        ax.tick_params(labelsize=10)
-        if cc == 0:
-            ax.set_ylabel("SD of OA (approach A)", fontsize=12)
-        _classic(ax)
-        if handles_labels is None:
-            handles_labels = ax.get_legend_handles_labels()
-    # one shared legend in the empty top-right cell
-    axes[0, 2].axis("off")
-    axes[0, 2].legend(*handles_labels, loc="center", fontsize=11, frameon=False, title="window size")
-    fig.suptitle("Sampling Precision vs Sample Size", fontsize=15, fontweight="bold")
-    fig.tight_layout(rect=[0, 0, 1, 0.96]); fig.savefig(os.path.join(OUT, "sd_vs_n_OA.png"), dpi=200,
-                                                        bbox_inches="tight"); plt.close(fig)
+    # 2x3 layout: two variants on top, three on the bottom, one shared legend in the empty top cell.
+    # rendered twice: the default log-decade y labels, and a version 2 with plain-number y ticks.
+    import matplotlib.ticker as mticker
+
+    def _sd_vs_n(out_name, plain_y):
+        fig, axes = plt.subplots(2, 3, figsize=(11, 7), sharey=True)
+        cells = [(0, 0), (0, 1), (1, 0), (1, 1), (1, 2)]       # panel cells; (0, 2) holds the legend
+        handles_labels = None
+        for (rr, cc), v in zip(cells, versions):
+            ax = axes[rr, cc]
+            s = md[(md.metric == "A_oa") & (md.design == "simple") & (md.version == v)]
+            for W in sorted(s.W.unique()):
+                sw = s[s.W == W].sort_values("n")
+                ax.plot(sw.n, sw.sd, "o-", color=wpal[W], label=f"W={W}", ms=4)
+            # 1/sqrt(n) reference anchored at the W=1 line's smallest-n SD (slope -0.5)
+            w1 = s[s.W == 1].sort_values("n")
+            if len(w1):
+                n0, sd0 = float(w1.n.iloc[0]), float(w1.sd.iloc[0])
+                nn = np.array(n_values, float)
+                ax.plot(nn, sd0 * np.sqrt(n0 / nn), "k--", lw=1, zorder=1,
+                        label="independent (slope −0.5)")
+            ax.set_xlabel("n (windows)", fontsize=12); ax.set_title(v, fontsize=13)
+            _logscale(ax, "xy"); _nticks(ax, n_values)
+            if plain_y:                                        # plain-number y ticks, slightly more frequent
+                yt = [0.003, 0.005, 0.01, 0.02, 0.05, 0.1]
+                ax.yaxis.set_major_locator(mticker.FixedLocator(yt))
+                ax.yaxis.set_major_formatter(mticker.FixedFormatter([f"{t:g}" for t in yt]))
+                ax.yaxis.set_minor_locator(mticker.NullLocator())
+            ax.tick_params(labelsize=10)
+            if cc == 0:
+                ax.set_ylabel("SD of OA (approach A)", fontsize=12)
+            _classic(ax)
+            if handles_labels is None:
+                handles_labels = ax.get_legend_handles_labels()
+        # one shared legend in the empty top-right cell
+        axes[0, 2].axis("off")
+        axes[0, 2].legend(*handles_labels, loc="center", fontsize=11, frameon=False, title="window size")
+        fig.suptitle("Sampling Precision vs Sample Size", fontsize=15, fontweight="bold")
+        fig.tight_layout(rect=[0, 0, 1, 0.96])
+        fig.savefig(os.path.join(OUT, out_name), dpi=200, bbox_inches="tight")
+        plt.close(fig)
+
+    _sd_vs_n("sd_vs_n_OA.png", plain_y=False)
+    _sd_vs_n("sd_vs_n_OA_v2.png", plain_y=True)
 
     # 2) bias vs n (v2, W=3): simple vs stratified weighted vs stratified unweighted
     fig, ax = plt.subplots(figsize=(8, 5))

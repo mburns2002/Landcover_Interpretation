@@ -37,7 +37,7 @@ Recovery of inter-interpreter agreement under spatial tolerance. For each class,
 ### Figure 3.7
 File: figure_3_7_sd_vs_n.png
 
-Standard deviation of the sampled overall accuracy against sample size on log-log axes, one line per window size, one panel per variant, with a 1/sqrt(n) reference line. Precision improves as 1/sqrt(n), but each spatial window contributes less than its pixel count because of within-window autocorrelation.
+Standard deviation of the sampled overall accuracy against sample size on log-log axes, one line per window size, one panel per variant, with a 1/sqrt(n) reference line. Precision improves as 1/sqrt(n), but each spatial window contributes less than its pixel count because of within-window autocorrelation. Version 2, figure_3_7_sd_vs_n_v2.png, is the same figure with plain-number y-axis ticks instead of powers of ten.
 
 ### Figure 3.8
 File: figure_3_8_design_effect_vs_W.png
@@ -80,6 +80,7 @@ Provisional supplementary set; a final renumber pass will assign S numbers.
 - `reports/interpreter_agreement/geometry/gs_wetland_training_overlay.png` -> `manuscript_formatting/figures/figure_3_5_training_conflict_overlay.png`
 - `reports/interpreter_agreement/spatial_tolerance_delta.png` -> `manuscript_formatting/figures/figure_3_6_spatial_tolerance.png`
 - `reports/Case_ABCD_sampling/sd_vs_n_OA.png` -> `manuscript_formatting/figures/figure_3_7_sd_vs_n.png`
+- `reports/Case_ABCD_sampling/sd_vs_n_OA_v2.png` -> `manuscript_formatting/figures/figure_3_7_sd_vs_n_v2.png`
 - `reports/Case_ABCD_sampling/design_effect_vs_W.png` -> `manuscript_formatting/figures/figure_3_8_design_effect_vs_W.png`
 - `reports/Case_ABCD_sampling/class_absence.png` -> `manuscript_formatting/figures/figure_3_9_class_absence.png`
 - `manuscript_formatting/chapter_3/figures/change_detection_rate_vs_cell_area_combined_linear.png` -> `manuscript_formatting/figures/figure_3_2a_detection_rate_combined.png`
