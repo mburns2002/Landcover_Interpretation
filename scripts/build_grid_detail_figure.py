@@ -15,6 +15,7 @@ Requires: geopandas, matplotlib, shapely
 
 import os
 
+import contextily as cx
 import geopandas as gpd
 import matplotlib.pyplot as plt
 import numpy as np
@@ -122,16 +123,19 @@ def main():
 
     pad = 0.08 * max(zx1 - zx0, zy1 - zy0)
     xlim = (zx0 - pad, zx1 + pad)
-    ylim = (zy0 - pad * 1.7, zy1 + pad)                   # extra bottom room for the scale bar
+    ylim = (zy0 - pad * 3.2, zy1 + pad)                   # clear strip below the grid: cell label + scale bar
 
-    states.plot(ax=ax, facecolor=STATE, edgecolor=STATE_EDGE, linewidth=0.5, zorder=1)
-    lakes.plot(ax=ax, facecolor=LAKE, edgecolor=LAKE_EDGE, linewidth=0.3, zorder=2)
+    # slightly transparent shaded-relief basemap so the underlying landscape shows through the grid;
+    # limits are set first so contextily fetches tiles for the zoom window, then warps them to 5070
+    ax.set_xlim(*xlim); ax.set_ylim(*ylim); ax.set_aspect("equal")
+    cx.add_basemap(ax, crs=f"EPSG:{CRS}", source=cx.providers.Esri.WorldShadedRelief,
+                   alpha=0.85, attribution=False, zorder=0)
     viewbox = box(xlim[0], ylim[0], xlim[1], ylim[1])
     park_in_view = bool(parks.boundary.intersects(viewbox).any())
     parks.boundary.plot(ax=ax, color="#7a7266", linewidth=1.0, linestyle=(0, (4, 2)), zorder=3)
     zoom.boundary.plot(ax=ax, color=GRIDLINE, linewidth=0.7, zorder=5)
     zoom[zoom.interp].plot(ax=ax, facecolor=INTERP, edgecolor=INTERP, linewidth=0.5,
-                           alpha=0.85, zorder=6)
+                           alpha=0.62, zorder=6)
 
     # label a spread of grid unique ids: every interpreted cell, plus a few plain cells
     zs = zoom.sort_values(["top", "left"], ascending=[False, True]).reset_index(drop=True)
@@ -166,23 +170,26 @@ def main():
     pool = cand if len(cand) else inner if len(inner) else plain
     pool = pool.assign(d=(pool.left - cc).abs() + (pool.top - cr).abs())
     dc = pool.sort_values("d").iloc[0]
+    # outline the representative cell and draw a width arrow inside it (no on-grid text); the label
+    # goes in the clear strip below the grid so it never crosses grid lines
     ax.add_patch(Rectangle((dc.left, dc.bottom), CELL_M, CELL_M, facecolor="none",
-                           edgecolor="#000000", linewidth=1.4, zorder=7))
-    y_dim = dc.bottom - 0.32 * CELL_M                       # dimension line just below the cell
-    ax.annotate("", xy=(dc.left, y_dim), xytext=(dc.right, y_dim),
+                           edgecolor="#000000", linewidth=1.6, zorder=7))
+    y_arrow = dc.bottom + 0.5 * CELL_M
+    ax.annotate("", xy=(dc.left + 0.08 * CELL_M, y_arrow), xytext=(dc.right - 0.08 * CELL_M, y_arrow),
                 arrowprops=dict(arrowstyle="<|-|>", color="#000000", lw=1.3), zorder=9)
-    ax.annotate("112 px = 3,360 m", ((dc.left + dc.right) / 2, y_dim - 0.11 * CELL_M),
-                ha="center", va="top", fontsize=8, fontweight="bold", zorder=9)
+    ax.annotate("each grid cell = 112 px (30 m) = 3,360 m per side",
+                (0.5, zy0 - 0.62 * CELL_M), xycoords=("axes fraction", "data"),
+                ha="center", va="center", fontsize=8, fontweight="bold", zorder=9)
 
     ax.set_xlim(*xlim); ax.set_ylim(*ylim); ax.set_aspect("equal")
     ax.set_xticks([]); ax.set_yticks([])
     for sp in ax.spines.values():
         sp.set_edgecolor("#888888")
     draw_scalebar(ax, length_m=10000, n_seg=2)
-    north_arrow(ax)
+    north_arrow(ax, x=0.028)
 
-    # locator inset (bottom-right, over empty cells): whole study area, full fishnet, zoom marked
-    axin = ax.inset_axes([0.66, 0.035, 0.335, 0.38])
+    # locator inset (top-right): whole study area, full fishnet, zoom window marked
+    axin = ax.inset_axes([0.66, 0.60, 0.335, 0.38])
     gminx, gminy, gmaxx, gmaxy = grid.total_bounds
     ib = box(gminx, gminy, gmaxx, gmaxy).buffer(0.05 * (gmaxx - gminx))
     states.clip(ib).plot(ax=axin, facecolor=STATE, edgecolor=STATE_EDGE, linewidth=0.3, zorder=1)
@@ -196,7 +203,6 @@ def main():
     axin.set_facecolor("white")
     for sp in axin.spines.values():
         sp.set_edgecolor("#888888")
-    axin.set_title("Study area (full fishnet)", fontsize=7, pad=2)
 
     handles = [
         Patch(facecolor="none", edgecolor=GRIDLINE, linewidth=0.8, label="Fishnet grid cell (3,360 m)"),
