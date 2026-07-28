@@ -179,9 +179,10 @@ def make_render(render, letter, path):
         axes[i, 0].set_ylabel(f"Patch {rank}\n{r.area_ha:.0f} ha", fontsize=11)
     handles = [Patch(facecolor=colors[c], edgecolor="k", label=names[c]) for c in (GS, WET)]
     handles += [Patch(edgecolor="red", facecolor="none", label="disagreement patch")]
-    fig.legend(handles=handles, loc="lower center", ncol=3, fontsize=10, bbox_to_anchor=(0.5, 0.01))
+    fig.legend(handles=handles, loc="center left", bbox_to_anchor=(1.0, 0.5), ncol=1, fontsize=11,
+               frameon=False)                                 # stacked legend on the right
     fig.suptitle("Grass/Shrub versus Wetland Training-Label Conflicts", fontsize=15, fontweight="bold")
-    fig.tight_layout(rect=[0, 0.05, 1, 0.97])
+    fig.tight_layout(rect=[0, 0, 1, 0.97])
     fig.savefig(path, dpi=200, bbox_inches="tight")
     plt.close(fig)
 
