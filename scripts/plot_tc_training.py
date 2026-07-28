@@ -141,11 +141,11 @@ def _repel_labels(targets, avoid, xlim, ylim, iters=700):
             for j in range(len(lab)):
                 if i != j and dist[j] < 0.14:
                     disp[i] += dl[j] / (dist[j] + 1e-6) * (0.14 - dist[j]) * 0.5
-            da = lab[i] - av                                    # repel from every plotted centroid
+            da = lab[i] - av                                    # repel from every avoid point (dots and arrow lines)
             dda = np.hypot(da[:, 0], da[:, 1])
             for j in range(len(av)):
-                if dda[j] < 0.07:
-                    disp[i] += da[j] / (dda[j] + 1e-6) * (0.07 - dda[j]) * 0.5
+                if dda[j] < 0.05:
+                    disp[i] += da[j] / (dda[j] + 1e-6) * (0.05 - dda[j]) * 0.5
             sp = t[i] - lab[i]                                  # spring back toward own target
             if np.hypot(*sp) > 0.11:
                 disp[i] += sp * 0.10
@@ -173,8 +173,10 @@ def trajectory(df):
                     arrowprops=dict(arrowstyle="->", color=PAL[l], lw=lw))
         ax.scatter([b0[i]], [g0[i]], s=34, color=PAL[l], edgecolors="k", zorder=3)
 
-    # labels point at the 2020 arrowheads but avoid both the 2018 and 2020 centroids
-    avoid = np.vstack([np.column_stack([b0, g0]), np.column_stack([b1, g1])])
+    # labels point at the 2020 arrowheads but avoid points sampled along each arrow (2018 to 2020),
+    # so a label clears the whole arrow line rather than just its endpoints
+    fracs = np.linspace(0.0, 1.0, 5)
+    avoid = np.vstack([np.column_stack([b0 + (b1 - b0) * f, g0 + (g1 - g0) * f]) for f in fracs])
     pos = _repel_labels(np.column_stack([b1, g1]), avoid, xlim, ylim)
     for i, l in enumerate(labs):
         ax.annotate(NAMES[l], xy=(b1[i], g1[i]), xytext=(pos[i, 0], pos[i, 1]),
