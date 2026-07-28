@@ -191,7 +191,7 @@ def plot(df, path):
     import matplotlib
     matplotlib.use("Agg")
     import matplotlib.pyplot as plt
-    fig, axes = plt.subplots(1, 2, figsize=(15, 6), sharey=True)
+    fig, axes = plt.subplots(2, 1, figsize=(11, 10), sharey=True)   # stacked so each panel is wide and readable
     for ax, direction in zip(axes, ["AtoB", "BtoA"]):
         sub = df[(df.direction == direction) & (df.denom_px >= MIN_DENOM_PX)].copy()
         sub = sub.sort_values("delta_net_3", ascending=False)
@@ -205,7 +205,7 @@ def plot(df, path):
         ax.tick_params(axis="y", labelsize=11)
         ax.set_title(f"{direction[0]} → {direction[-1]}  (dilate {'B' if direction=='AtoB' else 'A'})",
                      fontsize=12)
-        ax.set_ylabel("agreement recovered above null  (relaxed - strict) - null", fontsize=12)
+        ax.set_ylabel("net agreement recovered above null", fontsize=12)
         ax.legend(frameon=False, fontsize=11)
         ax.spines["top"].set_visible(False); ax.spines["right"].set_visible(False)
         ax.grid(False)
