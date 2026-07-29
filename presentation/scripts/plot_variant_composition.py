@@ -20,8 +20,8 @@ Panel A, so it carries information the dumbbell does not.
 
 outputs (png only, per the presentation figures convention):
   presentation/figures/variant_composition_clipped.png
-  presentation/figures/variant_composition_broken.png
   presentation/figures/variant_composition_full_navy_diamond.png (chosen style)
+  presentation/figures/marker_style_options/variant_composition_broken.png
   presentation/figures/marker_style_options/variant_composition_full_<style>.png
   presentation/tables/variant_composition.tex
 """
@@ -82,6 +82,7 @@ CHOSEN_STYLE = "navy_diamond"
 HERE = os.path.dirname(os.path.abspath(__file__))
 PRES = os.path.dirname(HERE)
 FIG_DIR = os.path.join(PRES, "figures")
+ALT_DIR = os.path.join(FIG_DIR, "marker_style_options")  # non-chosen alternatives live here
 TAB_DIR = os.path.join(PRES, "tables")
 
 TITLE = "Adding spectral bands lifts every variant to or above spec_all"
@@ -263,7 +264,7 @@ def make_full(style):
     _xaxis_labels(axB, x)
 
     # the chosen treatment lands in the figures root, the alternatives in a subfolder
-    outdir = FIG_DIR if style["key"] == CHOSEN_STYLE else os.path.join(FIG_DIR, "marker_style_options")
+    outdir = FIG_DIR if style["key"] == CHOSEN_STYLE else ALT_DIR
     _save(fig, f"variant_composition_full_{style['key']}", outdir=outdir)
 
 
@@ -315,7 +316,7 @@ def make_broken():
     plt.setp(axtop.get_xticklabels(), visible=False)
     plt.setp(axbot.get_xticklabels(), visible=False)
 
-    _save(fig, "variant_composition_broken")
+    _save(fig, "variant_composition_broken", outdir=ALT_DIR)
 
 
 def write_table():
