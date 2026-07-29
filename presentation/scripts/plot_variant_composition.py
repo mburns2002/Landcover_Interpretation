@@ -49,8 +49,10 @@ SPEC_ALL = 0.830  # shared spectral-only reference, identical for every variant
 EMB_COLOR = "#0072B2"      # blue, embeddings alone
 COMBO_COLOR = "#E69F00"    # orange, embeddings plus spectral
 REF_COLOR = "#555555"      # neutral grey, reference line
-BAR_COLOR = "#7F7F7F"      # neutral grey, delta bars
 CONNECT_COLOR = "#999999"  # light grey, dumbbell connector
+
+# per-variant palette, matching the convention used elsewhere in the repo
+VPAL = {"v2": "#1f77b4", "v3": "#2ca02c", "v4": "#9467bd", "v5": "#ff7f0e", "v6": "#d62728"}
 
 EMB_MARKER = "o"           # circle
 COMBO_MARKER = "s"         # square, a distinct shape so the figure survives greyscale
@@ -94,12 +96,8 @@ def draw_dumbbell(ax, x, ylo=None, clip_v6=False):
     # plot both endpoints and their connector for every variant on the given axis
     for xi, r in zip(x, DATA):
         if clip_v6 and r["variant"] == "v6":
-            # combo stays on scale, but emb_alone is far below, so mark it as a clipped arrow at the floor
+            # combo stays on scale, emb_alone is far below the floor so it is left off this panel
             _marker(ax, xi, r["combo"], COMBO_MARKER, COMBO_COLOR)
-            ax.annotate(f"{r['emb_alone']:.3f}", xy=(xi, ylo), xytext=(xi, ylo + 0.018),
-                        ha="center", va="bottom", fontsize=8, color=EMB_COLOR,
-                        arrowprops=dict(arrowstyle="-|>", color=EMB_COLOR, lw=1.3),
-                        annotation_clip=False)
             continue
         _connector(ax, xi, r["emb_alone"], r["combo"])
         _marker(ax, xi, r["emb_alone"], EMB_MARKER, EMB_COLOR)
@@ -154,9 +152,10 @@ def _xaxis_labels(ax, x):
 
 
 def _panel_b(axB, x):
-    # bar of delta_vs_best in a single neutral color, with value labels at the bar ends
+    # bar of delta_vs_best, colored by variant with the repo palette, value labels at the bar ends
     deltas = [r["delta_vs_best"] for r in DATA]
-    axB.bar(x, deltas, width=0.6, color=BAR_COLOR, edgecolor="black", linewidth=0.4, zorder=3)
+    colors = [VPAL[r["variant"]] for r in DATA]
+    axB.bar(x, deltas, width=0.6, color=colors, edgecolor="black", linewidth=0.4, zorder=3)
     for xi, d in zip(x, deltas):
         axB.annotate(f"+{d:.3f}", xy=(xi, d), xytext=(0, 2), textcoords="offset points",
                      ha="center", va="bottom", fontsize=7.5)
