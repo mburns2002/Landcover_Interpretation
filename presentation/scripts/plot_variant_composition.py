@@ -16,6 +16,7 @@ it carries information the dumbbell does not.
 outputs:
   presentation/figures/variant_composition_clipped.pdf and .png
   presentation/figures/variant_composition_broken.pdf and .png
+  presentation/figures/variant_composition_full.pdf and .png
   presentation/tables/variant_composition.tex
 """
 
@@ -197,6 +198,30 @@ def make_clipped():
     _save(fig, "variant_composition_clipped")
 
 
+def make_full():
+    # version (c): one continuous y-axis rescaled so the v6 outlier at 0.285 fits with no break
+    _style()
+    x = list(range(len(DATA)))
+    fig, (axA, axB) = plt.subplots(2, 1, figsize=(6.5, 5.0), sharex=True,
+                                   gridspec_kw=dict(height_ratios=[3, 1]))
+    fig.subplots_adjust(left=0.13, right=0.7, top=0.9, bottom=0.15, hspace=0.2)
+
+    axA.set_ylim(0.25, 0.88)
+    axA.set_xlim(-0.5, len(DATA) - 0.5)
+    axA.axhline(SPEC_ALL, linestyle="--", color=REF_COLOR, lw=1, zorder=2)
+    draw_dumbbell(axA, x)
+    axA.set_ylabel("Overall accuracy (OA)")
+    axA.set_title(TITLE, fontsize=10, fontweight="bold")
+    _spines(axA)
+    _spec_label(axA)
+    _legend(axA)
+
+    _panel_b(axB, x)
+    _xaxis_labels(axB, x)
+
+    _save(fig, "variant_composition_full")
+
+
 def make_broken():
     # version (b): broken y-axis, two stacked dumbbell axes plus the delta panel below
     _style()
@@ -279,6 +304,7 @@ def write_table():
 def main():
     make_clipped()
     make_broken()
+    make_full()
     tab = write_table()
 
     # print what was plotted so the values can be eyeballed against the source table
