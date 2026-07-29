@@ -55,9 +55,6 @@ def main():
 
     for v in VARIANTS:
         ax.plot(x, oa.loc[v].to_numpy(), "-o", color=VPAL[v], lw=2, ms=6, label=v, zorder=3)
-        for xi, val in zip(x, oa.loc[v].to_numpy()):       # value labels
-            ax.annotate(f"{val:.2f}", (xi, val), textcoords="offset points", xytext=(0, 7),
-                        ha="center", fontsize=6.5, color=VPAL[v])
 
     ax.set_xticks(list(x)); ax.set_xticklabels(xlabels)
     ax.tick_params(labelsize=11)
@@ -67,7 +64,7 @@ def main():
     ax.set_ylabel("Overall Accuracy (OA)", fontsize=12)
     ax.set_title("Classifier Temporal Transferability: OA by Variant and Bracket",
                  fontsize=15, fontweight="bold")
-    ax.legend(frameon=False, ncol=5, loc="lower center", bbox_to_anchor=(0.5, -0.26), fontsize=11)
+    ax.legend(frameon=False, ncol=5, loc="lower center", bbox_to_anchor=(0.5, -0.36), fontsize=11)
     ax.grid(False)
     for s in ("top", "right"):
         ax.spines[s].set_visible(False)
