@@ -18,11 +18,11 @@ combo gain in OA. Panel B is kept because that gain is combo minus the stronger 
 single-source models, which is not the same span as the emb_alone to combo arrow shown in
 Panel A, so it carries information the dumbbell does not.
 
-outputs:
-  presentation/figures/variant_composition_clipped.pdf and .png
-  presentation/figures/variant_composition_broken.pdf and .png
-  presentation/figures/variant_composition_full_navy_diamond.pdf and .png (chosen style)
-  presentation/figures/marker_style_options/variant_composition_full_<style>.pdf and .png
+outputs (png only, per the presentation figures convention):
+  presentation/figures/variant_composition_clipped.png
+  presentation/figures/variant_composition_broken.png
+  presentation/figures/variant_composition_full_navy_diamond.png (chosen style)
+  presentation/figures/marker_style_options/variant_composition_full_<style>.png
   presentation/tables/variant_composition.tex
 """
 
@@ -93,8 +93,6 @@ def _style():
         "font.sans-serif": ["Helvetica", "Arial", "DejaVu Sans"],
         "font.size": 9,
         "axes.linewidth": 0.8,
-        "pdf.fonttype": 42,  # keep text editable in the vector output
-        "ps.fonttype": 42,
     })
 
 
@@ -211,10 +209,9 @@ def _panel_b(axB, x):
 
 
 def _save(fig, stem, outdir=FIG_DIR):
+    # pngs only, per the presentation figures convention
     os.makedirs(outdir, exist_ok=True)
-    for ext in ("pdf", "png"):
-        dpi = 300 if ext == "png" else None
-        fig.savefig(os.path.join(outdir, f"{stem}.{ext}"), dpi=dpi, bbox_inches="tight")
+    fig.savefig(os.path.join(outdir, f"{stem}.png"), dpi=300, bbox_inches="tight")
     plt.close(fig)
 
 
