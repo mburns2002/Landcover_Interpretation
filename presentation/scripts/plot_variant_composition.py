@@ -4,19 +4,23 @@
 Renders the embeddings-alone versus combo comparison for RF variants v2 through v6 as a
 dumbbell plot, with the shared spec_all value drawn once as a reference line, plus a
 companion booktabs table. All numbers are hardcoded below, so there is no CSV input, and
-there are no command-line arguments. Two figure versions are written, one with a
-compressed y-axis and a clipped marker for the v6 outlier, and one with a broken y-axis,
-so the caller can pick between them.
+there are no command-line arguments. Three y-axis treatments are written, one with a
+compressed range and a clipped marker for the v6 outlier, one with a broken axis, and one
+with a single continuous range rescaled to include the v6 outlier, so the caller can pick
+between them.
 
-design note: this uses two panels. Panel A is the dumbbell, and Panel B is a bar of
-delta_vs_best. Panel B is kept because delta_vs_best is combo minus the better single
-family, which is not the same span as the emb_alone to combo arrow shown in Panel A, so
-it carries information the dumbbell does not.
+The full continuous version is additionally rendered in several combo-marker treatments,
+listed in STYLES, so the marker color and shape can be chosen by eye.
+
+design note: this uses two panels. Panel A is the dumbbell, and Panel B is a bar of the
+combo gain in OA. Panel B is kept because that gain is combo minus the stronger of the two
+single-source models, which is not the same span as the emb_alone to combo arrow shown in
+Panel A, so it carries information the dumbbell does not.
 
 outputs:
   presentation/figures/variant_composition_clipped.pdf and .png
   presentation/figures/variant_composition_broken.pdf and .png
-  presentation/figures/variant_composition_full.pdf and .png
+  presentation/figures/variant_composition_full_<style>.pdf and .png (one per STYLES entry)
   presentation/tables/variant_composition.tex
 """
 
@@ -56,7 +60,18 @@ CONNECT_COLOR = "#999999"  # light grey, dumbbell connector
 VPAL = {"v2": "#1f77b4", "v3": "#2ca02c", "v4": "#9467bd", "v5": "#ff7f0e", "v6": "#d62728"}
 
 EMB_MARKER = "o"           # circle
-COMBO_MARKER = "s"         # square, a distinct shape so the figure survives greyscale
+
+# combo-marker treatments to compare, keyed by a filename-safe label. the clipped and
+# broken versions use the first entry, and the full version is rendered once per entry.
+# byvariant colors both endpoints by the repo variant palette and leans on shape alone
+# to separate embeddings-alone from combo, tying the top panel to the delta bars.
+STYLES = [
+    {"key": "orange", "byvariant": False, "combo_color": "#E69F00", "combo_marker": "s"},
+    {"key": "teal", "byvariant": False, "combo_color": "#009E73", "combo_marker": "s"},
+    {"key": "purple", "byvariant": False, "combo_color": "#CC79A7", "combo_marker": "s"},
+    {"key": "navy_diamond", "byvariant": False, "combo_color": "#1B2A4A", "combo_marker": "D"},
+    {"key": "variant", "byvariant": True},
+]
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 PRES = os.path.dirname(HERE)
@@ -77,48 +92,71 @@ def _style():
     })
 
 
-def _marker(ax, xi, y, marker, color):
+def _marker(ax, xi, y, marker, mfc, mec="black", mew=0.6, ms=7):
     # draw one dumbbell endpoint
-    ax.plot(xi, y, linestyle="none", marker=marker, markersize=7,
-            markerfacecolor=color, markeredgecolor="black", markeredgewidth=0.6,
+    ax.plot(xi, y, linestyle="none", marker=marker, markersize=ms,
+            markerfacecolor=mfc, markeredgecolor=mec, markeredgewidth=mew,
             zorder=5, clip_on=True)
 
 
-def _connector(ax, xi, y_from, y_to):
+def _connector(ax, xi, y_from, y_to, color=CONNECT_COLOR):
     # thin vertical connector with a small arrowhead pointing from emb_alone to combo,
     # a patch rather than an annotation so its path clips to the axes box and a
     # broken-axis span does not bleed across the figure
     arr = FancyArrowPatch((xi, y_from), (xi, y_to), arrowstyle="-|>", mutation_scale=11,
-                          color=CONNECT_COLOR, lw=0.9, shrinkA=3, shrinkB=3, zorder=3)
+                          color=color, lw=0.9, shrinkA=3, shrinkB=3, zorder=3)
     ax.add_patch(arr)
 
 
-def draw_dumbbell(ax, x, ylo=None, clip_v6=False):
+def _endpoint_style(style, variant):
+    # resolve the emb and combo endpoint styling for one variant under a given treatment
+    if style["byvariant"]:
+        vc = VPAL[variant]
+        emb = dict(marker=EMB_MARKER, mfc="white", mec=vc, mew=1.6, ms=8)
+        combo = dict(marker="s", mfc=vc, mec="black", mew=0.6, ms=8)
+        return emb, combo, vc
+    emb = dict(marker=EMB_MARKER, mfc=EMB_COLOR, mec="black", mew=0.6, ms=7)
+    combo = dict(marker=style["combo_marker"], mfc=style["combo_color"], mec="black", mew=0.6, ms=7)
+    return emb, combo, CONNECT_COLOR
+
+
+def draw_dumbbell(ax, x, style, ylo=None, clip_v6=False):
     # plot both endpoints and their connector for every variant on the given axis
     for xi, r in zip(x, DATA):
+        emb, combo, conn = _endpoint_style(style, r["variant"])
         if clip_v6 and r["variant"] == "v6":
             # combo stays on scale, emb_alone is far below the floor so it is left off this panel
-            _marker(ax, xi, r["combo"], COMBO_MARKER, COMBO_COLOR)
+            _marker(ax, xi, r["combo"], **combo)
             continue
-        _connector(ax, xi, r["emb_alone"], r["combo"])
-        _marker(ax, xi, r["emb_alone"], EMB_MARKER, EMB_COLOR)
-        _marker(ax, xi, r["combo"], COMBO_MARKER, COMBO_COLOR)
+        _connector(ax, xi, r["emb_alone"], r["combo"], color=conn)
+        _marker(ax, xi, r["emb_alone"], **emb)
+        _marker(ax, xi, r["combo"], **combo)
 
 
-def _legend(ax):
-    # single-column legend outside the axes on the right, no frame
-    handles = [
-        Line2D([0], [0], linestyle="none", marker=EMB_MARKER, markersize=7,
-               markerfacecolor=EMB_COLOR, markeredgecolor="black", markeredgewidth=0.6,
-               label="Embeddings alone"),
-        Line2D([0], [0], linestyle="none", marker=COMBO_MARKER, markersize=7,
-               markerfacecolor=COMBO_COLOR, markeredgecolor="black", markeredgewidth=0.6,
-               label="Embeddings + spectral"),
-        Line2D([0], [0], linestyle="--", color=REF_COLOR, lw=1,
-               label=f"spec_all = {SPEC_ALL:.3f}"),
-    ]
-    ax.legend(handles=handles, loc="lower left", bbox_to_anchor=(1.02, 0.0),
+def _legend(ax, style):
+    # single-column legend outside the axes on the right, no frame. when the markers are
+    # colored by variant, the swatches are neutral and the note explains the color mapping
+    if style["byvariant"]:
+        emb_h = Line2D([0], [0], linestyle="none", marker=EMB_MARKER, markersize=8,
+                       markerfacecolor="white", markeredgecolor="black", markeredgewidth=1.2,
+                       label="Embeddings alone")
+        combo_h = Line2D([0], [0], linestyle="none", marker="s", markersize=8,
+                         markerfacecolor="0.4", markeredgecolor="black", markeredgewidth=0.6,
+                         label="Embeddings + spectral")
+    else:
+        emb_h = Line2D([0], [0], linestyle="none", marker=EMB_MARKER, markersize=7,
+                       markerfacecolor=EMB_COLOR, markeredgecolor="black", markeredgewidth=0.6,
+                       label="Embeddings alone")
+        combo_h = Line2D([0], [0], linestyle="none", marker=style["combo_marker"], markersize=7,
+                         markerfacecolor=style["combo_color"], markeredgecolor="black",
+                         markeredgewidth=0.6, label="Embeddings + spectral")
+    ref_h = Line2D([0], [0], linestyle="--", color=REF_COLOR, lw=1,
+                   label=f"spec_all = {SPEC_ALL:.3f}")
+    ax.legend(handles=[emb_h, combo_h, ref_h], loc="lower left", bbox_to_anchor=(1.02, 0.0),
               frameon=False, ncol=1, fontsize=8, handlelength=1.8, borderaxespad=0.0)
+    if style["byvariant"]:
+        ax.text(1.02, 0.42, "marker color = variant", transform=ax.transAxes,
+                fontsize=7.5, color="0.3")
 
 
 def _spec_label(ax):
@@ -153,7 +191,7 @@ def _xaxis_labels(ax, x):
 
 
 def _panel_b(axB, x):
-    # bar of delta_vs_best, colored by variant with the repo palette, value labels at the bar ends
+    # bar of the combo gain in OA, colored by variant with the repo palette, value labels at the ends
     deltas = [r["delta_vs_best"] for r in DATA]
     colors = [VPAL[r["variant"]] for r in DATA]
     axB.bar(x, deltas, width=0.6, color=colors, edgecolor="black", linewidth=0.4, zorder=3)
@@ -161,7 +199,7 @@ def _panel_b(axB, x):
         axB.annotate(f"+{d:.3f}", xy=(xi, d), xytext=(0, 2), textcoords="offset points",
                      ha="center", va="bottom", fontsize=7.5)
     axB.set_ylim(0, max(deltas) * 1.35)
-    axB.set_ylabel("Delta OA vs\nbetter single family", fontsize=8)
+    axB.set_ylabel("Combo gain\n(Delta OA)", fontsize=8)
     _spines(axB)
 
 
@@ -185,12 +223,12 @@ def make_clipped():
     axA.set_ylim(ylo, yhi)
     axA.set_xlim(-0.5, len(DATA) - 0.5)
     axA.axhline(SPEC_ALL, linestyle="--", color=REF_COLOR, lw=1, zorder=2)
-    draw_dumbbell(axA, x, ylo=ylo, clip_v6=True)
+    draw_dumbbell(axA, x, STYLES[0], ylo=ylo, clip_v6=True)
     axA.set_ylabel("Overall accuracy (OA)")
     axA.set_title(TITLE, fontsize=10, fontweight="bold")
     _spines(axA)
     _spec_label(axA)
-    _legend(axA)
+    _legend(axA, STYLES[0])
 
     _panel_b(axB, x)
     _xaxis_labels(axB, x)
@@ -198,8 +236,9 @@ def make_clipped():
     _save(fig, "variant_composition_clipped")
 
 
-def make_full():
-    # version (c): one continuous y-axis rescaled so the v6 outlier at 0.285 fits with no break
+def make_full(style):
+    # version (c): one continuous y-axis rescaled so the v6 outlier at 0.285 fits with no break,
+    # rendered in the given combo-marker treatment
     _style()
     x = list(range(len(DATA)))
     fig, (axA, axB) = plt.subplots(2, 1, figsize=(6.5, 5.0), sharex=True,
@@ -209,17 +248,17 @@ def make_full():
     axA.set_ylim(0.25, 0.88)
     axA.set_xlim(-0.5, len(DATA) - 0.5)
     axA.axhline(SPEC_ALL, linestyle="--", color=REF_COLOR, lw=1, zorder=2)
-    draw_dumbbell(axA, x)
+    draw_dumbbell(axA, x, style)
     axA.set_ylabel("Overall accuracy (OA)")
     axA.set_title(TITLE, fontsize=10, fontweight="bold")
     _spines(axA)
     _spec_label(axA)
-    _legend(axA)
+    _legend(axA, style)
 
     _panel_b(axB, x)
     _xaxis_labels(axB, x)
 
-    _save(fig, "variant_composition_full")
+    _save(fig, f"variant_composition_full_{style['key']}")
 
 
 def make_broken():
@@ -239,8 +278,8 @@ def make_broken():
     axtop.axhline(SPEC_ALL, linestyle="--", color=REF_COLOR, lw=1, zorder=2)
 
     # identical content on both axes, each axis clips to its own y range
-    draw_dumbbell(axtop, x)
-    draw_dumbbell(axbot, x)
+    draw_dumbbell(axtop, x, STYLES[0])
+    draw_dumbbell(axbot, x, STYLES[0])
 
     # hide the shared inner spines so the break reads cleanly
     _spines(axtop, keep_bottom=False)
@@ -261,7 +300,7 @@ def make_broken():
     # one y label centered across the two broken axes
     fig.text(0.035, 0.63, "Overall accuracy (OA)", rotation=90, va="center", fontsize=9)
     _spec_label(axtop)
-    _legend(axtop)
+    _legend(axtop, STYLES[0])
 
     _panel_b(axB, x)
     _xaxis_labels(axB, x)
@@ -304,7 +343,8 @@ def write_table():
 def main():
     make_clipped()
     make_broken()
-    make_full()
+    for style in STYLES:
+        make_full(style)
     tab = write_table()
 
     # print what was plotted so the values can be eyeballed against the source table
@@ -315,7 +355,7 @@ def main():
               f"delta_vs_best=+{r['delta_vs_best']:.3f}")
     print(f"  spec_all reference (all variants) = {SPEC_ALL:.3f}")
 
-    # cross-check the hardcoded delta against combo minus the better single family
+    # cross-check the hardcoded delta against combo minus the stronger single-source model
     print("cross-check delta_vs_best vs combo - max(emb_alone, spec_all):")
     for r in DATA:
         recomputed = r["combo"] - max(r["emb_alone"], SPEC_ALL)
