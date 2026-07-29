@@ -9,8 +9,9 @@ compressed range and a clipped marker for the v6 outlier, one with a broken axis
 with a single continuous range rescaled to include the v6 outlier, so the caller can pick
 between them.
 
-The full continuous version is additionally rendered in several combo-marker treatments,
-listed in STYLES, so the marker color and shape can be chosen by eye.
+The full continuous version is rendered in several combo-marker treatments listed in
+STYLES. The chosen treatment (CHOSEN_STYLE) lands in the figures root, and the rest go to
+a marker_style_options subfolder so the marker color and shape can be compared by eye.
 
 design note: this uses two panels. Panel A is the dumbbell, and Panel B is a bar of the
 combo gain in OA. Panel B is kept because that gain is combo minus the stronger of the two
@@ -20,7 +21,8 @@ Panel A, so it carries information the dumbbell does not.
 outputs:
   presentation/figures/variant_composition_clipped.pdf and .png
   presentation/figures/variant_composition_broken.pdf and .png
-  presentation/figures/variant_composition_full_<style>.pdf and .png (one per STYLES entry)
+  presentation/figures/variant_composition_full_navy_diamond.pdf and .png (chosen style)
+  presentation/figures/marker_style_options/variant_composition_full_<style>.pdf and .png
   presentation/tables/variant_composition.tex
 """
 
@@ -69,9 +71,13 @@ STYLES = [
     {"key": "orange", "byvariant": False, "combo_color": "#E69F00", "combo_marker": "s"},
     {"key": "teal", "byvariant": False, "combo_color": "#009E73", "combo_marker": "s"},
     {"key": "purple", "byvariant": False, "combo_color": "#CC79A7", "combo_marker": "s"},
-    {"key": "navy_diamond", "byvariant": False, "combo_color": "#1B2A4A", "combo_marker": "D"},
+    {"key": "navy_diamond", "byvariant": False, "combo_color": "#1B2A4A", "combo_marker": "D",
+     "combo_ms": 6.5},
     {"key": "variant", "byvariant": True},
 ]
+
+# the chosen combo-marker treatment, written to the figures root; the rest go to a subfolder
+CHOSEN_STYLE = "navy_diamond"
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 PRES = os.path.dirname(HERE)
@@ -116,7 +122,8 @@ def _endpoint_style(style, variant):
         combo = dict(marker="s", mfc=vc, mec="black", mew=0.6, ms=8)
         return emb, combo, vc
     emb = dict(marker=EMB_MARKER, mfc=EMB_COLOR, mec="black", mew=0.6, ms=7)
-    combo = dict(marker=style["combo_marker"], mfc=style["combo_color"], mec="black", mew=0.6, ms=7)
+    combo = dict(marker=style["combo_marker"], mfc=style["combo_color"], mec="black", mew=0.6,
+                 ms=style.get("combo_ms", 7))
     return emb, combo, CONNECT_COLOR
 
 
@@ -147,9 +154,9 @@ def _legend(ax, style):
         emb_h = Line2D([0], [0], linestyle="none", marker=EMB_MARKER, markersize=7,
                        markerfacecolor=EMB_COLOR, markeredgecolor="black", markeredgewidth=0.6,
                        label="Embeddings alone")
-        combo_h = Line2D([0], [0], linestyle="none", marker=style["combo_marker"], markersize=7,
-                         markerfacecolor=style["combo_color"], markeredgecolor="black",
-                         markeredgewidth=0.6, label="Embeddings + spectral")
+        combo_h = Line2D([0], [0], linestyle="none", marker=style["combo_marker"],
+                         markersize=style.get("combo_ms", 7), markerfacecolor=style["combo_color"],
+                         markeredgecolor="black", markeredgewidth=0.6, label="Embeddings + spectral")
     ref_h = Line2D([0], [0], linestyle="--", color=REF_COLOR, lw=1,
                    label=f"spec_all = {SPEC_ALL:.3f}")
     ax.legend(handles=[emb_h, combo_h, ref_h], loc="lower left", bbox_to_anchor=(1.02, 0.0),
@@ -203,11 +210,11 @@ def _panel_b(axB, x):
     _spines(axB)
 
 
-def _save(fig, stem):
-    os.makedirs(FIG_DIR, exist_ok=True)
+def _save(fig, stem, outdir=FIG_DIR):
+    os.makedirs(outdir, exist_ok=True)
     for ext in ("pdf", "png"):
         dpi = 300 if ext == "png" else None
-        fig.savefig(os.path.join(FIG_DIR, f"{stem}.{ext}"), dpi=dpi, bbox_inches="tight")
+        fig.savefig(os.path.join(outdir, f"{stem}.{ext}"), dpi=dpi, bbox_inches="tight")
     plt.close(fig)
 
 
@@ -258,7 +265,9 @@ def make_full(style):
     _panel_b(axB, x)
     _xaxis_labels(axB, x)
 
-    _save(fig, f"variant_composition_full_{style['key']}")
+    # the chosen treatment lands in the figures root, the alternatives in a subfolder
+    outdir = FIG_DIR if style["key"] == CHOSEN_STYLE else os.path.join(FIG_DIR, "marker_style_options")
+    _save(fig, f"variant_composition_full_{style['key']}", outdir=outdir)
 
 
 def make_broken():
