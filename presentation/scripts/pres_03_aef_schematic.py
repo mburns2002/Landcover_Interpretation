@@ -41,8 +41,8 @@ INPUTS = [
     ("Landsat 8/9", "Optical + thermal: B2-B6, B8, B10", "#8C5A2B"),
     ("Sentinel-1", "C-band SAR: VV, VH, HH, HV, angle", "#2C7A73"),
 ]
-OUT_EDGE = "#5A5A5A"   # neutral grey for the output vector, muted rather than cartoonish
-OUT_FILL = "#EDEDED"
+OUT_EDGE = "#7B5EA7"   # muted violet for the output vector, distinct from the input colors
+OUT_FILL = "#ECE7F3"
 # target-only sources from Table S1, excluded from the inputs (printed for the record)
 TARGET_ONLY = ["ALOS PALSAR (L-band SAR)", "Copernicus DEM", "GEDI (LiDAR)", "ERA5-Land (climate)",
                "GRACE (gravity)", "NLCD (land cover)", "Wikipedia (text)", "GBIF (text)"]
@@ -85,9 +85,10 @@ def _vector_stack(ax, cx, cy):
     top = cy + 2 * s + h / 2
     bot = cy - 3 * s - h / 2
     ax.annotate("", xy=(cx + w / 2 + 0.03, top), xytext=(cx + w / 2 + 0.03, bot),
-                arrowprops=dict(arrowstyle="<->", color="0.3", lw=1.4))
-    ax.text(cx + w / 2 + 0.05, cy, "64\ndims", ha="left", va="center", fontsize=15, color="0.2")
-    return cx - w / 2, bot
+                arrowprops=dict(arrowstyle="<->", color=OUT_EDGE, lw=1.6))
+    ax.text(cx + w / 2 + 0.05, cy, "64\ndims", ha="left", va="center", fontsize=15,
+            fontweight="bold", color=OUT_EDGE)
+    return cx - w / 2, top, bot
 
 
 def main():
@@ -110,10 +111,10 @@ def main():
             fontsize=23, fontweight="bold")
 
     # geometry: input boxes on the left, model in the middle, output vector on the right.
-    # the model and output sit below the input mid-line so they read closer to the lower boxes
+    # the model and output sit well below the input mid-line so they read closer to the lower boxes
     bx, bw, bh = 0.03, 0.38, 0.15
     y_centers = [0.72, 0.505, 0.29]
-    mx, mw, mh, mc = 0.52, 0.17, 0.32, 0.45
+    mx, mw, mh, mc = 0.52, 0.17, 0.30, 0.40
     ocx = 0.80
 
     # column headers
@@ -122,12 +123,12 @@ def main():
     ax.text(ocx, 0.86, "Output", ha="center", va="center", fontsize=15, color="0.3")
 
     # input boxes, arrows fan into the left edge of the model at matched heights so they miss the text
-    entry_y = [mc + 0.10, mc, mc - 0.10]
+    entry_y = [mc + 0.09, mc, mc - 0.09]
     for (name, bands, color), yc, ey in zip(INPUTS, y_centers, entry_y):
         _box(ax, bx, yc - bh / 2, bw, bh, edge=color)
         ax.text(bx + 0.018, yc + 0.028, name, ha="left", va="center", fontsize=17,
                 fontweight="bold", color=color)
-        ax.text(bx + 0.018, yc - 0.032, bands, ha="left", va="center", fontsize=14, color="0.15")
+        ax.text(bx + 0.018, yc - 0.032, bands, ha="left", va="center", fontsize=13, color="0.15")
         _arrow(ax, bx + bw, yc, mx, ey)
 
     # model box
@@ -135,20 +136,20 @@ def main():
     ax.text(mx + mw / 2, mc, "AlphaEarth\nFoundations\nmodel", ha="center", va="center",
             fontsize=18, fontweight="bold", color="0.1")
 
-    # output: stacked squares for the 64-D embedding vector
-    left_edge, bot = _vector_stack(ax, ocx, mc)
+    # output: stacked squares for the 64-D embedding vector, label above so it clears the bottom band
+    left_edge, top, _ = _vector_stack(ax, ocx, mc)
     _arrow(ax, mx + mw, mc, left_edge - 0.012, mc)
-    ax.text(ocx, bot - 0.03, "Embedding vector per 10 m pixel", ha="center", va="top",
+    ax.text(ocx, top + 0.03, "Embedding vector\nper 10 m pixel", ha="center", va="bottom",
             fontsize=15, color="0.1")
 
     # the annual-cadence annotation that motivates the two-date configurations next slide,
     # placed as a takeaway band across the open bottom, clear of the other elements
-    ax.add_patch(FancyBboxPatch((0.19, 0.02), 0.78, 0.135,
+    ax.add_patch(FancyBboxPatch((0.16, 0.015), 0.68, 0.125,
                                 boxstyle="round,pad=0.008,rounding_size=0.02",
                                 linewidth=1.6, edgecolor="0.45", facecolor="white", zorder=3))
-    ax.text(0.58, 0.088,
-            "One embedding covers one full year, so comparing two dates\n"
-            "needs two embeddings (the two-date configurations, next slide).",
+    ax.text(0.50, 0.078,
+            "One embedding covers one full year,\n"
+            "so comparing two dates needs two embeddings.",
             ha="center", va="center", fontsize=15, color="0.1")
 
     os.makedirs(OUT, exist_ok=True)
