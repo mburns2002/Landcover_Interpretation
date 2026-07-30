@@ -22,17 +22,17 @@ ROOT = os.path.dirname(os.path.dirname(HERE))
 SRC = os.path.join(ROOT, "presentation", "assets", "examples_w_scale")
 OUT = os.path.join(ROOT, "presentation", "figures")
 
-# panel order (reading order), each: (label, filename). class palette color used only for a small tag
+# panel order (reading order), each: (label, filename)
 PANELS = [
-    ("Harvest", "Thesis_Figures_-2-1_scalebar.png", "#C9A400"),        # yellow class, darkened for a tag
-    ("Development", "Thesis_Figures_-2-4_scalebar.png", "#D62728"),
-    ("Beaver", "Thesis_Figures_-2-3_scalebar.png", "#E69F00"),
-    ("Insect/Disease Mortality", "Thesis_Figures_-2-2_scalebar.png", "#70A2DB"),
+    ("Harvest", "Thesis_Figures_-2-1_scalebar.png"),
+    ("Development", "Thesis_Figures_-2-4_scalebar.png"),
+    ("Beaver", "Thesis_Figures_-2-3_scalebar.png"),
+    ("Insect/Disease Mortality", "Thesis_Figures_-2-2_scalebar.png"),
 ]
 
 
 def main():
-    for _lbl, fn, _c in PANELS:
+    for _lbl, fn in PANELS:
         p = os.path.join(SRC, fn)
         if not os.path.isfile(p):
             raise SystemExit(f"missing source screenshot: {p}")
@@ -43,13 +43,10 @@ def main():
     fig.subplots_adjust(left=0.01, right=0.99, top=0.90, bottom=0.02, wspace=0.04, hspace=0.14)
     fig.suptitle("NAIP Chips by Change Agent (Before and After)", fontsize=21, fontweight="bold", y=0.98)
 
-    for ax, (label, fn, color) in zip(axes.flat, PANELS):
+    for ax, (label, fn) in zip(axes.flat, PANELS):
         ax.imshow(plt.imread(os.path.join(SRC, fn)))
         ax.set_axis_off()
-        # agent label with a small class-color tag square for consistency with the deck palette
         ax.set_title(label, fontsize=18, fontweight="bold", pad=8)
-        ax.plot(0.012, 1.045, marker="s", markersize=13, markerfacecolor=color,
-                markeredgecolor="black", markeredgewidth=0.6, transform=ax.transAxes, clip_on=False)
 
     print(f"compiled 4 NAIP before/after chips into a 2x2 grid from {SRC}")
     os.makedirs(OUT, exist_ok=True)
