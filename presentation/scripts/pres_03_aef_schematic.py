@@ -28,18 +28,21 @@ import os
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
-from matplotlib.patches import FancyBboxPatch, FancyArrowPatch
+from matplotlib.patches import FancyBboxPatch, FancyArrowPatch, Rectangle
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(os.path.dirname(HERE))
 OUT = os.path.join(ROOT, "presentation", "figures")
 
-# inference inputs, from Brown et al. 2025 Table S1 (rows tagged "input, target")
+# inference inputs, from Brown et al. 2025 Table S1 (rows tagged "input, target").
+# muted, colorblind-safe box colors (brown/teal from ColorBrewer BrBG); the top blue is kept
 INPUTS = [
     ("Sentinel-2", "Optical: B2, B3, B4, B8, B11", "#0072B2"),
-    ("Landsat 8/9", "Optical + thermal: B2-B6, B8, B10", "#D55E00"),
-    ("Sentinel-1", "C-band SAR: VV, VH, HH, HV, angle", "#009E73"),
+    ("Landsat 8/9", "Optical + thermal: B2-B6, B8, B10", "#8C5A2B"),
+    ("Sentinel-1", "C-band SAR: VV, VH, HH, HV, angle", "#2C7A73"),
 ]
+OUT_EDGE = "#5A5A5A"   # neutral grey for the output vector, muted rather than cartoonish
+OUT_FILL = "#EDEDED"
 # target-only sources from Table S1, excluded from the inputs (printed for the record)
 TARGET_ONLY = ["ALOS PALSAR (L-band SAR)", "Copernicus DEM", "GEDI (LiDAR)", "ERA5-Land (climate)",
                "GRACE (gravity)", "NLCD (land cover)", "Wikipedia (text)", "GBIF (text)"]
@@ -63,6 +66,30 @@ def _arrow(ax, x0, y0, x1, y1):
                                  lw=2.0, color="0.35", shrinkA=2, shrinkB=2, zorder=2))
 
 
+def _vector_stack(ax, cx, cy):
+    # stacked squares standing in for the 64-D embedding vector: three cells, a vertical
+    # ellipsis, then two cells, so it reads as a long vector without drawing all 64 cells.
+    # the axes span 10 x 5.6 in over 0..1, so square cells need a wider x than y extent.
+    # one cell sits at cy so the feed arrow points straight at a square
+    side = 0.30
+    w, h = side / 10.0, side / 5.6
+    s = 0.062
+    offsets = [2, 1, 0, -2, -3]        # gap at -1 holds the ellipsis
+    for off in offsets:
+        yc = cy + off * s
+        ax.add_patch(Rectangle((cx - w / 2, yc - h / 2), w, h, linewidth=1.6,
+                               edgecolor=OUT_EDGE, facecolor=OUT_FILL, zorder=4))
+    ey = cy - s
+    for dy in (-0.016, 0.0, 0.016):
+        ax.plot(cx, ey + dy, marker="o", ms=3, color=OUT_EDGE, zorder=4)
+    top = cy + 2 * s + h / 2
+    bot = cy - 3 * s - h / 2
+    ax.annotate("", xy=(cx + w / 2 + 0.03, top), xytext=(cx + w / 2 + 0.03, bot),
+                arrowprops=dict(arrowstyle="<->", color="0.3", lw=1.4))
+    ax.text(cx + w / 2 + 0.05, cy, "64\ndims", ha="left", va="center", fontsize=15, color="0.2")
+    return cx - w / 2, bot
+
+
 def main():
     # diagnostics before plotting
     print("AlphaEarth Foundations inference inputs (Brown et al. 2025, Table S1, 'input, target'):")
@@ -79,22 +106,23 @@ def main():
     ax.axis("off")
 
     # title inside the plot, title case, no subtitle
-    ax.text(0.5, 0.965, "What Goes Into an AlphaEarth Embedding", ha="center", va="top",
+    ax.text(0.5, 0.965, "What Goes Into an AlphaEarth Embedding?", ha="center", va="top",
             fontsize=23, fontweight="bold")
 
-    # geometry: input boxes on the left, model in the middle, output column on the right
+    # geometry: input boxes on the left, model in the middle, output vector on the right.
+    # the model and output sit below the input mid-line so they read closer to the lower boxes
     bx, bw, bh = 0.03, 0.38, 0.15
     y_centers = [0.72, 0.505, 0.29]
-    mx, mw, mh = 0.52, 0.17, 0.32
-    ox, ow, oy0, oy1 = 0.75, 0.045, 0.35, 0.67
+    mx, mw, mh, mc = 0.52, 0.17, 0.32, 0.45
+    ocx = 0.80
 
     # column headers
     ax.text(bx + bw / 2, 0.86, "Inputs (at inference)", ha="center", va="center", fontsize=15, color="0.3")
     ax.text(mx + mw / 2, 0.86, "Model", ha="center", va="center", fontsize=15, color="0.3")
-    ax.text(ox + ow / 2, 0.86, "Output", ha="center", va="center", fontsize=15, color="0.3")
+    ax.text(ocx, 0.86, "Output", ha="center", va="center", fontsize=15, color="0.3")
 
     # input boxes, arrows fan into the left edge of the model at matched heights so they miss the text
-    entry_y = [0.60, 0.505, 0.41]
+    entry_y = [mc + 0.10, mc, mc - 0.10]
     for (name, bands, color), yc, ey in zip(INPUTS, y_centers, entry_y):
         _box(ax, bx, yc - bh / 2, bw, bh, edge=color)
         ax.text(bx + 0.018, yc + 0.028, name, ha="left", va="center", fontsize=17,
@@ -103,30 +131,22 @@ def main():
         _arrow(ax, bx + bw, yc, mx, ey)
 
     # model box
-    _box(ax, mx, 0.505 - mh / 2, mw, mh, edge="0.2", lw=2.4, face="#f2f2f2")
-    ax.text(mx + mw / 2, 0.505, "AlphaEarth\nFoundations\nmodel", ha="center", va="center",
+    _box(ax, mx, mc - mh / 2, mw, mh, edge="0.2", lw=2.4, face="#f2f2f2")
+    ax.text(mx + mw / 2, mc, "AlphaEarth\nFoundations\nmodel", ha="center", va="center",
             fontsize=18, fontweight="bold", color="0.1")
-    _arrow(ax, mx + mw, 0.505, ox, (oy0 + oy1) / 2)
 
-    # output: a tall vector column subdivided to suggest components, with a 64 dimension marker
-    _box(ax, ox, oy0, ow, oy1 - oy0, edge="#7B3294", lw=2.2, face="#f3eef6")
-    n_ticks = 12
-    for k in range(1, n_ticks):
-        yy = oy0 + (oy1 - oy0) * k / n_ticks
-        ax.plot([ox, ox + ow], [yy, yy], color="#7B3294", lw=0.5, alpha=0.5, zorder=4)
-    ax.annotate("", xy=(ox + ow + 0.02, oy1), xytext=(ox + ow + 0.02, oy0),
-                arrowprops=dict(arrowstyle="<->", color="0.3", lw=1.4))
-    ax.text(ox + ow + 0.035, (oy0 + oy1) / 2, "64\ndims", ha="left", va="center", fontsize=15,
-            color="0.2")
-    ax.text(ox + ow / 2, oy0 - 0.03, "Embedding vector\nper 10 m pixel", ha="center", va="top",
+    # output: stacked squares for the 64-D embedding vector
+    left_edge, bot = _vector_stack(ax, ocx, mc)
+    _arrow(ax, mx + mw, mc, left_edge - 0.012, mc)
+    ax.text(ocx, bot - 0.03, "Embedding vector per 10 m pixel", ha="center", va="top",
             fontsize=15, color="0.1")
 
     # the annual-cadence annotation that motivates the two-date configurations next slide,
     # placed as a takeaway band across the open bottom, clear of the other elements
-    ax.add_patch(FancyBboxPatch((0.19, 0.03), 0.78, 0.15,
+    ax.add_patch(FancyBboxPatch((0.19, 0.02), 0.78, 0.135,
                                 boxstyle="round,pad=0.008,rounding_size=0.02",
                                 linewidth=1.6, edgecolor="0.45", facecolor="white", zorder=3))
-    ax.text(0.58, 0.105,
+    ax.text(0.58, 0.088,
             "One embedding covers one full year, so comparing two dates\n"
             "needs two embeddings (the two-date configurations, next slide).",
             ha="center", va="center", fontsize=15, color="0.1")
