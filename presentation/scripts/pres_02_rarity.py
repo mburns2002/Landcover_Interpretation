@@ -13,9 +13,9 @@ equal-area, so geometry area in square meters divides to km2). Nothing is hard-c
 
 sizing: 10 x 5.6 in, the content area of a 16:9 slide (not full bleed).
 
-outputs:
-  presentation/figures/pres_02_rarity.png and .pdf (log x axis, primary)
-  presentation/figures/pres_02_rarity_linear.png and .pdf (linear x axis, alternative)
+outputs (png only):
+  presentation/figures/pres_02_rarity.png (log x axis, primary)
+  presentation/figures/pres_02_rarity_linear.png (linear x axis, alternative)
 """
 
 import os
@@ -151,11 +151,11 @@ def make_linear(df, watershed_km2, total_change, ratio):
 
 
 def _save(fig, stem):
+    # pngs only, per the presentation figures convention
     os.makedirs(OUT, exist_ok=True)
     fig.savefig(os.path.join(OUT, f"{stem}.png"), dpi=300, bbox_inches="tight")
-    fig.savefig(os.path.join(OUT, f"{stem}.pdf"), bbox_inches="tight")
     plt.close(fig)
-    print(f"wrote {stem}.png and {stem}.pdf")
+    print(f"wrote {stem}.png")
 
 
 def main():
