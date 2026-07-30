@@ -33,6 +33,9 @@ CALLOUTS = [
     {"num": 5, "text": "Advance to the next assigned sample.", "xy": (0.115, 0.635)},
 ]
 SAMPLE_ID = "11"
+# reviewer whose interpreted reference is shown on the right; set to a name to override the
+# adjudicated truth selection, or None to use the adjudicated reviewer. mina matches the screenshot.
+REVIEWER_OVERRIDE = "mina"
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(os.path.dirname(HERE))
@@ -70,12 +73,17 @@ def _reference_for_sample(sample_id):
     if not cands:
         raise SystemExit(f"no 10 m reference raster found for sample {sample_id}")
     grid = cands[0][0]
-    truth = pd.read_csv(TRUTH, dtype=str, keep_default_na=False)
-    want = {_pad(r.grid_id): str(r.reviewer).strip().lower() for r in truth.itertuples()}.get(grid)
+    # prefer the override reviewer if given, otherwise the adjudicated reviewer from truth
+    if REVIEWER_OVERRIDE:
+        want = REVIEWER_OVERRIDE.lower()
+    else:
+        truth = pd.read_csv(TRUTH, dtype=str, keep_default_na=False)
+        want = {_pad(r.grid_id): str(r.reviewer).strip().lower() for r in truth.itertuples()}.get(grid)
     for g, rev, p in cands:
         if rev == want:
             return g, rev, p
-    return cands[0]   # fall back to the first if truth does not name a reviewer here
+    raise SystemExit(f"sample {sample_id}, grid {grid}: no raster for reviewer '{want}' "
+                     f"(available: {[r for _, r, _ in cands]})")
 
 
 def _palette():
@@ -98,7 +106,8 @@ def main():
     iface = plt.imread(IFACE)
     ih, iw = iface.shape[:2]
 
-    print(f"sample {SAMPLE_ID}: grid {grid}, adjudicated reviewer '{reviewer}', "
+    which = "override" if REVIEWER_OVERRIDE else "adjudicated"
+    print(f"sample {SAMPLE_ID}: grid {grid}, reviewer '{reviewer}' ({which}), "
           f"reference {W}x{H} px, {n_valid:,} labeled px")
     print(f"interface screenshot {iw}x{ih}px; {len(CALLOUTS)} callouts")
     print("classes present:", ", ".join(NAMES[c] for c in present))
