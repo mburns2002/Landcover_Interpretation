@@ -27,6 +27,19 @@ def _box(ax, cx, cy, w, h, face, edge):
                                 linewidth=2.6, edgecolor=edge, facecolor=face, zorder=3))
 
 
+def _fit(ax, renderer, text, max_w_frac, sizes, weight="normal"):
+    # largest of `sizes` whose rendered width (widest line) fits max_w_frac of the axes width,
+    # so box text never spills over the box borders
+    ax_w = ax.get_window_extent(renderer).width
+    for s in sizes:
+        t = ax.text(0.5, 0.5, text, fontsize=s, fontweight=weight)
+        w = t.get_window_extent(renderer).width / ax_w
+        t.remove()
+        if w <= max_w_frac:
+            return s
+    return sizes[-1]
+
+
 def main():
     plt.rcParams.update({"font.family": "sans-serif",
                          "font.sans-serif": ["Helvetica", "Arial", "DejaVu Sans"],
@@ -36,18 +49,23 @@ def main():
     ax.set_ylim(0, 1)
     ax.axis("off")
 
-    lcx, rcx, cy, bw, bh = 0.235, 0.765, 0.56, 0.34, 0.26
+    fig.canvas.draw()
+    renderer = fig.canvas.get_renderer()
+
+    lcx, rcx, cy, bw, bh = 0.22, 0.78, 0.56, 0.38, 0.26
     _box(ax, lcx, cy, bw, bh, "#E8EEF6", "#34618E")
     _box(ax, rcx, cy, bw, bh, "#F5EAE0", "#8C5A2B")
 
-    ax.text(lcx, cy + 0.055, "Chapter 2", ha="center", va="center", fontsize=25, fontweight="bold",
-            color="#34618E")
-    ax.text(lcx, cy - 0.045, "representation determines\nspatial structure", ha="center", va="center",
-            fontsize=20, color="0.1")
-    ax.text(rcx, cy + 0.055, "Chapter 3", ha="center", va="center", fontsize=25, fontweight="bold",
-            color="#8C5A2B")
-    ax.text(rcx, cy - 0.045, "conventional assessment cannot\nsee spatial structure", ha="center",
-            va="center", fontsize=20, color="0.1")
+    inner = bw - 0.05   # box inner width the text must fit inside
+    boxes = [
+        (lcx, "Chapter 2", "representation determines\nspatial structure", "#34618E"),
+        (rcx, "Chapter 3", "conventional assessment cannot\nsee spatial structure", "#8C5A2B"),
+    ]
+    for cx, head, phrase, col in boxes:
+        hs = _fit(ax, renderer, head, inner, [25, 24, 23, 22], weight="bold")
+        ps = _fit(ax, renderer, phrase, inner, [20, 19, 18, 17, 16, 15])
+        ax.text(cx, cy + 0.055, head, ha="center", va="center", fontsize=hs, fontweight="bold", color=col)
+        ax.text(cx, cy - 0.045, phrase, ha="center", va="center", fontsize=ps, color="0.1")
 
     # forward arrow (left -> right), bowing up, and return arrow (right -> left), bowing down
     xl, xr = lcx + bw / 2, rcx - bw / 2
