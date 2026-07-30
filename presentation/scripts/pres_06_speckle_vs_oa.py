@@ -103,7 +103,7 @@ def main():
     ax.set_xlim(0, 0.85)
     ax.set_ylim(0, 0.72)
     ax.set_xlabel("Neighbor-change (map speckle)", fontsize=18)
-    ax.set_ylabel("Pooled overall accuracy", fontsize=18)
+    ax.set_ylabel("Overall Accuracy (OA)", fontsize=18)
     ax.tick_params(labelsize=15)
     ax.grid(False)
     for s in ("top", "right"):
