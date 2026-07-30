@@ -48,6 +48,19 @@ TARGET_ONLY = ["ALOS PALSAR (L-band SAR)", "Copernicus DEM", "GEDI (LiDAR)", "ER
                "GRACE (gravity)", "NLCD (land cover)", "Wikipedia (text)", "GBIF (text)"]
 
 
+def _fit_size(ax, renderer, text, max_w_frac, sizes, weight="normal"):
+    # return the largest of `sizes` whose rendered width (widest line) fits max_w_frac of the axes,
+    # so box labels never overflow regardless of their content
+    ax_w = ax.get_window_extent(renderer).width
+    for s in sizes:
+        t = ax.text(0.5, 0.5, text, fontsize=s, fontweight=weight)
+        w = t.get_window_extent(renderer).width / ax_w
+        t.remove()
+        if w <= max_w_frac:
+            return s
+    return sizes[-1]
+
+
 def _style():
     plt.rcParams.update({
         "font.family": "sans-serif",
@@ -105,6 +118,9 @@ def main():
     ax.set_xlim(0, 1)
     ax.set_ylim(0, 1)
     ax.axis("off")
+    # a first draw so text extents can be measured for auto-fitting box labels
+    fig.canvas.draw()
+    renderer = fig.canvas.get_renderer()
 
     # title inside the plot, title case, no subtitle
     ax.text(0.5, 0.965, "What Goes Into an AlphaEarth Embedding?", ha="center", va="top",
@@ -113,8 +129,9 @@ def main():
     # geometry: input boxes on the left, model in the middle, output vector on the right.
     # the model and output sit well below the input mid-line so they read closer to the lower boxes
     bx, bw, bh = 0.03, 0.38, 0.15
+    pad = 0.018
     y_centers = [0.72, 0.505, 0.29]
-    mx, mw, mh, mc = 0.52, 0.17, 0.30, 0.40
+    mx, mw, mh, mc = 0.50, 0.22, 0.30, 0.40
     ocx = 0.80
 
     # column headers
@@ -122,19 +139,24 @@ def main():
     ax.text(mx + mw / 2, 0.86, "Model", ha="center", va="center", fontsize=15, color="0.3")
     ax.text(ocx, 0.86, "Output", ha="center", va="center", fontsize=15, color="0.3")
 
-    # input boxes, arrows fan into the left edge of the model at matched heights so they miss the text
+    # input boxes, arrows fan into the left edge of the model at matched heights so they miss the text.
+    # band-detail font is auto-fitted to the box width so it never spills outside the box
+    band_w = bw - 2 * pad
     entry_y = [mc + 0.09, mc, mc - 0.09]
     for (name, bands, color), yc, ey in zip(INPUTS, y_centers, entry_y):
         _box(ax, bx, yc - bh / 2, bw, bh, edge=color)
-        ax.text(bx + 0.018, yc + 0.028, name, ha="left", va="center", fontsize=17,
+        ax.text(bx + pad, yc + 0.028, name, ha="left", va="center", fontsize=17,
                 fontweight="bold", color=color)
-        ax.text(bx + 0.018, yc - 0.032, bands, ha="left", va="center", fontsize=13, color="0.15")
+        bsize = _fit_size(ax, renderer, bands, band_w, [14, 13.5, 13, 12.5, 12, 11.5, 11])
+        ax.text(bx + pad, yc - 0.032, bands, ha="left", va="center", fontsize=bsize, color="0.15")
         _arrow(ax, bx + bw, yc, mx, ey)
 
-    # model box
+    # model box, label auto-fitted to the box width
     _box(ax, mx, mc - mh / 2, mw, mh, edge="0.2", lw=2.4, face="#f2f2f2")
-    ax.text(mx + mw / 2, mc, "AlphaEarth\nFoundations\nmodel", ha="center", va="center",
-            fontsize=18, fontweight="bold", color="0.1")
+    model_label = "AlphaEarth\nFoundations\nmodel"
+    msize = _fit_size(ax, renderer, model_label, mw - 0.03, [18, 17, 16, 15, 14], weight="bold")
+    ax.text(mx + mw / 2, mc, model_label, ha="center", va="center",
+            fontsize=msize, fontweight="bold", color="0.1")
 
     # output: stacked squares for the 64-D embedding vector, label above so it clears the bottom band
     left_edge, top, _ = _vector_stack(ax, ocx, mc)
@@ -148,7 +170,7 @@ def main():
                                 boxstyle="round,pad=0.008,rounding_size=0.02",
                                 linewidth=1.6, edgecolor="0.45", facecolor="white", zorder=3))
     ax.text(0.50, 0.078,
-            "One embedding covers one full year,\n"
+            "One embedding covers a full year,\n"
             "so comparing two dates needs two embeddings.",
             ha="center", va="center", fontsize=15, color="0.1")
 
