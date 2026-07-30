@@ -25,6 +25,7 @@ import os
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
+from matplotlib.lines import Line2D
 import pandas as pd
 from scipy.stats import spearmanr
 
@@ -35,6 +36,17 @@ OUT = os.path.join(ROOT, "presentation", "figures")
 
 # shared variant palette, matching the rest of the repo
 VPAL = {"v2": "#1f77b4", "v3": "#2ca02c", "v4": "#9467bd", "v5": "#ff7f0e", "v6": "#d62728"}
+
+# embedding configuration per variant, worded in reference to the base year with the year in
+# parentheses (base is 2018, paired with 2020). matches the feature configurations elsewhere in the repo
+VDESC = {
+    "v2": "v2: base (2018) embedding + delta",
+    "v3": "v3: base (2018) + 2020 embeddings",
+    "v4": "v4: delta only (2020 - 2018)",
+    "v5": "v5: base (2018) embedding + dot product",
+    "v6": "v6: dot product only",
+}
+VORDER = ["v2", "v3", "v4", "v5", "v6"]
 
 # per-point label offsets in points (dx, dy, horizontal-align), to keep the close cluster readable
 LABEL_OFFSET = {
@@ -96,6 +108,14 @@ def main():
     ax.grid(False)
     for s in ("top", "right"):
         ax.spines[s].set_visible(False)
+
+    # legend reminding what each variant is, placed in the open centre of the panel
+    handles = [Line2D([0], [0], marker="o", linestyle="none", markersize=11,
+                      markerfacecolor=VPAL[v], markeredgecolor="black", markeredgewidth=0.8,
+                      label=VDESC[v]) for v in VORDER]
+    ax.legend(handles=handles, loc="upper left", bbox_to_anchor=(0.30, 0.98), frameon=False,
+              fontsize=14, handletextpad=0.5, labelspacing=0.6,
+              title="Embedding configuration", title_fontsize=14)
 
     os.makedirs(OUT, exist_ok=True)
     fig.savefig(os.path.join(OUT, "pres_06_speckle_vs_oa.png"), dpi=300, bbox_inches="tight")
