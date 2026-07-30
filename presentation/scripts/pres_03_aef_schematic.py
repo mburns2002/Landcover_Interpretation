@@ -105,8 +105,10 @@ def _print_sources():
 
 
 def _draw_target_subcolumn(ax, renderer, x, top_y, w, groups):
-    # draw type-grouped outlined boxes flowing downward, return the y of the lowest box bottom
-    tbh, gap, lab, ggap = 0.062, 0.016, 0.032, 0.022
+    # draw type-grouped outlined boxes flowing downward, return the y of the lowest box bottom.
+    # taller boxes with tighter gaps keep the column the same height while giving the two text
+    # lines clear margins from the box borders
+    tbh, gap, lab, ggap = 0.072, 0.010, 0.032, 0.020
     y = top_y
     low = top_y
     for gname, boxes in groups:
@@ -116,8 +118,8 @@ def _draw_target_subcolumn(ax, renderer, x, top_y, w, groups):
             ax.add_patch(FancyBboxPatch((x, y - tbh), w, tbh, boxstyle="round,pad=0.003,rounding_size=0.01",
                                         linewidth=1.8, edgecolor=TARGET_EDGE, facecolor="white", zorder=3))
             ns = _fit_size(ax, renderer, name, w - 0.018, [15, 14.5, 14, 13.5], weight="bold")
-            ax.text(x + 0.011, y - 0.022, name, fontsize=ns, fontweight="bold", color="0.1", va="center")
-            ax.text(x + 0.011, y - 0.046, modality, fontsize=12.5, color="0.35", va="center")
+            ax.text(x + 0.011, y - 0.025, name, fontsize=ns, fontweight="bold", color="0.1", va="center")
+            ax.text(x + 0.011, y - 0.051, modality, fontsize=12.5, color="0.35", va="center")
             low = y - tbh
             y -= tbh + gap
         y -= ggap
@@ -167,9 +169,9 @@ def main():
     mx, mw, mc, mh = 0.60, 0.13, 0.63, 0.20
     ax.add_patch(FancyBboxPatch((mx, mc - mh / 2), mw, mh, boxstyle="round,pad=0.006,rounding_size=0.02",
                                 linewidth=2.2, edgecolor="0.2", facecolor="#f2f2f2", zorder=3))
-    msize = _fit_size(ax, renderer, "AlphaEarth\nFoundations model", mw - 0.02, [17, 16, 15, 14],
-                      weight="bold")
-    ax.text(mx + mw / 2, mc, "AlphaEarth\nFoundations model", ha="center", va="center",
+    model_label = "AlphaEarth\nFoundations\nmodel"   # 3 lines so the widest word fits the narrow box
+    msize = _fit_size(ax, renderer, model_label, mw - 0.03, [17, 16, 15, 14, 13], weight="bold")
+    ax.text(mx + mw / 2, mc, model_label, ha="center", va="center",
             fontsize=msize, fontweight="bold", color="0.1")
     _arrow(ax, block_right + 0.008, mc, mx, mc)
     ax.text(mx + mw / 2, mc - mh / 2 - 0.02, "at inference: input sources only", ha="center", va="top",
