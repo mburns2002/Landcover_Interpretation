@@ -33,10 +33,10 @@ SPEC_FILL, SPEC_EDGE = "#f5e6c8", "#c4941f"         # muted amber, complements t
 STAGE_FILL, STAGE_EDGE = "white", "#333333"
 ARROW = "#333333"
 CONTROL = "#0072B2"
-# soft per-stage tints for the colored variant (single-box stages)
-STAGE_COLORS = {"Reference": ("#dcefe1", "#4e9e72"),
-                "Classification": ("#e6e1f2", "#7b5ea7"),
-                "Evaluation": ("#d9ecec", "#3f8f8a")}
+# soft, clearly distinct per-stage tints for the colored variant (single-box stages)
+STAGE_COLORS = {"Reference": ("#dcefe1", "#4e9e72"),        # green
+                "Classification": ("#f4e0ea", "#b56a92"),   # rose
+                "Evaluation": ("#dfe6ef", "#647a9e")}        # steel blue
 
 FIG_W, FIG_H = 12.0, 5.8
 WB, PAD_X, GAP, MARGIN = 2.5, 0.24, 0.47, 0.28     # box width, side pad, inter-stage gap, margin (in)
