@@ -144,11 +144,9 @@ def draw_main(mat, n_cells, peak, peak_src, y_full):
     ax.set_ylabel("Per-class F1 (five-class)", fontsize=AXIS_FS)
     ax.tick_params(axis="y", labelsize=TICK_FS)
 
-    # set spec_all apart: a soft vertical separator and a benchmark label above its group
+    # set spec_all apart: a soft vertical separator (its position already reads as the benchmark)
     sep_x = (centers[4] + centers[5]) / 2
     ax.axvline(sep_x, color="0.7", lw=1.0, ls=(0, (4, 3)), zorder=1)
-    ax.text(centers[5], 1.015, "spectral benchmark", transform=ax.get_xaxis_transform(),
-            ha="center", va="bottom", fontsize=BODY_FS - 3, color="0.35", style="italic")
 
     if y_full:
         ax.set_ylim(0, 1.0)
@@ -157,14 +155,9 @@ def draw_main(mat, n_cells, peak, peak_src, y_full):
         ymax = float(np.ceil(peak * 100 + 1.0)) / 100      # just above the tallest bar
         ax.set_ylim(0, ymax)
 
-    # ceiling: the single highest F1 anywhere, drawn so it reads as a lid, not a highlight
-    ax.axhline(peak, color="0.35", lw=1.4, ls="--", zorder=4)
-    ax.text(centers[0] - 0.35, peak + ymax * 0.012,
-            f"ceiling: best F1 anywhere = {peak:.2f}  ({peak_src}, Harvest)",
-            ha="left", va="bottom", fontsize=BODY_FS - 2, color="0.2")
     # make the axis maximum unmissable so nobody reads the tallest bar as "good"
     if not y_full:
-        ax.text(centers[0] - 0.35, peak - ymax * 0.055,
+        ax.text(centers[0] - 0.35, ymax * 0.97,
                 f"axis max = {ymax:.2f}  ·  F1 ranges 0–1, so every bar is near the floor",
                 ha="left", va="top", fontsize=BODY_FS - 3, color="0.4")
 
