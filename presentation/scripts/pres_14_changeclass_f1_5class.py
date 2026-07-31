@@ -144,22 +144,12 @@ def draw_main(mat, n_cells, peak, peak_src, y_full):
     ax.set_ylabel("Per-class F1 (five-class)", fontsize=AXIS_FS)
     ax.tick_params(axis="y", labelsize=TICK_FS)
 
-    # set spec_all apart: a soft vertical separator (its position already reads as the benchmark)
-    sep_x = (centers[4] + centers[5]) / 2
-    ax.axvline(sep_x, color="0.7", lw=1.0, ls=(0, (4, 3)), zorder=1)
-
     if y_full:
         ax.set_ylim(0, 1.0)
         ymax = 1.0
     else:
         ymax = float(np.ceil(peak * 100 + 1.0)) / 100      # just above the tallest bar
         ax.set_ylim(0, ymax)
-
-    # make the axis maximum unmissable so nobody reads the tallest bar as "good"
-    if not y_full:
-        ax.text(centers[0] - 0.35, ymax * 0.97,
-                f"axis max = {ymax:.2f}  ·  F1 ranges 0–1, so every bar is near the floor",
-                ha="left", va="top", fontsize=BODY_FS - 3, color="0.4")
 
     ax.set_xlim(centers[0] - 0.7, centers[-1] + 0.7)
     for sp in ("top", "right"):
