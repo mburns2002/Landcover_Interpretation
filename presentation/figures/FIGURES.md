@@ -71,6 +71,16 @@ is not stable):
 
 ![Figure 14b](pres_14b_changeclass_f1_by_bracket.png)
 
+### Figure 15 — Two operations on a pair of embeddings
+
+Dimensionality teaching figure. Two embeddings (2018, 2020) as 64-cell strips; Delta (elementwise
+difference) preserves all 64 cells, the dot product collapses the pair to a single cell, drawn at the
+same cell scale so the 64-vs-1 gap is visible at a glance. Cell fills are illustrative, not real
+values. Dot product is a cosine similarity in [−1, 1] (embeddings are unit-norm per the AlphaEarth
+paper, Fig 1E).
+
+![Figure 15](pres_15_embedding_ops.png)
+
 ## Supplemental figures
 
 ### Supplemental — Tasseled Cap class-centroid trajectory
