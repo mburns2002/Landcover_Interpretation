@@ -52,6 +52,25 @@ Option B, design-based 5-class OA:
 
 ![Figure 06b](pres_06b_speckle_vs_oa_5class.png)
 
+### Figure 14 — Five-class change F1 across sources (primary results)
+
+Per-class F1 for the four change classes, all six sources on the common 168-cell set. No per-class
+winner arrows: brackets use disjoint cell sets, so a pooled cross-source ranking is not valid. The only
+annotation is the ceiling (best F1 anywhere = 0.14, v4 Harvest).
+
+Version A, y auto-zoomed just above the tallest bar (axis max labelled so the scale is not misread):
+
+![Figure 14](pres_14_changeclass_f1_5class.png)
+
+Version B, full 0–1 scale (drives the "everything is at the floor" message):
+
+![Figure 14 full](pres_14_changeclass_f1_5class_full.png)
+
+Backup — faceted per bracket (evidence that failure is uniform in every bracket and the source ranking
+is not stable):
+
+![Figure 14b](pres_14b_changeclass_f1_by_bracket.png)
+
 ## Supplemental figures
 
 ### Supplemental — Tasseled Cap class-centroid trajectory
