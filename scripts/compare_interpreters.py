@@ -162,7 +162,8 @@ def plot_pair(gid, revA, revB, arrA, arrB, codes, names, colors, m, out_path):
     plt.close(fig)
 
 
-def plot_confusion(cm, codes, names, out_path, title="Inter-interpreter agreement (pooled over all pairs)"):
+def plot_confusion(cm, codes, names, out_path, title="Inter-interpreter agreement (pooled over all pairs)",
+                   decimals=0):
     """Pooled inter-interpreter confusion in the shared PA/UA style: cells are raw counts, color
     is the row proportion, with a PA column (row-conditional agreement) and reference support on
     the right, a UA row (column-conditional agreement) and predicted support on the bottom, and OA
@@ -212,14 +213,14 @@ def plot_confusion(cm, codes, names, out_path, title="Inter-interpreter agreemen
             if c:
                 ax.text(j, i, f"{c:,}", ha="center", va="center", fontsize=8, color=txtcolor(rn[i, j]))
     for i in range(n):                                     # PA column + reviewer A support
-        t = f"{pa[i]*100:.0f}%" if np.isfinite(pa[i]) else "-"
+        t = f"{pa[i]*100:.{decimals}f}%" if np.isfinite(pa[i]) else "-"
         ax.text(n, i, f"{t}\nn={int(row[i]):,}", ha="center", va="center", fontsize=7.5,
                 color=txtcolor(pa[i]))
     for j in range(n):                                     # UA row + reviewer B support
-        t = f"{ua[j]*100:.0f}%" if np.isfinite(ua[j]) else "-"
+        t = f"{ua[j]*100:.{decimals}f}%" if np.isfinite(ua[j]) else "-"
         ax.text(j, n, f"{t}\nn={int(col[j]):,}", ha="center", va="center", fontsize=7.5,
                 color=txtcolor(ua[j]))
-    ax.text(n, n, f"OA {oa*100:.0f}%\nκ {kappa:.2f}", ha="center", va="center",
+    ax.text(n, n, f"OA {oa*100:.{decimals}f}%\nκ {kappa:.2f}", ha="center", va="center",
             fontsize=9, color=txtcolor(oa))
 
     ax.set_xticks(range(n + 1)); ax.set_xticklabels(labels + ["PA"], rotation=45, ha="left", fontsize=10)
