@@ -33,6 +33,10 @@ SPEC_FILL, SPEC_EDGE = "#f5e6c8", "#c4941f"         # muted amber, complements t
 STAGE_FILL, STAGE_EDGE = "white", "#333333"
 ARROW = "#333333"
 CONTROL = "#0072B2"
+# soft per-stage tints for the colored variant (single-box stages)
+STAGE_COLORS = {"Reference": ("#dcefe1", "#4e9e72"),
+                "Classification": ("#e6e1f2", "#7b5ea7"),
+                "Evaluation": ("#d9ecec", "#3f8f8a")}
 
 FIG_W, FIG_H = 12.0, 5.8
 WB, PAD_X, GAP, MARGIN = 2.5, 0.24, 0.47, 0.28     # box width, side pad, inter-stage gap, margin (in)
@@ -133,7 +137,7 @@ def _arrow(ax, p1, p2, alpha, lw=2.6):
                                  linewidth=lw, zorder=2, shrinkA=0, shrinkB=1, alpha=alpha))
 
 
-def draw(dim=False):
+def draw(dim=False, colored=False):
     cx = [MARGIN + WB / 2 + i * (WB + GAP) for i in range(len(STAGES))]
     kf = next(i for i, s in enumerate(STAGES) if "branches" in s)     # fork column index
     he = _h(len(STAGES[kf]["branches"][0]["_lines"]))
@@ -167,7 +171,9 @@ def draw(dim=False):
                  s["branches"][1]["fill"], s["branches"][1]["edge"], al)
             _label(ax, cx[i], ya + emb_cy + he / 2 + 0.12, s["label"], al)
         else:
-            _box(ax, cx[i], ya + top_y, s["_lines"], STAGE_FILL, STAGE_EDGE, al)
+            fill, edge = STAGE_COLORS.get(s["label"], (STAGE_FILL, STAGE_EDGE)) if colored \
+                else (STAGE_FILL, STAGE_EDGE)
+            _box(ax, cx[i], ya + top_y, s["_lines"], fill, edge, al)
             _label(ax, cx[i], ya + top_y + 0.12, s["label"], al)
 
     ca = ya
@@ -217,6 +223,9 @@ def main():
     plt.close(fig)
     fig, _, _ = draw(dim=True)
     fig.savefig(f"{OUT}/pres_11_workflow_simple_stage3.png", dpi=300, bbox_inches="tight")
+    plt.close(fig)
+    fig, _, _ = draw(dim=False, colored=True)     # colored-box variant, png only
+    fig.savefig(f"{OUT}/pres_11_workflow_simple_colored.png", dpi=300, bbox_inches="tight")
     plt.close(fig)
 
     print(f"canvas 12 x 5.8 in; content spans y [{bot_e:.2f}, {top_e:.2f}] of 5.8")
