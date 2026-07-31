@@ -76,7 +76,7 @@ def build_grid():
     return gpd.GeoDataFrame(df, geometry=geom, crs=CRS)
 
 
-def main():
+def main(show_cells=True):
     os.makedirs(OUT, exist_ok=True)
 
     grid = build_grid()
@@ -128,7 +128,8 @@ def main():
         sub.plot(ax=ax, facecolor=PARK_COLOR[code], edgecolor=PARK_COLOR[code],
                  alpha=0.45, linewidth=1.1, zorder=4)
         sub.boundary.plot(ax=ax, color=PARK_COLOR[code], linewidth=1.1, zorder=5)
-    interp.plot(ax=ax, facecolor="#111111", edgecolor="#111111", linewidth=0.2, zorder=6)
+    if show_cells:
+        interp.plot(ax=ax, facecolor="#111111", edgecolor="#111111", linewidth=0.2, zorder=6)
 
     # state name labels, placed at the representative point of the in-frame part of each state
     # (so Michigan labels in the Upper Peninsula rather than the off-frame Lower Peninsula)
@@ -160,11 +161,12 @@ def main():
     handles = [Patch(facecolor=PARK_COLOR[c], edgecolor=PARK_COLOR[c], alpha=0.6,
                      label=PARK_NAME[c]) for c in sorted(PARK_NAME)]
     handles += [Patch(facecolor="none", edgecolor="black", linewidth=0.8,
-                      label="Study grid extent"),
-                Line2D([], [], marker="s", ls="", markerfacecolor="#111111",
-                       markeredgecolor="#111111", markersize=6,
-                       label=f"Interpreted cells (n = {n_join})"),
-                Patch(facecolor="#cfe3ef", edgecolor="#9dc4d8", label="Great Lakes")]
+                      label="Study grid extent")]
+    if show_cells:
+        handles += [Line2D([], [], marker="s", ls="", markerfacecolor="#111111",
+                           markeredgecolor="#111111", markersize=6,
+                           label=f"Interpreted cells (n = {n_join})")]
+    handles += [Patch(facecolor="#cfe3ef", edgecolor="#9dc4d8", label="Great Lakes")]
     axleg.legend(handles=handles, loc="center", ncol=2, fontsize=7.2, frameon=False,
                  handlelength=1.4, columnspacing=1.6, title="GLKN park units and map layers",
                  title_fontsize=8)
@@ -181,8 +183,9 @@ def main():
     axin.set_facecolor("white")
     for sp in axin.spines.values():
         sp.set_edgecolor("#888888")
-    png = f"{OUT}/figure1_study_area.png"
-    pdf = f"{OUT}/figure1_study_area.pdf"
+    stem = "figure1_study_area" if show_cells else "figure1_study_area_no_cells"
+    png = f"{OUT}/{stem}.png"
+    pdf = f"{OUT}/{stem}.pdf"
     fig.savefig(png, dpi=300, bbox_inches="tight")
     fig.savefig(pdf, bbox_inches="tight")                     # vector version
     plt.close(fig)
@@ -194,4 +197,5 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    main(show_cells=True)
+    main(show_cells=False)   # companion version without the interpreted cells
