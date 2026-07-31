@@ -69,7 +69,7 @@ def main():
     spec = importlib.util.spec_from_file_location("CI", f"{ROOT}/scripts/compare_interpreters.py")
     CI = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(CI)
-    CI.plot_confusion(cm5, list(NAMES5), NAMES5, OUT_PNG)
+    CI.plot_confusion(cm5, list(NAMES5), NAMES5, OUT_PNG, title="Inter-Interpreter Agreement")
     print(f"wrote {OUT_PNG} and {OUT_CSV}")
 
 

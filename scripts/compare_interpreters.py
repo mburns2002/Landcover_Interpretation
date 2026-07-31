@@ -162,7 +162,7 @@ def plot_pair(gid, revA, revB, arrA, arrB, codes, names, colors, m, out_path):
     plt.close(fig)
 
 
-def plot_confusion(cm, codes, names, out_path):
+def plot_confusion(cm, codes, names, out_path, title="Inter-interpreter agreement (pooled over all pairs)"):
     """Pooled inter-interpreter confusion in the shared PA/UA style: cells are raw counts, color
     is the row proportion, with a PA column (row-conditional agreement) and reference support on
     the right, a UA row (column-conditional agreement) and predicted support on the bottom, and OA
@@ -231,8 +231,7 @@ def plot_confusion(cm, codes, names, out_path):
     ax.set_xticks(np.arange(-0.5, n + 1, 1), minor=True)
     ax.set_yticks(np.arange(-0.5, n + 1, 1), minor=True)
     ax.grid(which="minor", color="white", lw=0.6); ax.tick_params(which="minor", length=0)
-    ax.set_title("Inter-interpreter agreement (pooled over all pairs)", fontsize=15,
-                 fontweight="bold", pad=30)
+    ax.set_title(title, fontsize=15, fontweight="bold", pad=30)
 
     import textwrap
     cap = ("Inter-interpreter confusion pooled over all double-interpreted pairs. Cells are raw pixel "
