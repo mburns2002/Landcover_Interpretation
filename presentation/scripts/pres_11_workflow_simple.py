@@ -12,8 +12,8 @@ The canvas is fixed at 12 x 5.8 in and text is fit inside it, so 16 pt body and 
 and 20 at final size (no downstream scaling). The classifier-control claim "identical across all
 configurations" is an italic annotation at the merge.
 
-Two outputs:
-  pres_11_workflow_simple.png / .pdf          full diagram
+Outputs (PNG only for the Google Slides deck):
+  pres_11_workflow_simple.png                 full diagram
   pres_11_workflow_simple_stage3.png          Classification and Evaluation at 25% opacity (two-state build)
 """
 
@@ -219,7 +219,6 @@ def main():
     os.makedirs(OUT, exist_ok=True)
     fig, top_e, bot_e = draw(dim=False)
     fig.savefig(f"{OUT}/pres_11_workflow_simple.png", dpi=300, bbox_inches="tight")
-    fig.savefig(f"{OUT}/pres_11_workflow_simple.pdf", bbox_inches="tight")
     plt.close(fig)
     fig, _, _ = draw(dim=True)
     fig.savefig(f"{OUT}/pres_11_workflow_simple_stage3.png", dpi=300, bbox_inches="tight")
@@ -231,7 +230,7 @@ def main():
     print(f"canvas 12 x 5.8 in; content spans y [{bot_e:.2f}, {top_e:.2f}] of 5.8")
     print("  DOES NOT FIT height" if (bot_e < 0.1 or top_e > 5.7)
           else f"  fits at {DETAIL_FS} pt body, {LABEL_FS} pt labels on the fixed 12 x 5.8 in canvas.")
-    print("wrote pres_11_workflow_simple.png/.pdf and pres_11_workflow_simple_stage3.png")
+    print("wrote pres_11_workflow_simple.png and pres_11_workflow_simple_stage3.png")
 
 
 if __name__ == "__main__":

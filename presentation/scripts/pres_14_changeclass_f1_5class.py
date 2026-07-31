@@ -12,10 +12,10 @@ Everything is recomputed locally from per-cell predictions on the COMMON cell se
 six sources plus the adjudicated reference exist and spec_all is non-blank), using the canonical collapse
 imported from scripts/collapsed_5class_confusion.py. No Earth Engine.
 
-Outputs (presentation/figures/):
-  pres_14_changeclass_f1_5class.png / .pdf        version A, y auto-zoomed just above the tallest bar
-  pres_14_changeclass_f1_5class_full.png / .pdf   version B, y 0..1
-  pres_14b_changeclass_f1_by_bracket.png / .pdf   backup, faceted per bracket (uniform failure evidence)
+Outputs (presentation/figures/, PNG only for the Google Slides deck):
+  pres_14_changeclass_f1_5class.png        version A, y auto-zoomed just above the tallest bar
+  pres_14_changeclass_f1_5class_full.png   version B, y 0..1
+  pres_14b_changeclass_f1_by_bracket.png   backup, faceted per bracket (uniform failure evidence)
 """
 
 import glob
@@ -243,24 +243,22 @@ def main():
         print(f"  {b:<12}" + "".join(f"{c:>16}" for c in row))
 
     os.makedirs(OUT, exist_ok=True)
+    # PNG only (Google Slides deck does not accept PDF images)
     # version A: auto-zoomed
     fig = draw_main(mat, n_cells, peak, peak_src, y_full=False)
     fig.savefig(f"{OUT}/pres_14_changeclass_f1_5class.png", dpi=300)
-    fig.savefig(f"{OUT}/pres_14_changeclass_f1_5class.pdf")
     plt.close(fig)
     # version B: full 0..1
     fig = draw_main(mat, n_cells, peak, peak_src, y_full=True)
     fig.savefig(f"{OUT}/pres_14_changeclass_f1_5class_full.png", dpi=300)
-    fig.savefig(f"{OUT}/pres_14_changeclass_f1_5class_full.pdf")
     plt.close(fig)
     # backup: per-bracket facets
     fig = draw_bracket_facets(per_bracket, per_bracket_n)
     fig.savefig(f"{OUT}/pres_14b_changeclass_f1_by_bracket.png", dpi=300)
-    fig.savefig(f"{OUT}/pres_14b_changeclass_f1_by_bracket.pdf")
     plt.close(fig)
 
-    print("\nwrote pres_14_changeclass_f1_5class.png/.pdf, _full.png/.pdf, "
-          "pres_14b_changeclass_f1_by_bracket.png/.pdf")
+    print("\nwrote pres_14_changeclass_f1_5class.png, _full.png, "
+          "pres_14b_changeclass_f1_by_bracket.png")
 
 
 if __name__ == "__main__":

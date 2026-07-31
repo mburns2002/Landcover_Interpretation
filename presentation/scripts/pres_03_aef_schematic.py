@@ -25,9 +25,8 @@ Text is kept as text (pdf.fonttype 42), not converted to paths. No gradients, sh
 sizing: 13.33 x 7.5 in, a full-bleed 16:9 slide, given the density (eleven source boxes plus callouts
 and a timeline inset).
 
-outputs (png and pdf, both requested explicitly for this figure):
+outputs (PNG only for the Google Slides deck):
   presentation/figures/pres_03_aef_schematic.png
-  presentation/figures/pres_03_aef_schematic.pdf
 """
 
 import os
@@ -231,9 +230,8 @@ def main():
 
     os.makedirs(OUT, exist_ok=True)
     fig.savefig(os.path.join(OUT, "pres_03_aef_schematic.png"), dpi=300, bbox_inches="tight")
-    fig.savefig(os.path.join(OUT, "pres_03_aef_schematic.pdf"), bbox_inches="tight")
     plt.close(fig)
-    print("\nwrote pres_03_aef_schematic.png and .pdf")
+    print("\nwrote pres_03_aef_schematic.png")
 
 
 if __name__ == "__main__":
