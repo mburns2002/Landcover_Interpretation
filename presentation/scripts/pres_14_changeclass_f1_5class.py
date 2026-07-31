@@ -155,9 +155,15 @@ def draw_main(mat, n_cells, peak, peak_src, y_full):
     for sp in ("top", "right"):
         ax.spines[sp].set_visible(False)
     ax.grid(False)
+    ax.set_title("Per-Class Change F1 by Source (Five-Class)", fontsize=AXIS_FS + 2,
+                 fontweight="bold", pad=14)
     ax.legend(ncol=4, fontsize=BODY_FS - 2, frameon=False, loc="upper center",
-              bbox_to_anchor=(0.5, -0.11), handlelength=1.3, columnspacing=1.6)
-    fig.subplots_adjust(left=0.085, right=0.985, top=0.9, bottom=0.2)
+              bbox_to_anchor=(0.5, -0.12), handlelength=1.3, columnspacing=1.6)
+    fig.text(0.5, 0.02,
+             "F1 for the four change classes across five embedding configurations (v2–v6)\n"
+             "and the spectral benchmark (spec_all), on the common 168-cell reference set.",
+             ha="center", va="bottom", fontsize=BODY_FS - 4, color="0.3", linespacing=1.4)
+    fig.subplots_adjust(left=0.085, right=0.985, top=0.87, bottom=0.28)
     return fig
 
 
