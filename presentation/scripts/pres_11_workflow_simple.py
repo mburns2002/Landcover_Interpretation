@@ -29,15 +29,15 @@ ROOT = os.path.dirname(os.path.dirname(HERE))
 OUT = os.path.join(ROOT, "presentation", "figures")
 
 EMB_FILL, EMB_EDGE = "#cfe3f2", "#0072B2"
-SPEC_FILL, SPEC_EDGE = "#efefef", "#555555"
+SPEC_FILL, SPEC_EDGE = "#f5e6c8", "#c4941f"         # muted amber, complements the embedding blue
 STAGE_FILL, STAGE_EDGE = "white", "#333333"
 ARROW = "#333333"
 CONTROL = "#0072B2"
 
 FIG_W, FIG_H = 12.0, 5.8
 WB, PAD_X, GAP, MARGIN = 2.5, 0.24, 0.47, 0.28     # box width, side pad, inter-stage gap, margin (in)
-LH, VPAD = 0.32, 0.24                               # line height, box vertical pad (in)
-LABEL_FS, DETAIL_FS = 20, 16
+LH, VPAD = 0.30, 0.22                               # line height, box vertical pad (in)
+LABEL_FS, DETAIL_FS, CTRL_FS = 20, 14, 12
 DIM = {"Classification", "Evaluation"}
 INNER = WB - 2 * PAD_X
 CTRL_LINES = []
@@ -45,12 +45,14 @@ CTRL_LINES = []
 STAGES = [
     {"label": "Reference", "phrases": ["GLKN change polygons", "NAIP, two dates", "wall-to-wall labels"]},
     {"label": "Features", "branches": [
-        {"fill": EMB_FILL, "edge": EMB_EDGE, "phrases": ["AlphaEarth 2018, 2020", "v2 to v6"]},
-        {"fill": SPEC_FILL, "edge": SPEC_EDGE, "phrases": ["Sentinel-2, Landsat 8, Sentinel-1",
+        {"fill": EMB_FILL, "edge": EMB_EDGE, "phrases": ["AlphaEarth 2018, 2020",
+                                                         "5 embedding configurations"]},
+        {"fill": SPEC_FILL, "edge": SPEC_EDGE, "phrases": ["spectral composite",
+                                                          "Sentinel-2, Landsat 8, Sentinel-1",
                                                           "about 50 bands"]},
     ]},
     {"label": "Classification", "phrases": ["Random Forest, 300 trees"]},
-    {"label": "Evaluation", "phrases": ["spatial structure", "accuracy, 10 and 5 class"]},
+    {"label": "Evaluation", "phrases": ["spatial structure,", "accuracy, 10 and 5 class"]},
 ]
 CTRL_TEXT = "identical across all configurations"
 
@@ -98,7 +100,7 @@ def _wrap_all():
                 br["_lines"] = box_lines(br["phrases"])
         else:
             s["_lines"] = box_lines(s["phrases"])
-    CTRL_LINES[:] = _wrap(fig, r, CTRL_TEXT, INNER, DETAIL_FS)[0]
+    CTRL_LINES[:] = _wrap(fig, r, CTRL_TEXT, INNER, CTRL_FS)[0]
     plt.close(fig)
     return overflow
 
@@ -190,7 +192,7 @@ def draw(dim=False):
     _arrow(ax, (cx[kf + 1] + WB / 2, ca), (cx[kf + 2] - WB / 2, ca), a(STAGES[kf + 2]["label"]))
 
     ax.text(cx[kf + 1], ya + ctrl_top, "\n".join(CTRL_LINES), ha="center", va="top",
-            fontsize=DETAIL_FS, style="italic", color=CONTROL, alpha=am, zorder=4, linespacing=1.35)
+            fontsize=CTRL_FS, style="italic", color=CONTROL, alpha=am, zorder=4, linespacing=1.3)
 
     return fig, ya + max(tops), ya + min(bots)
 
@@ -219,7 +221,7 @@ def main():
 
     print(f"canvas 12 x 5.8 in; content spans y [{bot_e:.2f}, {top_e:.2f}] of 5.8")
     print("  DOES NOT FIT height" if (bot_e < 0.1 or top_e > 5.7)
-          else "  fits at 16 pt body, 20 pt labels on the fixed 12 x 5.8 in canvas.")
+          else f"  fits at {DETAIL_FS} pt body, {LABEL_FS} pt labels on the fixed 12 x 5.8 in canvas.")
     print("wrote pres_11_workflow_simple.png/.pdf and pres_11_workflow_simple_stage3.png")
 
 
