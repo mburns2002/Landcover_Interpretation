@@ -57,7 +57,7 @@ CW = 0.52                                      # delta-strip / dot-cell width
 SH = 2.0                                       # delta-strip height (64 cells)
 CH = SH / NCELL                                # single-cell height, shared by strip cells and dot cell
 DELTA_CY, DOT_CY = 3.2, 1.8                    # upper (delta) and lower (dot) lanes, symmetric about BOX_CY
-NODE_CX, NODE_H = 6.1, 0.55
+NODE_CX, NODE_H = 6.1, 0.64
 NODE_W = 2.0                                    # recomputed in main() to fit the widest label
 FORK_X = 3.95                                   # riser x, just right of the group box
 OUT_X = 8.3                                     # x-left of both outputs (same column: strip over cell)
@@ -121,7 +121,7 @@ def main():
     a = rng.uniform(-1.0, 1.0, NCELL)
     b = a + rng.normal(0.0, 0.45, NCELL)
     delta = b - a                                        # signed elementwise difference, illustrative
-    div = plt.get_cmap("RdBu_r")
+    div = plt.get_cmap("RdBu")                            # red -> white -> blue, colorblind-safe
     dmax = float(np.max(np.abs(delta)))
     n_d = TwoSlopeNorm(vmin=-dmax, vcenter=0.0, vmax=dmax)
 
@@ -138,10 +138,7 @@ def main():
         t = fig.text(0, 0, name, fontsize=LABEL_FS, fontweight="bold")
         widest = max(widest, t.get_window_extent(r).width / fig.dpi)
         t.remove()
-    NODE_W = widest + 0.5
-
-    ax.text(FIG_W / 2, 4.72, "Two Operations on a Pair of Embeddings", ha="center", va="center",
-            fontsize=LABEL_FS + 1, fontweight="bold", color="#1a1a1a")
+    NODE_W = widest + 0.8                                 # 0.4 in padding each side
 
     # light group box around both embeddings (drawn first, behind the stacks)
     ax.add_patch(FancyBboxPatch((BOX_L, BOX_B), BOX_R - BOX_L, BOX_T - BOX_B,
@@ -172,7 +169,7 @@ def main():
 
     # outputs at the same cell scale: 64-cell delta strip over a single dot-product cell
     _cells(ax, OUT_X, DELTA_CY, delta, div, n_d)
-    ax.add_patch(Rectangle((OUT_X, DOT_CY - CH / 2), CW, CH, facecolor=div(0.82),
+    ax.add_patch(Rectangle((OUT_X, DOT_CY - CH / 2), CW, CH, facecolor=div(0.66),   # lighter single cell
                            edgecolor=FRAME, linewidth=1.6, zorder=4))
 
     # per-operation annotations, right of each output
