@@ -86,6 +86,11 @@ product) from `presentation/assets/`, instead of the schematic drawings:
 
 ![Figure 15 v2](pres_15_embedding_ops_version_2.png)
 
+Version 3 — symbolic: the 2018 and 2020 embeddings as overlapping stacked squares, Delta as a
+subtraction of two embeddings (square − square), and the dot product as a single dot:
+
+![Figure 15 v3](pres_15_embedding_ops_version_3.png)
+
 ### Figure 16 — How the spectral composite baseline is built
 
 Linear pipeline: three sensors, each a distinct color and showing its bands by type (Sentinel-2
