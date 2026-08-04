@@ -109,7 +109,7 @@ def main():
     axB.set_xticklabels(["0", "100k", "200k", "300k"], fontsize=13)
     for s in ("top", "right", "left"):
         axB.spines[s].set_visible(False)
-    axB.set_xlabel("Change-class reference pixels (zoom of the 1.6% sliver)", fontsize=15, loc="left")
+    axB.set_xlabel("Change-class reference pixels", fontsize=15, loc="left")
 
     # direct labels outside each segment; the two tiny classes go to the right margin with leaders
     xr = change_total * 1.06
