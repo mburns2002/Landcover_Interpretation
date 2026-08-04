@@ -90,7 +90,7 @@ def _cells(ax, x_left, cy, values, cmap, norm):
         ax.add_patch(Rectangle((x_left, y0 + i * CH), CW, CH, facecolor=sm.to_rgba(v),
                                edgecolor="0.55", linewidth=0.15, zorder=3))
     ax.add_patch(Rectangle((x_left, y0), CW, n * CH, fill=False, edgecolor=FRAME,
-                           linewidth=1.6, zorder=4))
+                           linewidth=0.5, zorder=4))       # match the dot-product cell's thin border
 
 
 def _node(ax, cx, cy, name, sub):
