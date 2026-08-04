@@ -151,6 +151,8 @@ def main():
     for cx, yr in zip(STACK_CX, ("2018", "2020")):
         ax.text(cx, BOX_T + 0.12, yr, ha="center", va="bottom", fontsize=LABEL_FS, fontweight="bold",
                 color="#1a1a1a")
+    ax.text((STACK_CX[0] + STACK_CX[1]) / 2, BOX_T + 0.55, "AlphaEarth embeddings", ha="center",
+            va="bottom", fontsize=16, fontweight="bold", color="#1a1a1a")
 
     # operation nodes
     _node(ax, NODE_CX, DELTA_CY, "Delta", "elementwise difference")
@@ -169,7 +171,7 @@ def main():
 
     # outputs at the same cell scale: 64-cell delta strip over a single dot-product cell
     _cells(ax, OUT_X, DELTA_CY, delta, div, n_d)
-    ax.add_patch(Rectangle((OUT_X, DOT_CY - CH / 2), CW, CH, facecolor=div(0.66),   # lighter single cell
+    ax.add_patch(Rectangle((OUT_X, DOT_CY - CH / 2), CW, CH, facecolor=div(0.58),   # lighter single cell
                            edgecolor=FRAME, linewidth=1.6, zorder=4))
 
     # per-operation annotations, right of each output
