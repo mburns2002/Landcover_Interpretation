@@ -83,10 +83,10 @@ similarity in [−1, 1] (embeddings are unit-norm per the AlphaEarth paper, Fig 
 
 ### Figure 16 — How the spectral composite baseline is built
 
-Linear pipeline: three sensors, each with the bands it contributes (Sentinel-2 B2/B3/B4/B8/B11;
-Landsat 8/9 B2/B3/B4/B5/B6/B8/B10; Sentinel-1 VV/VH/HH/HV/angle), feed one spectral composite (50 bands
-with indices, growing season April to October), classified by a Random Forest (300 trees). Colored
-boxes. The growing-season window is user-supplied (not recorded in the repo).
+Linear pipeline: three sensors, each a distinct color and showing its bands by type (Sentinel-2
+Blue/Green/Red/NIR/SWIR; Landsat 8/9 adds Pan and Thermal; Sentinel-1 VV/VH/HH/HV/angle), feed one
+spectral composite (50 bands with indices, growing season April to October), classified by a Random
+Forest (300 trees) into a land-cover map. The growing-season window is user-supplied (not in the repo).
 
 ![Figure 16](pres_16_spectral_baseline.png)
 
