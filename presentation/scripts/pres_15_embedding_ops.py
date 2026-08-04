@@ -171,8 +171,9 @@ def main():
 
     # outputs at the same cell scale: 64-cell delta strip over a single dot-product cell
     _cells(ax, OUT_X, DELTA_CY, delta, div, n_d)
-    ax.add_patch(Rectangle((OUT_X, DOT_CY - CH / 2), CW, CH, facecolor=div(0.58),   # lighter single cell
-                           edgecolor=FRAME, linewidth=1.6, zorder=4))
+    # thin border: the cell is only 1/64 of the strip height, so a thick outline would hide its fill
+    ax.add_patch(Rectangle((OUT_X, DOT_CY - CH / 2), CW, CH, facecolor=div(0.58),
+                           edgecolor=FRAME, linewidth=0.5, zorder=4))
 
     # per-operation annotations, right of each output
     ax_x = OUT_X + CW + 0.3
