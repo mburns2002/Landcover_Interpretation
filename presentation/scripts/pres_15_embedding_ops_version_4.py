@@ -43,28 +43,52 @@ COL = {"a": 1.5, "op": 2.75, "b": 4.0, "eq": 5.25, "out": 6.5}
 ANN_X = 7.5
 
 
+N = 240                                                            # native texture resolution (sharp)
+VIVID = np.array([[.85, .10, .70], [.12, .78, .38], [.95, .55, .10],
+                  [.20, .35, .85], [.85, .22, .25], [.55, .15, .80]])
+
+
 def _textures():
-    rng = np.random.default_rng(11)
-    k = 9                                                          # small grid -> smooth, map-like blobs
-    b18 = rng.random((k, k, 3))
-    b20 = np.clip(b18 + rng.normal(0, 0.16, (k, k, 3)), 0, 1)       # 2020 resembles 2018
+    rng = np.random.default_rng(7)
 
-    def contrast(f):
-        return np.clip((f - 0.5) * 1.7 + 0.5, 0, 1)
+    def fnoise(beta=2.1):                                           # 1/f noise: structure at all scales
+        white = rng.normal(size=(N, N))
+        f = np.fft.fftfreq(N)
+        fx, fy = np.meshgrid(f, f)
+        r = np.hypot(fx, fy)
+        r[0, 0] = 1.0
+        img = np.real(np.fft.ifft2(np.fft.fft2(white) / r ** (beta / 2)))
+        return (img - img.min()) / (np.ptp(img) + 1e-9)
 
-    d = (b20 - b18).mean(axis=2)                                    # signed per-pixel delta
-    dot = (b18 * b20).sum(axis=2) / 3.0                            # per-pixel similarity, grayscale
-    m = float(np.max(np.abs(d)))
+    def emb():
+        base = np.stack([fnoise() for _ in range(3)], -1)
+        return np.clip((base - 0.5) * 1.5 + 0.5, 0, 1)
+
+    def parcels(img, count):                                       # vivid field-like blocks
+        for _ in range(count):
+            w, h = int(rng.integers(N // 12, N // 4)), int(rng.integers(N // 12, N // 4))
+            x, y = int(rng.integers(0, N - w)), int(rng.integers(0, N - h))
+            a = float(rng.uniform(0.45, 0.8))
+            img[y:y + h, x:x + w] = (1 - a) * img[y:y + h, x:x + w] + a * VIVID[rng.integers(len(VIVID))]
+
+    e18 = emb()
+    parcels(e18, 16)
+    e20 = np.clip(e18 + 0.05 * (np.stack([fnoise(2.4) for _ in range(3)], -1) - 0.5) * 2, 0, 1)
+    parcels(e20, 4)                                                # a few changed parcels -> visible delta
+
+    d = (e20 - e18).mean(axis=2)                                    # signed per-pixel delta
+    dot = (e18 * e20).sum(axis=2) / 3.0                            # per-pixel similarity, grayscale
+    m = float(np.max(np.abs(d))) or 1.0
     delta_rgba = ScalarMappable(norm=TwoSlopeNorm(vcenter=0.0, vmin=-m, vmax=m),
                                 cmap=plt.get_cmap("RdBu")).to_rgba(d)
     dot_rgba = ScalarMappable(norm=Normalize(dot.min(), dot.max()),
                               cmap=plt.get_cmap("gray")).to_rgba(dot)
-    return contrast(b18), contrast(b20), delta_rgba, dot_rgba
+    return e18, e20, delta_rgba, dot_rgba
 
 
 def _imgsq(fig, cx, cy, s, tex, edge):
     ax = fig.add_axes([(cx - s / 2) / FIG_W, (cy - s / 2) / FIG_H, s / FIG_W, s / FIG_H])
-    ax.imshow(tex, interpolation="bilinear", aspect="auto")
+    ax.imshow(tex, interpolation="nearest", aspect="auto")
     ax.set_xticks([])
     ax.set_yticks([])
     for sp in ax.spines.values():
