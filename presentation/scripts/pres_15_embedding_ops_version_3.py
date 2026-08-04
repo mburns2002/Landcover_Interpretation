@@ -36,7 +36,7 @@ S_IN, N_IN, OFF_IN = 0.74, 4, 0.15       # input stack: square side, count, per-
 S_SM, N_SM, OFF_SM = 0.44, 3, 0.11       # small stacks used in the delta subtraction
 FORK_X = 4.55
 SYM_CX = 6.15                            # x-center of the delta glyph and the dot
-DOT_R = 0.27
+DOT_R = 0.13
 ANN_X = 7.55
 
 
