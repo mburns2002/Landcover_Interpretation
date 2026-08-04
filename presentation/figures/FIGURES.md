@@ -81,13 +81,12 @@ similarity in [−1, 1] (embeddings are unit-norm per the AlphaEarth paper, Fig 
 
 ![Figure 15](pres_15_embedding_ops.png)
 
-### Figure 16 — The spectral baseline is a matched control
+### Figure 16 — How the spectral composite baseline is built
 
-Makes the experimental control explicit: both feature families start from the same three sensors
-(Sentinel-2, Landsat 8, Sentinel-1) on a shared bus, fork into AlphaEarth embeddings (64 numbers/pixel)
-and spectral composites (50 bands), then remerge into one Random Forest. Fork annotation "same inputs,
-different representation" in the pres_11 control style. Zoom on the feature fork that pres_11 shows at
-low detail; unlike pres_11 it puts the sensors upstream of both branches.
+Linear pipeline: three sensors, each with the bands it contributes (Sentinel-2 B2/B3/B4/B8/B11;
+Landsat 8/9 B2/B3/B4/B5/B6/B8/B10; Sentinel-1 VV/VH/HH/HV/angle), feed one spectral composite (50 bands
+with indices, growing season April to October), classified by a Random Forest (300 trees). Colored
+boxes. The growing-season window is user-supplied (not recorded in the repo).
 
 ![Figure 16](pres_16_spectral_baseline.png)
 
