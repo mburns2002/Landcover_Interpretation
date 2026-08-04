@@ -20,6 +20,7 @@ import os
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
+import numpy as np
 from matplotlib.patches import FancyArrowPatch, FancyBboxPatch, Rectangle
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -36,9 +37,9 @@ SENSORS = [
     ("Sentinel-1", ["VV, VH, HH, HV, angle"], "#e7ddf2", "#7A5DA8"),
 ]
 WINDOW_LINE = "growing season: April to October"   # compositing window (user-supplied)
-# illustrative land-cover classes for the classified-map icon (not real values)
+# illustrative land-cover classes for the classified-map icon (not real values); 10x10, fixed pattern
 LC_COLORS = ["#2e7d32", "#e6c229", "#2f6fb0", "#8a8f98", "#8bc34a", "#4db6ac"]
-LC_PATTERN = [[0, 4, 0, 1], [3, 0, 2, 0], [0, 1, 4, 5], [2, 0, 0, 3]]
+LC_PATTERN = np.random.default_rng(5).integers(0, len(LC_COLORS), size=(10, 10)).tolist()
 
 FIG_W, FIG_H = 12.0, 5.0
 LABEL_FS, SUB_FS = 20, 13
@@ -49,7 +50,7 @@ SX, SW = 0.35, 2.4
 BUS_X = 2.9
 SPX, SPW = 3.6, 3.4
 RFX, RFW = 7.3, 2.7
-MAP_CX, MAP_SZ = 10.85, 1.0
+MAP_CX, MAP_SZ = 11.0, 1.25             # 10x10 grid, 0.125 in cells
 MID = 2.5
 GAP = 0.2
 
@@ -89,11 +90,11 @@ def _map(ax, cx, cy, size):
     for i in range(n):
         for j in range(n):
             ax.add_patch(Rectangle((x0 + j * cs, y0 + (n - 1 - i) * cs), cs, cs,
-                                   facecolor=LC_COLORS[LC_PATTERN[i][j]], edgecolor="white",
-                                   linewidth=0.6, zorder=3))
+                                   facecolor=LC_COLORS[LC_PATTERN[i][j]], edgecolor="none",
+                                   zorder=3))
     ax.add_patch(Rectangle((x0, y0), size, size, fill=False, edgecolor="#333333", linewidth=1.8,
                            zorder=4))
-    ax.text(cx, y0 - 0.14, "classified\nland-cover map", ha="center", va="top", fontsize=SUB_FS + 1,
+    ax.text(cx, y0 - 0.16, "classified\nland-cover map", ha="center", va="top", fontsize=SUB_FS,
             fontweight="bold", color="#1a1a1a", linespacing=1.3)
 
 
