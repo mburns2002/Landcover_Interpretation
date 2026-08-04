@@ -73,13 +73,23 @@ is not stable):
 
 ### Figure 15 — Two operations on a pair of embeddings
 
-Dimensionality teaching figure. Two embeddings (2018, 2020) as 64-cell strips; Delta (elementwise
-difference) preserves all 64 cells, the dot product collapses the pair to a single cell, drawn at the
-same cell scale so the 64-vs-1 gap is visible at a glance. Cell fills are illustrative, not real
-values. Dot product is a cosine similarity in [−1, 1] (embeddings are unit-norm per the AlphaEarth
-paper, Fig 1E).
+Dimensionality teaching figure. Two embeddings (2018, 2020) drawn as stacks of band layers
+(A00, A01, A02, ⋮, A63); Delta (elementwise difference) preserves all 64 dimensions as a 64-cell
+strip, the dot product collapses the pair to a single cell, drawn at the same cell scale so the
+64-vs-1 gap is visible at a glance. Fills are illustrative, not real values. Dot product is a cosine
+similarity in [−1, 1] (embeddings are unit-norm per the AlphaEarth paper, Fig 1E).
 
 ![Figure 15](pres_15_embedding_ops.png)
+
+### Figure 16 — The spectral baseline is a matched control
+
+Makes the experimental control explicit: both feature families start from the same three sensors
+(Sentinel-2, Landsat 8, Sentinel-1) on a shared bus, fork into AlphaEarth embeddings (64 numbers/pixel)
+and spectral composites (50 bands), then remerge into one Random Forest. Fork annotation "same inputs,
+different representation" in the pres_11 control style. Zoom on the feature fork that pres_11 shows at
+low detail; unlike pres_11 it puts the sensors upstream of both branches.
+
+![Figure 16](pres_16_spectral_baseline.png)
 
 ## Supplemental figures
 
