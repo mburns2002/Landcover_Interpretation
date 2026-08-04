@@ -73,12 +73,12 @@ def _textures():
 
     e18 = emb()
     parcels(e18, 16)
-    e20 = np.clip(e18 + 0.05 * (np.stack([fnoise(2.4) for _ in range(3)], -1) - 0.5) * 2, 0, 1)
+    e20 = np.clip(e18 + 0.13 * (np.stack([fnoise(2.2) for _ in range(3)], -1) - 0.5) * 2, 0, 1)
     parcels(e20, 4)                                                # a few changed parcels -> visible delta
 
     d = (e20 - e18).mean(axis=2)                                    # signed per-pixel delta
     dot = (e18 * e20).sum(axis=2) / 3.0                            # per-pixel similarity, grayscale
-    m = float(np.max(np.abs(d))) or 1.0
+    m = float(np.percentile(np.abs(d), 60)) or 1.0                  # saturate so more of the map is red/blue
     delta_rgba = ScalarMappable(norm=TwoSlopeNorm(vcenter=0.0, vmin=-m, vmax=m),
                                 cmap=plt.get_cmap("RdBu")).to_rgba(d)
     dot_rgba = ScalarMappable(norm=Normalize(dot.min(), dot.max()),
@@ -148,8 +148,8 @@ def main():
     bg.add_patch(Circle((COL["op"], DOT_CY), 0.1, facecolor=DARK, edgecolor="none", zorder=6))
     _sign(bg, COL["eq"], DOT_CY, "=", 34)
     _imgsq(fig, COL["out"], DOT_CY, S_EMB, dot_rgba, OUT_EDGE)
-    bg.text(COL["out"], DOT_CY - S_EMB / 2 - 0.16, "single value (−1 to 1)", ha="center", va="top",
-            fontsize=SUB_FS, color="0.35", zorder=6)
+    bg.text(COL["out"], DOT_CY - S_EMB / 2 - 0.16, "cosine similarity (−1 to 1)", ha="center",
+            va="top", fontsize=SUB_FS, color="0.35", zorder=6)
     _oplabel(bg, "Dot product", "similarity between the years", DOT_CY)
 
     os.makedirs(OUT, exist_ok=True)
