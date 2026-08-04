@@ -48,8 +48,8 @@ LH = 0.32
 # geometry (data units == inches; axes fills figure)
 SX, SW = 0.35, 2.4
 BUS_X = 2.9
-SPX, SPW = 3.6, 3.4
-RFX, RFW = 7.3, 2.7
+SPX, SPW = 3.26, 3.4        # even ~0.51 in gaps: sensors|composite|RF|map
+RFX, RFW = 7.17, 2.7
 MAP_CX, MAP_SZ = 11.0, 1.25             # 10x10 grid, 0.125 in cells
 MID = 2.5
 GAP = 0.2
