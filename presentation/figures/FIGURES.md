@@ -8,7 +8,7 @@ options. Supplemental figures are grouped at the end. (Excludes `marker_style_op
 ### Figure 01 — Change agents on NAIP
 ![Figure 01](pres_01_agents_naip.png)
 
-2x2 before/after NAIP chips: Harvest, Development, Beaver, Insect/Disease Mortality.
+2x2 before/after NAIP examples: Harvest, Development, Beaver, Insect/Disease Mortality.
 
 ### Figure 02 — Rarity of change
 

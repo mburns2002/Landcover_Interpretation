@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""pres_01_agents_naip: 2 by 2 panel of NAIP before/after chips, one per change agent.
+"""pres_01_agents_naip: 2 by 2 panel of NAIP before/after examples, one per change agent.
 
 Compilation only. Each source screenshot in presentation/assets/examples_w_scale/ is already a
 before/after NAIP pair (left before, right after) with a 50 m scale bar. This lays the four out in a
@@ -41,14 +41,15 @@ def main():
                          "font.sans-serif": ["Helvetica", "Arial", "DejaVu Sans"], "font.size": 16})
     fig, axes = plt.subplots(2, 2, figsize=(14, 8))
     fig.subplots_adjust(left=0.01, right=0.99, top=0.90, bottom=0.02, wspace=0.04, hspace=0.14)
-    fig.suptitle("NAIP Chips by Change Agent (Before and After)", fontsize=21, fontweight="bold", y=0.98)
+    fig.suptitle("NAIP Examples by Change Agent (Before and After)", fontsize=21, fontweight="bold",
+                 y=0.98)
 
     for ax, (label, fn) in zip(axes.flat, PANELS):
         ax.imshow(plt.imread(os.path.join(SRC, fn)))
         ax.set_axis_off()
         ax.set_title(label, fontsize=18, fontweight="bold", pad=8)
 
-    print(f"compiled 4 NAIP before/after chips into a 2x2 grid from {SRC}")
+    print(f"compiled 4 NAIP before/after examples into a 2x2 grid from {SRC}")
     os.makedirs(OUT, exist_ok=True)
     fig.savefig(os.path.join(OUT, "pres_01_agents_naip.png"), dpi=300, bbox_inches="tight")
     plt.close(fig)
