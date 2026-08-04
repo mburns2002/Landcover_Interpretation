@@ -73,18 +73,12 @@ def _textures():
 
     e18 = emb()
     parcels(e18, 16)
-    e20 = np.clip(e18 + 0.06 * (np.stack([fnoise(2.2) for _ in range(3)], -1) - 0.5) * 2, 0, 1)
-    parcels(e20, 4)                                                # a few changed parcels
+    e20 = np.clip(e18 + 0.05 * (np.stack([fnoise(2.4) for _ in range(3)], -1) - 0.5) * 2, 0, 1)
+    parcels(e20, 14)                                               # more changed parcels -> more areas of change
 
-    # delta: pale, lightly textured background with many small soft patches, like the example delta asset
-    xx, yy = np.meshgrid(np.arange(N), np.arange(N))
-    d = 0.10 * (fnoise(2.4) - 0.5) + 0.07 * (fnoise(1.4) - 0.5)     # pale, faintly textured background
-    for _ in range(22):                                            # many small soft diverging patches
-        cx, cy, rr = int(rng.integers(N)), int(rng.integers(N)), float(rng.integers(N // 22, N // 10))
-        d += rng.choice([-1.0, 1.0]) * float(rng.uniform(0.3, 0.6)) \
-            * np.exp(-((xx - cx) ** 2 + (yy - cy) ** 2) / (2.0 * rr ** 2))
+    d = (e20 - e18).mean(axis=2)                                    # signed per-pixel delta (~0 except at changes)
     dot = (e18 * e20).sum(axis=2) / 3.0                            # per-pixel similarity, grayscale
-    m = 0.6
+    m = float(np.percentile(np.abs(d), 90)) or 1.0                  # changed blocks show red/blue, rest stays pale
     delta_rgba = ScalarMappable(norm=TwoSlopeNorm(vcenter=0.0, vmin=-m, vmax=m),
                                 cmap=plt.get_cmap("RdBu")).to_rgba(d)
     dot_rgba = ScalarMappable(norm=Normalize(dot.min(), dot.max()),
