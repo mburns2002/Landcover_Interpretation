@@ -16,6 +16,7 @@ import os
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
+import numpy as np
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(os.path.dirname(HERE))
@@ -37,13 +38,22 @@ GAP = 0.03                       # horizontal gap between the two images in a ro
 ROW_BOTTOM = [0.49, 0.05]        # bottom y of the top and bottom rows
 
 
+def _crop_to_content(im):
+    """Trim the uneven white margin baked into each source so the photo content is what gets sized."""
+    rgb = im[..., :3]
+    content = rgb.min(axis=2) < 0.90                      # not near-white
+    rows = np.where(content.any(axis=1))[0]
+    cols = np.where(content.any(axis=0))[0]
+    return im[rows.min():rows.max() + 1, cols.min():cols.max() + 1]
+
+
 def main():
     imgs = {}
     for _lbl, fn in PANELS:
         p = os.path.join(SRC, fn)
         if not os.path.isfile(p):
             raise SystemExit(f"missing source screenshot: {p}")
-        imgs[fn] = plt.imread(p)
+        imgs[fn] = _crop_to_content(plt.imread(p))
 
     plt.rcParams.update({"font.family": "sans-serif",
                          "font.sans-serif": ["Helvetica", "Arial", "DejaVu Sans"], "font.size": 16})
