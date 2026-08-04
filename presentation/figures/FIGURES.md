@@ -81,6 +81,11 @@ similarity in [−1, 1] (embeddings are unit-norm per the AlphaEarth paper, Fig 
 
 ![Figure 15](pres_15_embedding_ops.png)
 
+Version 2 — same flow with the actual AlphaEarth maps (2019 and 2020 embeddings, the delta, and the dot
+product) from `presentation/assets/`, instead of the schematic drawings:
+
+![Figure 15 v2](pres_15_embedding_ops_version_2.png)
+
 ### Figure 16 — How the spectral composite baseline is built
 
 Linear pipeline: three sensors, each a distinct color and showing its bands by type (Sentinel-2
