@@ -151,7 +151,7 @@ def main():
     for cx, yr in zip(STACK_CX, ("2018", "2020")):
         ax.text(cx, BOX_T + 0.12, yr, ha="center", va="bottom", fontsize=LABEL_FS, fontweight="bold",
                 color="#1a1a1a")
-    ax.text((STACK_CX[0] + STACK_CX[1]) / 2, BOX_T + 0.55, "AlphaEarth embeddings", ha="center",
+    ax.text((STACK_CX[0] + STACK_CX[1]) / 2, BOX_T + 0.55, "AlphaEarth Embeddings", ha="center",
             va="bottom", fontsize=16, fontweight="bold", color="#1a1a1a")
 
     # operation nodes
