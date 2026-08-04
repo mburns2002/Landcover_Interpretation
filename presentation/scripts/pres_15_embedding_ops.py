@@ -49,14 +49,17 @@ NCELL = 64
 SQ = 0.5                                       # embedding band-square side
 ELL = 0.40                                     # ellipsis gap in the band stack
 STACK_CX = [1.4, 2.9]                          # x-centers of the 2018 / 2020 stacks (well separated)
-STACK_CY = 2.6
+STACK_CY = 2.5
+# light group box around BOTH embeddings; the fork floats off its right edge (the pair, not one year)
+BOX_L, BOX_R, BOX_B, BOX_T = 0.95, 3.35, 1.15, 3.85
+BOX_CY = (BOX_B + BOX_T) / 2
 CW = 0.52                                      # delta-strip / dot-cell width
 SH = 2.0                                       # delta-strip height (64 cells)
 CH = SH / NCELL                                # single-cell height, shared by strip cells and dot cell
-DELTA_CY, DOT_CY = 3.15, 1.30                  # upper (delta) and lower (dot) lane centers
-NODE_CX, NODE_H = 5.3, 0.55
+DELTA_CY, DOT_CY = 3.2, 1.8                    # upper (delta) and lower (dot) lanes, symmetric about BOX_CY
+NODE_CX, NODE_H = 6.1, 0.55
 NODE_W = 2.0                                    # recomputed in main() to fit the widest label
-FORK_X = 4.0
+FORK_X = 3.95                                   # riser x, just right of the group box
 OUT_X = 8.3                                     # x-left of both outputs (same column: strip over cell)
 
 
@@ -140,20 +143,25 @@ def main():
     ax.text(FIG_W / 2, 4.72, "Two Operations on a Pair of Embeddings", ha="center", va="center",
             fontsize=LABEL_FS + 1, fontweight="bold", color="#1a1a1a")
 
+    # light group box around both embeddings (drawn first, behind the stacks)
+    ax.add_patch(FancyBboxPatch((BOX_L, BOX_B), BOX_R - BOX_L, BOX_T - BOX_B,
+                                boxstyle="round,pad=0.02,rounding_size=0.08", facecolor="#f4f7fb",
+                                edgecolor="#b6c5d4", linewidth=1.4, zorder=1))
+
     # inputs: two embeddings as band-layer stacks
-    top = _stack(ax, STACK_CX[0], STACK_CY)
+    _stack(ax, STACK_CX[0], STACK_CY)
     _stack(ax, STACK_CX[1], STACK_CY)
     for cx, yr in zip(STACK_CX, ("2018", "2020")):
-        ax.text(cx, top + 0.14, yr, ha="center", va="bottom", fontsize=LABEL_FS, fontweight="bold",
+        ax.text(cx, BOX_T + 0.12, yr, ha="center", va="bottom", fontsize=LABEL_FS, fontweight="bold",
                 color="#1a1a1a")
 
     # operation nodes
     _node(ax, NODE_CX, DELTA_CY, "Delta", "elementwise difference")
     _node(ax, NODE_CX, DOT_CY, "Dot product", "similarity between the years")
 
-    # orthogonal fork: the pair feeds both operations
+    # orthogonal fork floating off the group box: the pair (both years) feeds both operations
     node_l = NODE_CX - NODE_W / 2
-    _line(ax, [STACK_CX[1] + SQ / 2, FORK_X], [STACK_CY, STACK_CY])   # trunk from the pair
+    _line(ax, [BOX_R, FORK_X], [BOX_CY, BOX_CY])                      # trunk from the group box
     _line(ax, [FORK_X, FORK_X], [DOT_CY, DELTA_CY])                   # fork riser
     _arrow(ax, (FORK_X, DELTA_CY), (node_l, DELTA_CY))
     _arrow(ax, (FORK_X, DOT_CY), (node_l, DOT_CY))
