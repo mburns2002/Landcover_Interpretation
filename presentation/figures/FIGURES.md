@@ -91,6 +91,11 @@ subtraction of two embeddings (square − square), and the dot product as a sing
 
 ![Figure 15 v3](pres_15_embedding_ops_version_3.png)
 
+Version 4 — equations with abstract embedding textures: emb − emb = delta output (red-white-blue, still
+64 dimensions, drawn as a stack); emb · emb = a single grayscale value:
+
+![Figure 15 v4](pres_15_embedding_ops_version_4.png)
+
 ### Figure 16 — How the spectral composite baseline is built
 
 Linear pipeline: three sensors, each a distinct color and showing its bands by type (Sentinel-2
