@@ -42,13 +42,13 @@ CONTROL = "#0072B2"
 FIG_W, FIG_H = 12.0, 5.0
 LABEL_FS, BODY_FS, CTRL_FS = 20, 16, 13       # stage labels 20, body 16, control annotation 13 (pres_11 style)
 
-# geometry (data units = inches; axes 0..12 x 0..5)
-SX, SW, SBH, SGAP = 0.45, 2.0, 0.72, 0.16     # sensor column x-left, width, box height, gap
-BUS_X = 2.72
-FORK_X = 3.45
-RX, RW, RBH = 5.0, 2.6, 1.6                    # representation boxes x-left, width, height (2-line title)
-MERGE_X = 7.95
-FX, FW, FBH = 8.2, 2.8, 1.0                    # random-forest box x-left, width, height
+# geometry: data units == inches, because main() pins the axes to fill the whole figure (0..12 x 0..5)
+SX, SW, SBH, SGAP = 0.5, 2.0, 0.72, 0.16      # sensor column x-left, width, box height, gap
+BUS_X = 2.7
+FORK_X = 3.05
+RX, RW, RBH = 5.5, 2.7, 1.6                    # representation boxes x-left, width, height (2-line title)
+MERGE_X = 8.55
+FX, FW, FBH = 8.8, 2.8, 1.0                    # random-forest box x-left, width, height
 EMB_CY, SPEC_CY, MID = 3.4, 1.45, 2.45
 SENSOR_CY = [MID + (SBH + SGAP), MID, MID - (SBH + SGAP)]   # 3.33, 2.45, 1.57
 LH = 0.30                                      # line height inside boxes
@@ -97,15 +97,13 @@ def main():
     ax.set_xlim(0, FIG_W)
     ax.set_ylim(0, FIG_H)
     ax.axis("off")
+    ax.set_position([0, 0, 1, 1])                 # axes fills the figure: 1 data unit == 1 inch
 
     over = _fit_check(fig, [("AlphaEarth", RW), ("embeddings", RW), ("Spectral", RW),
                             ("composites", RW), ("Random Forest", FW), ("Sentinel-2", SW),
                             ("Landsat 8", SW), ("Sentinel-1", SW)])
     if over:
         print("WARN title line wider than box interior:", over)
-
-    ax.text(FIG_W / 2, 4.66, "The Spectral Baseline Is a Matched Control", ha="center", va="center",
-            fontsize=LABEL_FS + 1, fontweight="bold", color="#1a1a1a")
 
     # sensor column on a shared bus
     for name, cy in zip(("Sentinel-2", "Landsat 8", "Sentinel-1"), SENSOR_CY):
@@ -133,10 +131,6 @@ def main():
     _line(ax, [MERGE_X, MERGE_X], [SPEC_CY, EMB_CY])
     _arrow(ax, (MERGE_X, MID), (FX, MID))
     _box(ax, FX, MID, FW, FBH, STAGE_FILL, STAGE_EDGE, ["Random Forest"], "300 trees")
-
-    ax.text(FIG_W / 2, 0.26, "Embeddings and spectral composites are built from the same three sensors, "
-            "so the comparison\nvaries only the representation, not the input information.",
-            ha="center", va="center", fontsize=BODY_FS - 2, color="0.3", linespacing=1.4)
 
     os.makedirs(OUT, exist_ok=True)
     fig.savefig(f"{OUT}/pres_16_spectral_baseline.png", dpi=300)
