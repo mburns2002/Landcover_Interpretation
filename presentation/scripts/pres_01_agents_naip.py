@@ -31,27 +31,45 @@ PANELS = [
 ]
 
 
+FIG_W, FIG_H = 14.0, 8.0
+IMG_H = 0.37                     # every image gets the SAME display height (figure fraction)
+GAP = 0.03                       # horizontal gap between the two images in a row
+ROW_BOTTOM = [0.49, 0.05]        # bottom y of the top and bottom rows
+
+
 def main():
+    imgs = {}
     for _lbl, fn in PANELS:
         p = os.path.join(SRC, fn)
         if not os.path.isfile(p):
             raise SystemExit(f"missing source screenshot: {p}")
+        imgs[fn] = plt.imread(p)
 
     plt.rcParams.update({"font.family": "sans-serif",
                          "font.sans-serif": ["Helvetica", "Arial", "DejaVu Sans"], "font.size": 16})
-    fig, axes = plt.subplots(2, 2, figsize=(14, 8))
-    fig.subplots_adjust(left=0.01, right=0.99, top=0.90, bottom=0.02, wspace=0.04, hspace=0.14)
+    fig = plt.figure(figsize=(FIG_W, FIG_H))
     fig.suptitle("NAIP Examples by Change Agent (Before and After)", fontsize=21, fontweight="bold",
-                 y=0.98)
+                 y=0.96)
 
-    for ax, (label, fn) in zip(axes.flat, PANELS):
-        ax.imshow(plt.imread(os.path.join(SRC, fn)))
-        ax.set_axis_off()
-        ax.set_title(label, fontsize=18, fontweight="bold", pad=8)
+    # uniform height, true proportions: axes width follows each image's aspect (w/h), so no distortion.
+    def frac_w(fn):
+        im = imgs[fn]
+        aspect = im.shape[1] / im.shape[0]
+        return aspect * IMG_H * FIG_H / FIG_W
 
-    print(f"compiled 4 NAIP before/after examples into a 2x2 grid from {SRC}")
+    for row, y0 in zip((PANELS[:2], PANELS[2:]), ROW_BOTTOM):
+        widths = [frac_w(fn) for _, fn in row]
+        x = (1.0 - (sum(widths) + GAP * (len(row) - 1))) / 2.0        # center the row
+        for (label, fn), w in zip(row, widths):
+            ax = fig.add_axes([x, y0, w, IMG_H])
+            ax.imshow(imgs[fn])
+            ax.set_axis_off()
+            ax.set_title(label, fontsize=18, fontweight="bold", pad=8)
+            x += w + GAP
+
+    print(f"compiled 4 NAIP before/after examples at uniform height from {SRC}")
     os.makedirs(OUT, exist_ok=True)
-    fig.savefig(os.path.join(OUT, "pres_01_agents_naip.png"), dpi=300, bbox_inches="tight")
+    fig.savefig(os.path.join(OUT, "pres_01_agents_naip.png"), dpi=300)
     plt.close(fig)
     print("wrote pres_01_agents_naip.png")
 
