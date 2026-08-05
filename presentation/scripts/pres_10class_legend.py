@@ -39,11 +39,11 @@ NAME10 = {1: "Harvest", 2: "Development", 3: "Forest", 4: "Urban", 5: "Water",
 STABLE = [3, 4, 5, 6, 7, 8]        # no-change classes, display order
 CHANGE = [1, 2, 10, 9]             # disturbance classes, display order
 
-LABEL_FS, HDR_FS = 15, 12
+LABEL_FS, HDR_FS = 15, 17     # headers two points larger than the class labels
 SW, SH, PAD = 0.34, 0.30, 0.16     # swatch width, height, swatch-to-label gap (in)
 RP = 0.52                          # row pitch (in)
 LM, RM, TOPM, BOTM = 0.3, 0.3, 0.28, 0.28
-HDR_GAP, COLGAP = 0.34, 0.6        # header-to-first-row gap, gap between the two columns (in)
+HDR_GAP, COLGAP = 0.22, 0.6        # header-to-first-row gap, gap between the two columns (in)
 SWATCH_EDGE = "0.3"
 
 
