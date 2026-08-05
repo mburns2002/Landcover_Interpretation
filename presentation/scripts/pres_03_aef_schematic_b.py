@@ -96,19 +96,17 @@ def main():
             fontweight="bold", color=TEXT)
     ax.text(EMB_CX, ebot - 0.5, "per 10 m pixel", ha="center", va="top", fontsize=FS_EMB, color=MUTED)
 
-    # training targets (training only): an additional step feeding the model
-    tx, ty, tw, th = 4.55, 0.6, 4.35, 1.62
+    # training targets: an additional step feeding the model
+    tx, ty, tw, th = 4.55, 1.1, 4.35, 1.05
     ax.add_patch(FancyBboxPatch((tx, ty), tw, th, boxstyle="round,pad=0.02,rounding_size=0.08",
                                 facecolor=TGT_FILL, edgecolor=TGT_EDGE, linewidth=1.8, linestyle="--",
                                 zorder=1))
-    ax.text(tx + tw / 2, ty + th - 0.3, "Training targets", ha="center", va="center",
+    ax.text(tx + tw / 2, ty + th - 0.28, "Training targets", ha="center", va="center",
             fontsize=FS_SECTION - 1, fontweight="bold", color=TEXT, zorder=4)
     cxs = [tx + tw * f for f in (0.13, 0.38, 0.63, 0.88)]
-    for (cat, ex), cxx in zip(TARGETS, cxs):
-        ax.text(cxx, ty + 0.55, cat, ha="center", va="center", fontsize=FS_TGT, fontweight="bold",
+    for (cat, _ex), cxx in zip(TARGETS, cxs):
+        ax.text(cxx, ty + 0.34, cat, ha="center", va="center", fontsize=FS_TGT, fontweight="bold",
                 color=TEXT, zorder=4)
-        ax.text(cxx, ty + 0.26, ex, ha="center", va="center", fontsize=FS_TGT_EX, color=MUTED,
-                zorder=4)
     _arrow(ax, (tx + tw / 2, ty + th), (mx + mw / 2, my), dashed=True)
 
     os.makedirs(OUT, exist_ok=True)
