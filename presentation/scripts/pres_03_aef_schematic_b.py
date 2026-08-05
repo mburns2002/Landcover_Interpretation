@@ -18,6 +18,8 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 from matplotlib.patches import FancyArrowPatch, FancyBboxPatch, Rectangle
 
+import slide_font
+
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 OUT = os.path.join(ROOT, "presentation", "figures")
 
@@ -27,8 +29,7 @@ TGT_FILL, TGT_EDGE = "#F5F6F7", "#9AA1A6"
 EMB_FILL, EMB_EDGE = "#d9ecdb", "#3f8f66"        # green output, distinct from Sentinel-2 blue
 EMB_S, EMB_OFF, EMB_N = 1.0, 0.2, 4
 EMB_BBOX = EMB_S + (EMB_N - 1) * EMB_OFF
-plt.rcParams.update({"font.family": "sans-serif",
-                     "font.sans-serif": ["Helvetica", "Arial", "DejaVu Sans"]})
+slide_font.use_spectral()
 FS_SECTION, FS_TITLE, FS_SUB, FS_MODEL = 17, 17, 13, 18
 FS_TGT, FS_TGT_EX, FS_EMB = 14.5, 11.5, 13.5
 
