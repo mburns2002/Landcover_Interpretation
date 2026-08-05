@@ -70,9 +70,10 @@ Classification, Evaluation. Colored-box variant:
 
 ![Figure 11 colored](pres_11_workflow_simple_colored.png)
 
-Version 2 — same flow with a classified land-cover map under the Classification box (illustrative
-pixels, like pres_16), Reference trimmed to two lines, and the Features labels updated (two-date
-AlphaEarth; "Spectral composite" over "Sentinel-2, Landsat 8, Sentinel-1 bands + indices"):
+Version 2 — the classified land-cover map is its own box in the pipeline (Random Forest -> Land-Cover
+Map -> Evaluation; illustrative pixels, like pres_16). Reference trimmed to two lines, and the Features
+labels updated (two-date AlphaEarth; "Spectral composite" over "Sentinel-2, Landsat 8, Sentinel-1,
+bands + indices"):
 
 ![Figure 11 colored v2](pres_11_workflow_simple_colored_v2.png)
 
