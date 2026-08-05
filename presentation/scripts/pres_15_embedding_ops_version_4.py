@@ -59,8 +59,8 @@ def _textures():
         return (img - img.min()) / (np.ptp(img) + 1e-9)
 
     def emb():                                                     # colorful organic terrain, no blocky parcels
-        base = np.stack([fnoise(2.0) for _ in range(3)], -1)
-        return np.clip((base - 0.5) * 1.5 + 0.5, 0, 1)
+        base = np.stack([fnoise(2.6) for _ in range(3)], -1)       # more low-frequency -> more continuous
+        return np.clip((base - 0.5) * 1.6 + 0.5, 0, 1)
 
     e18 = emb()
     change = np.stack([fnoise(2.3) for _ in range(3)], -1) - 0.5    # smooth organic year-to-year change
