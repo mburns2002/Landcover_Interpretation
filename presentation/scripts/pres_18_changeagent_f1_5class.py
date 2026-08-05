@@ -20,11 +20,15 @@ import matplotlib.pyplot as plt
 
 import slide_font
 import numpy as np
+import pandas as pd
+from matplotlib.lines import Line2D
+from matplotlib.patches import Rectangle
 slide_font.use_spectral()
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(os.path.dirname(HERE))
 OUT = os.path.join(ROOT, "presentation", "figures")
+CI_CSV = os.path.join(ROOT, "reports", "interpreter_agreement", "per_class_agreement_ci_5class.csv")
 
 # reuse pres_14's five-class computation so the numbers match exactly
 _spec = importlib.util.spec_from_file_location("P14", os.path.join(HERE, "pres_14_changeclass_f1_5class.py"))
@@ -78,6 +82,55 @@ def draw(mat, stem, title, caption, y_full):
     return fig
 
 
+def _ceiling():
+    """Inter-interpreter agreement F1 (+95% CI) per change agent: the human ceiling on classifier F1."""
+    df = pd.read_csv(CI_CSV).set_index("cls")
+    return {a: (df.loc[a, "f1"], df.loc[a, "f1_lo"], df.loc[a, "f1_hi"]) for a in AGENTS}
+
+
+def draw_ceiling(mat, ceil, stem, title, caption):
+    x = np.arange(len(AGENTS))
+    n = len(SOURCES)
+    bar_w = 0.85 / n
+    ymax = 0.9
+    half = 0.46
+
+    fig, ax = plt.subplots(figsize=(FIG_W, FIG_H))
+    for i, s in enumerate(SOURCES):
+        offs = (i - (n - 1) / 2) * bar_w
+        vals = [mat[s][j] for j in range(len(AGENTS))]
+        ax.bar(x + offs, vals, bar_w, color=COLOR[s], edgecolor="0.25", linewidth=0.6, label=s, zorder=3)
+
+    # interpreter-agreement ceiling per agent: shaded 95% CI band + dashed line, with value label
+    for j, a in enumerate(AGENTS):
+        f1, lo, hi = ceil[a]
+        ax.add_patch(Rectangle((x[j] - half, lo), 2 * half, hi - lo, facecolor="0.55", alpha=0.16,
+                               edgecolor="none", zorder=1))
+        ax.plot([x[j] - half, x[j] + half], [f1, f1], color="0.12", lw=2.4, ls=(0, (5, 2)), zorder=6)
+        ax.text(x[j] + half + 0.03, f1, f"{f1:.2f}", ha="left", va="center", fontsize=9, color="0.12")
+
+    ax.set_xticks(x)
+    ax.set_xticklabels(AGENTS, fontsize=TICK_FS)
+    ax.set_ylabel("F1 (five-class)", fontsize=AXIS_FS)
+    ax.tick_params(axis="y", labelsize=TICK_FS)
+    ax.set_ylim(0, ymax)
+    ax.set_xlim(-0.6, len(AGENTS) - 0.4)
+    ax.grid(False)
+    for sp in ("top", "right"):
+        ax.spines[sp].set_visible(False)
+    ax.set_title(title, fontsize=AXIS_FS + 2, fontweight="bold", pad=14)
+
+    handles, labels = ax.get_legend_handles_labels()
+    handles.append(Line2D([0], [0], color="0.12", lw=2.4, ls=(0, (5, 2))))
+    labels.append("interpreter ceiling")
+    ax.legend(handles, labels, ncol=4, fontsize=BODY_FS - 3, frameon=False, loc="upper right",
+              handlelength=1.5, columnspacing=1.3, labelspacing=0.4)
+    fig.text(0.5, 0.03, caption, ha="center", va="bottom", fontsize=BODY_FS - 4, color="0.3",
+             linespacing=1.4)
+    fig.subplots_adjust(left=0.085, right=0.985, top=0.88, bottom=0.25)
+    return fig
+
+
 def main():
     mat, _per_bracket, n_cells, _pbn = P14.compute()
     print(f"common cell set N = {n_cells}")
@@ -96,7 +149,15 @@ def main():
                "Change-Agent F1 by Model (Five-Class)", cap, y_full=True)
     fig.savefig(f"{OUT}/pres_18_changeagent_f1_5class_full.png", dpi=300)
     plt.close(fig)
-    print("wrote pres_18_changeagent_f1_5class.png and _full.png")
+
+    ceil = _ceiling()
+    cap_c = ("Bars: five-class F1 by model. Dashed line: inter-interpreter agreement F1 for that agent\n"
+             "(the human ceiling), shaded 95% CI. Every model sits well below the ceiling.")
+    fig = draw_ceiling(mat, ceil, "pres_18_changeagent_f1_vs_ceiling",
+                       "Change-Agent F1 vs the Interpreter Ceiling (Five-Class)", cap_c)
+    fig.savefig(f"{OUT}/pres_18_changeagent_f1_vs_ceiling.png", dpi=300)
+    plt.close(fig)
+    print("wrote pres_18_changeagent_f1_5class.png, _full.png, and _vs_ceiling.png")
 
 
 if __name__ == "__main__":

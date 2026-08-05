@@ -148,6 +148,19 @@ Version B, full 0–1 scale (drives the "all change F1 is at the floor" message)
 
 ![Figure 18 full](pres_18_changeagent_f1_5class_full.png)
 
+Version C, with the interpreter-agreement ceiling overlaid (dashed line + shaded 95% CI per agent):
+every model sits well below the human ceiling.
+
+![Figure 18 vs ceiling](pres_18_changeagent_f1_vs_ceiling.png)
+
+### Figure 19 — Interpreter-agreement ceiling (five-class)
+
+Deck version of manuscript Figure 3.3: per-class inter-interpreter F1 with 95% CI on the 5-class
+collapse, colored by reliability. This is the ceiling on any classifier's F1 (Stable and Harvest
+reliable; Development, Insect/Disease, Beaver not):
+
+![Figure 19](pres_19_interpreter_ceiling_5class.png)
+
 ### Figure 17 — Accuracy metrics by model
 
 Grouped bar chart of the 10-class headline metrics (OA, F1, IoU, Kappa; Table 2.3), grouped by statistic
