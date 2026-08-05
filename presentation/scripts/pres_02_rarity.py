@@ -119,8 +119,8 @@ def main():
     lab = {
         "Harvest": (centers["Harvest"], -1.05, "center", -0.28),
         "Insect/Disease": (centers["Insect/Disease"], -1.05, "center", -0.28),
-        "Beaver": (xr, -0.35, "left", -0.12),
-        "Development": (xr, -1.5, "left", -0.12),
+        "Development": (xr, -0.35, "left", -0.12),
+        "Beaver": (xr, -1.6, "left", -0.12),
     }
     for c in order:
         lx, ly, ha, yanchor = lab[c]
