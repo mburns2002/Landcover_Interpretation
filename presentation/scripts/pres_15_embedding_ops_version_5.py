@@ -139,9 +139,9 @@ def main():
     bg.add_patch(Circle((COL["op"], DOT_CY), 0.1, facecolor=DARK, edgecolor="none", zorder=6))
     _sign(bg, COL["eq"], DOT_CY, "=", 34)
     _imgsq(fig, COL["out"], DOT_CY, S_EMB, dot_rgba, OUT_EDGE)
-    bg.text(COL["out"], DOT_CY - S_EMB / 2 - 0.16, "cosine similarity (−1 to 1)", ha="center",
+    bg.text(COL["out"], DOT_CY - S_EMB / 2 - 0.16, "single value (−1 to 1)", ha="center",
             va="top", fontsize=SUB_FS, color="0.35", zorder=6)
-    _oplabel(bg, "Dot product", "similarity between the years", DOT_CY)
+    _oplabel(bg, "Dot product", "cosine similarity", DOT_CY)
 
     os.makedirs(OUT, exist_ok=True)
     fig.savefig(os.path.join(OUT, "pres_15_embedding_ops_version_5.png"), dpi=300)
