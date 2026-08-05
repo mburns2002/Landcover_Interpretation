@@ -105,6 +105,17 @@ Forest (300 trees) into a land-cover map. The growing-season window is user-supp
 
 ![Figure 16](pres_16_spectral_baseline.png)
 
+### AlphaEarth Foundations context panels
+
+Two transparent 5.5 x 4.5 in slide panels (flat style matching the GFM band-stack reference), for the
+AEF model slide. Spatial: each embedding reads its whole 1.28 km neighborhood, with one 10 m pixel
+called out. Temporal: a simplified Figure 1B — irregular sensor observations in a "support period"
+converge into one embedding, and a copper "valid period" bar is offset from it (the valid period need
+not sit inside the support period). No month offset, no dimensionality, no user-chosen window.
+
+![Spatial context](spatial_context.png)
+![Temporal context](temporal_context.png)
+
 ## Supplemental figures
 
 ### Supplemental — Tasseled Cap class-centroid trajectory
