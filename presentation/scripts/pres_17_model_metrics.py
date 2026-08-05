@@ -29,9 +29,9 @@ ROOT = os.path.dirname(os.path.dirname(HERE))
 T23 = os.path.join(ROOT, "manuscript_formatting", "tables", "table_2_3.csv")
 OUT = os.path.join(ROOT, "presentation", "figures")
 
-# per-model colors: embeddings from the transfer-OA palette, spec_all a neutral grey (baseline)
+# per-model colors: embeddings from the transfer-OA palette, spec_all brown (the tab10 next color)
 COLOR = {"v2": "#1f77b4", "v3": "#2ca02c", "v4": "#9467bd", "v5": "#ff7f0e", "v6": "#d62728",
-         "spec_all": "#7f7f7f"}
+         "spec_all": "#8c564b"}
 # (x-axis group label, table column)
 STATS = [("OA", "OA"), ("F1", "Macro-F1"), ("IoU", "Mean IoU"), ("Kappa", "Kappa")]
 
@@ -57,8 +57,7 @@ def _draw(df, models, stem, title, caption):
     ax.set_ylim(0, 1.0)
     ax.set_ylabel("Score", fontsize=14)
     ax.tick_params(axis="y", labelsize=12)
-    ax.grid(axis="y", color="0.85", lw=0.8, zorder=0)
-    ax.set_axisbelow(True)
+    ax.grid(False)
     for s in ("top", "right"):
         ax.spines[s].set_visible(False)
     ax.legend(ncol=n, fontsize=12, loc="upper right", frameon=False, columnspacing=1.1,
