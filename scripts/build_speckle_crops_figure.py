@@ -1,16 +1,18 @@
 #!/usr/bin/env python3
 """Figure 2.9, the classified-map speckle crop, regenerated from the current 180-cell pipeline.
 
-One panel per classification of the same ground location (cell 31320): the spectral baseline (Sentinel-2
-Random Forest) followed by each embedding configuration (v2 to v6), to show how map coherence differs
-across feature sets. The embedding panels use the current temporally-matched per-bracket predictions
-(data/raw/transfer_predictions, bands 1 to 5 = v2 to v6); the spectral panel uses the matching Sentinel-2
-RF classification under data/raw/rf_class_maps (its CKIT class ids are remapped to the model's 10 codes).
+Panels of the same ground location (cell 31320), all pixel-aligned (337 x 337 at 10 m, EPSG:5070),
+colored with the standard 10-class palette:
+  base version    (figure_2_9_speckle_crops):          spectral baseline, then v2..v6
+  with-reference  (figure_2_9_speckle_crops_with_ref): interpreted reference, spectral baseline, v2..v6
 
-Crop location: cell 31320 (bracket 2018_2020), footprint (464760, 2593250, 468130, 2596620) in
-EPSG:5070. The spectral and prediction rasters share this exact footprint (both 337 x 337 at 10 m), so
-all six panels are pixel-aligned. The cell contains a water body where the v6 salt-and-pepper speckle is
-visually obvious.
+Data sources (all local, no Earth Engine):
+  - Interpreted reference: data/raw/rf_class_maps/*_s2_31320/*.tif, the adjudicated "Interpreted (RF)"
+    reference (see compare_interpreted_vs_model.py). Stored as CKIT class ids; remapped to the model's
+    10 codes via CROSSWALK.
+  - Spectral baseline (spec_all): data/raw/spectral_transferability_10class_percell/<bracket>/
+    pred_specall_<bracket>_cell<id>.tif, already in 10-class codes.
+  - Embeddings v2..v6: data/raw/transfer_predictions/<bracket>/pred_<bracket>_cell<id>.tif, bands 1..5.
 
 Run: python scripts/build_speckle_crops_figure.py
 Requires: rasterio, numpy, matplotlib
@@ -29,15 +31,19 @@ from matplotlib.patches import Patch, Rectangle
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 PRED_DIR = f"{ROOT}/data/raw/transfer_predictions"
+SPEC_DIR = f"{ROOT}/data/raw/spectral_transferability_10class_percell"
 RF_MAP_DIR = f"{ROOT}/data/raw/rf_class_maps"
 OUT = f"{ROOT}/manuscript_formatting/figures"
-CROP_CELL = "31320"                                        # footprint matches the earlier crop bounds
+CROP_CELL = "31320"
+BRACKET = "2018_2020"
 VBAND = {"v2": 1, "v3": 2, "v4": 3, "v5": 4, "v6": 5}      # transfer_predictions band order
 NAME10 = {1: "Harvest", 2: "Development", 3: "Forest", 4: "Urban", 5: "Water",
           6: "Agriculture", 7: "Grass/Shrub", 8: "Wetland", 9: "Beaver", 10: "Insect/Disease"}
-# model code -> CKIT label id (the spectral RF rasters are stored as CKIT ids)
-CKIT = {1: 20, 2: 30, 3: 3, 4: 0, 5: 4, 6: 1, 7: 2, 8: 5, 9: 62, 10: 50}
-CKIT2CODE = {v: k for k, v in CKIT.items()}
+# CKIT reference id -> model code (for the interpreted reference raster)
+CROSSWALK = {0: 4, 1: 6, 2: 7, 3: 3, 4: 5, 5: 8, 20: 1, 30: 2, 50: 10, 62: 9}
+LUT = np.zeros(63, np.uint8)
+for _k, _v in CROSSWALK.items():
+    LUT[_k] = _v
 
 
 def _load(name, path):
@@ -56,17 +62,52 @@ for code, col in C10.items():
 CMAP = ListedColormap([CLUT[i] for i in range(11)])
 
 
-def _spectral_crop():
-    """Sentinel-2 RF classification of the crop cell, remapped from CKIT ids to the model's 10 codes."""
+def _interpreted_reference():
+    """Adjudicated interpreted reference for the crop cell, CKIT ids remapped to the 10 model codes."""
     files = glob.glob(f"{RF_MAP_DIR}/*_s2_{CROP_CELL}/*.tif")
     if not files:
-        raise SystemExit(f"STOP: spectral RF map for cell {CROP_CELL} not found under {RF_MAP_DIR}.")
+        raise SystemExit(f"STOP: interpreted reference for cell {CROP_CELL} not found under {RF_MAP_DIR}.")
     with rasterio.open(files[0]) as s:
         raw = s.read(1)
-    out = np.zeros_like(raw)
-    for ckit_val, code in CKIT2CODE.items():
-        out[raw == ckit_val] = code                        # CKIT id -> model code (unmapped stays 0)
-    return out
+    return LUT[np.clip(raw, 0, 62)]
+
+
+def _spectral_baseline():
+    """spec_all spectral-baseline classification for the crop cell (already 10-class codes)."""
+    files = glob.glob(f"{SPEC_DIR}/*/pred_specall_*cell{CROP_CELL}.tif")
+    if not files:
+        raise SystemExit(f"STOP: spec_all prediction for cell {CROP_CELL} not found under {SPEC_DIR}.")
+    with rasterio.open(files[0]) as s:
+        return s.read(1)
+
+
+def _draw(panels, res, stem, title, caption):
+    fig, axes = plt.subplots(1, len(panels), figsize=(2.5 * len(panels) + 0.4, 5.4))
+    for ax, (name, arr) in zip(axes, panels):
+        ax.imshow(arr, cmap=CMAP, vmin=0, vmax=10, interpolation="nearest")
+        ax.set_title(name, fontsize=14, fontweight="bold")
+        ax.set_xticks([]); ax.set_yticks([])
+    # scale bar on the first panel: 1 km = 100 px at 10 m
+    h, w = panels[0][1].shape
+    km_px = 1000 / res
+    y0 = h - 22
+    axes[0].add_patch(Rectangle((12, y0), km_px, 6, facecolor="black", edgecolor="white", lw=0.6))
+    axes[0].text(12 + km_px / 2, y0 - 6, "1 km", ha="center", va="bottom", fontsize=8, color="black")
+
+    present = sorted({int(c) for _, arr in panels for c in np.unique(arr) if c > 0})
+    handles = [Patch(facecolor=CLUT[c], edgecolor="0.4", label=NAME10[c]) for c in present]
+    fig.subplots_adjust(left=0.02, right=0.98, top=0.88, bottom=0.32, wspace=0.05)
+    fig.legend(handles=handles, loc="lower center", ncol=5, fontsize=12, frameon=False,
+               bbox_to_anchor=(0.5, 0.16))
+    fig.suptitle(title, fontsize=15, fontweight="bold", y=0.97)
+    fig.text(0.5, 0.015, "\n".join(textwrap.wrap(caption, 135)), ha="center", va="bottom",
+             fontsize=9, color="0.3")
+
+    png, pdf = f"{OUT}/{stem}.png", f"{OUT}/{stem}.pdf"
+    fig.savefig(png, dpi=300, bbox_inches="tight")
+    fig.savefig(pdf, bbox_inches="tight")
+    plt.close(fig)
+    print(f"wrote {png} and {pdf}")
 
 
 def main():
@@ -79,48 +120,26 @@ def main():
         bands = {v: s.read(b) for v, b in VBAND.items()}
         res = s.res[0]                                       # metres per pixel (10 m)
 
-    panels = [("spectral", _spectral_crop())] + [(v, bands[v]) for v in VBAND]
+    spec = _spectral_baseline()
+    ref = _interpreted_reference()
+    emb_panels = [(v, bands[v]) for v in VBAND]
 
-    fig, axes = plt.subplots(1, len(panels), figsize=(16.2, 5.4))
-    for ax, (name, arr) in zip(axes, panels):
-        ax.imshow(arr, cmap=CMAP, vmin=0, vmax=10, interpolation="nearest")
-        ax.set_title(name, fontsize=14, fontweight="bold")
-        ax.set_xticks([]); ax.set_yticks([])
-    # scale bar on the first panel: 1 km = 100 px at 10 m
-    h, w = panels[0][1].shape
-    km_px = 1000 / res
-    y0 = h - 22
-    axes[0].add_patch(Rectangle((12, y0), km_px, 6, facecolor="black", edgecolor="white", lw=0.6))
-    axes[0].text(12 + km_px / 2, y0 - 6, "1 km", ha="center", va="bottom", fontsize=8, color="black")
+    # base version: spectral baseline + embeddings
+    _draw([("spectral", spec)] + emb_panels, res, "figure_2_9_speckle_crops",
+          f"Same Location Classified by the Spectral Baseline and Embedding Configurations (Cell {CROP_CELL})",
+          f"The same NAIP grid cell (cell {CROP_CELL}) classified by the spectral baseline (spec_all) and by "
+          "each embedding configuration, v2 through v6, with the standard land-cover class colors. The scale "
+          "bar is 1 km. The dot-product configuration v6 fragments into salt-and-pepper speckle, while the "
+          "spectral baseline and the baseline-preserving embedding configurations stay spatially coherent.")
 
-    # class legend for classes present in any panel, using the standard palette
-    present = sorted({int(c) for _, arr in panels for c in np.unique(arr) if c > 0})
-    handles = [Patch(facecolor=CLUT[c], edgecolor="0.4", label=NAME10[c]) for c in present]
-    # panels occupy the top band; legend and caption sit below without overlap
-    fig.subplots_adjust(left=0.02, right=0.98, top=0.88, bottom=0.32, wspace=0.05)
-    fig.legend(handles=handles, loc="lower center", ncol=5, fontsize=12,
-               frameon=False, bbox_to_anchor=(0.5, 0.16))
-
-    fig.suptitle(f"Same Location Classified by the Spectral Baseline and Embedding Configurations "
-                 f"(Cell {CROP_CELL})", fontsize=15, fontweight="bold", y=0.97)
-
-    # descriptive caption band below the class legend
-    caption = (
-        f"The same NAIP grid cell (cell {CROP_CELL}) classified by the spectral baseline (Sentinel-2 "
-        "Random Forest) and by each embedding configuration, v2 through v6, with the standard land-cover "
-        "class colors. The scale bar is 1 km. The dot-product configuration v6 fragments into "
-        "salt-and-pepper speckle, while the spectral baseline and the baseline-preserving embedding "
-        "configurations stay spatially coherent."
-    )
-    wrapped = "\n".join(textwrap.wrap(caption, 130))
-    fig.text(0.5, 0.015, wrapped, ha="center", va="bottom", fontsize=9, color="0.3")
-
-    png = f"{OUT}/figure_2_9_speckle_crops.png"
-    pdf = f"{OUT}/figure_2_9_speckle_crops.pdf"
-    fig.savefig(png, dpi=300, bbox_inches="tight")
-    fig.savefig(pdf, bbox_inches="tight")
-    plt.close(fig)
-    print(f"wrote {png} and {pdf}")
+    # with-reference version: interpreted reference + spectral baseline + embeddings
+    _draw([("interpreted reference", ref), ("spectral", spec)] + emb_panels,
+          res, "figure_2_9_speckle_crops_with_ref",
+          f"Interpreted Reference, Spectral Baseline, and Embedding Configurations (Cell {CROP_CELL})",
+          f"The adjudicated interpreted reference for cell {CROP_CELL} alongside the spectral baseline (spec_all) "
+          "and each embedding configuration, v2 through v6, with the standard land-cover class colors. The scale "
+          "bar is 1 km. Against the reference, the spectral baseline and the baseline-preserving embedding "
+          "configurations stay spatially coherent, while the dot-product configuration v6 dissolves into speckle.")
 
 
 if __name__ == "__main__":

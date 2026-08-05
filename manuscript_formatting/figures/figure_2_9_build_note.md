@@ -6,23 +6,32 @@ model_comparison snapshot with random dedup.
 
 ## Panels
 
-Six panels for the same crop: the spectral baseline first, then the five embedding configurations
-(v2 to v6). The per-panel neighbor-change annotations were removed; the metric itself is unchanged and
-still reported in Table S3 (see below), it is just no longer printed on the figure.
+Two outputs, both from the same script:
+- `figure_2_9_speckle_crops`: six panels, the spectral baseline first, then the five embedding
+  configurations (v2 to v6).
+- `figure_2_9_speckle_crops_with_ref`: seven panels, the interpreted reference prepended (interpreted
+  reference, spectral, v2 to v6).
 
-## Data basis
+The per-panel neighbor-change annotations were removed; the metric itself is unchanged and still
+reported in Table S3, it is just no longer printed on the figure.
+
+## Data basis (all pixel-aligned: 337 x 337 at 10 m, EPSG:5070, cell 31320)
 
 - Embedding rasters: the current temporally-matched per-bracket predictions
   `data/raw/transfer_predictions/<bracket>/pred_<bracket>_cell<id>.tif`, bands 1 to 5 = v2 to v6, over
-  the 180 adjudicated cells. These are the same classifications behind the current spatial-structure
-  diagnostics (Table 2.6, spatial_structure/with_spec_all/), not the model_comparison snapshot.
-- Spectral panel: the Sentinel-2 RF classification under
-  `data/raw/rf_class_maps/CKIT_RF_*_s2_31320/*.tif` (sample_27, target 2019, opt 2018-2020). It shares
-  the crop cell's exact footprint (337 x 337 at 10 m, EPSG:5070), so it is pixel-aligned with the
-  embedding panels. Its pixel values are CKIT class ids and are remapped to the model's 10 codes via
-  the crosswalk in the figure script (CKIT dict).
+  the 180 adjudicated cells (the same classifications behind the current spatial-structure diagnostics,
+  Table 2.6, spatial_structure/with_spec_all/).
+- Spectral baseline (spec_all) panel: `data/raw/spectral_transferability_10class_percell/<bracket>/
+  pred_specall_<bracket>_cell<id>.tif`, already in 10-class codes (1..10). This is the spectral RF
+  baseline, NOT the interpreted reference.
+- Interpreted reference panel (with-ref version only): the adjudicated "Interpreted (RF)" raster
+  `data/raw/rf_class_maps/*_s2_31320/*.tif` (see compare_interpreted_vs_model.py). Its pixel values are
+  CKIT class ids, remapped to the 10 model codes via the CROSSWALK in the figure script.
 - Palette: the standard 10-class palette from `compare_interpreted_vs_model.load_mappings`, matching
   the other Chapter 2 maps.
+
+Note: `data/raw/rf_class_maps` holds the interpreted reference, not a classification, despite the
+`rf_class_*Sentinel-2*` file naming; the spectral baseline is the separate `spec_all` raster above.
 
 ## Crop location
 
