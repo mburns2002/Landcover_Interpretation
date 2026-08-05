@@ -44,14 +44,12 @@ ANN_X = 7.5
 
 
 N = 240                                                            # native texture resolution (sharp)
-VIVID = np.array([[.85, .10, .70], [.12, .78, .38], [.95, .55, .10],
-                  [.20, .35, .85], [.85, .22, .25], [.55, .15, .80]])
 
 
 def _textures():
     rng = np.random.default_rng(7)
 
-    def fnoise(beta=2.1):                                           # 1/f noise: structure at all scales
+    def fnoise(beta=2.1):                                           # 1/f noise: organic structure at all scales
         white = rng.normal(size=(N, N))
         f = np.fft.fftfreq(N)
         fx, fy = np.meshgrid(f, f)
@@ -60,25 +58,17 @@ def _textures():
         img = np.real(np.fft.ifft2(np.fft.fft2(white) / r ** (beta / 2)))
         return (img - img.min()) / (np.ptp(img) + 1e-9)
 
-    def emb():
-        base = np.stack([fnoise() for _ in range(3)], -1)
+    def emb():                                                     # colorful organic terrain, no blocky parcels
+        base = np.stack([fnoise(2.0) for _ in range(3)], -1)
         return np.clip((base - 0.5) * 1.5 + 0.5, 0, 1)
 
-    def parcels(img, count):                                       # vivid field-like blocks
-        for _ in range(count):
-            w, h = int(rng.integers(N // 12, N // 4)), int(rng.integers(N // 12, N // 4))
-            x, y = int(rng.integers(0, N - w)), int(rng.integers(0, N - h))
-            a = float(rng.uniform(0.45, 0.8))
-            img[y:y + h, x:x + w] = (1 - a) * img[y:y + h, x:x + w] + a * VIVID[rng.integers(len(VIVID))]
-
     e18 = emb()
-    parcels(e18, 16)
-    e20 = np.clip(e18 + 0.05 * (np.stack([fnoise(2.4) for _ in range(3)], -1) - 0.5) * 2, 0, 1)
-    parcels(e20, 14)                                               # more changed parcels -> more areas of change
+    change = np.stack([fnoise(2.3) for _ in range(3)], -1) - 0.5    # smooth organic year-to-year change
+    e20 = np.clip(e18 + 0.16 * change, 0, 1)
 
-    d = (e20 - e18).mean(axis=2)                                    # signed per-pixel delta (~0 except at changes)
+    d = (e20 - e18).mean(axis=2)                                    # organic signed delta (irregular, no blocks)
     dot = (e18 * e20).sum(axis=2) / 3.0                            # per-pixel similarity, grayscale
-    m = float(np.percentile(np.abs(d), 90)) or 1.0                  # changed blocks show red/blue, rest stays pale
+    m = 1.7 * float(np.max(np.abs(d))) or 1.0                       # soft: change reads medium red/blue, not dark
     delta_rgba = ScalarMappable(norm=TwoSlopeNorm(vcenter=0.0, vmin=-m, vmax=m),
                                 cmap=plt.get_cmap("RdBu")).to_rgba(d)
     dot_rgba = ScalarMappable(norm=Normalize(dot.min(), dot.max()),
