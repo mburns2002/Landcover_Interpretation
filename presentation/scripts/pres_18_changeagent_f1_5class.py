@@ -33,9 +33,9 @@ _spec.loader.exec_module(P14)
 
 SOURCES = P14.SOURCES                              # ["v2","v3","v4","v5","v6","spec_all"]
 AGENTS = [name for _, name in P14.CHANGE]          # Harvest, Development, Beaver, Insect/Disease
-# per-model colors (match pres_17): embeddings from the transfer-OA palette, spec_all a neutral grey
+# per-model colors (match pres_17): embeddings from the transfer-OA palette, spec_all brown (tab10 next)
 COLOR = {"v2": "#1f77b4", "v3": "#2ca02c", "v4": "#9467bd", "v5": "#ff7f0e", "v6": "#d62728",
-         "spec_all": "#7f7f7f"}
+         "spec_all": "#8c564b"}
 
 FIG_W, FIG_H = 12.0, 5.8
 BODY_FS, AXIS_FS, TICK_FS = 16, 18, 16
@@ -65,8 +65,7 @@ def draw(mat, stem, title, caption, y_full):
     ax.tick_params(axis="y", labelsize=TICK_FS)
     ax.set_ylim(0, ymax)
     ax.set_xlim(-0.6, len(AGENTS) - 0.4)
-    ax.grid(axis="y", color="0.88", lw=0.8, zorder=0)
-    ax.set_axisbelow(True)
+    ax.grid(False)
     for sp in ("top", "right"):
         ax.spines[sp].set_visible(False)
     ax.set_title(title, fontsize=AXIS_FS + 2, fontweight="bold", pad=14)
