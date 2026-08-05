@@ -36,6 +36,11 @@ Option B, what goes into an embedding (previous version):
 
 ![Figure 03a](pres_03_aef_schematic_a.png)
 
+Option C, restyled (pres_16 flat style): shaded input boxes, simplified training-targets step
+(Climate/LiDAR/Land cover/Text, training only), and the embedding drawn as a stack of layers:
+
+![Figure 03b](pres_03_aef_schematic_b.png)
+
 ### Figure 04 — CKIT-RF interface and interpreted reference
 ![Figure 04](pres_04_ckit_interface.png)
 
