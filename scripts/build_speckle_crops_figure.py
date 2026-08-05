@@ -1,16 +1,16 @@
 #!/usr/bin/env python3
 """Figure 2.9, the classified-map speckle crop, regenerated from the current 180-cell pipeline.
 
-One panel per embedding configuration (v2 to v6) showing the same ground location classified by each,
-to illustrate the neighbor-change speckle metric visually. This replaces the earlier crop drawn from
-the 154-location model_comparison snapshot; it now uses the current temporally-matched per-bracket
-predictions (data/raw/transfer_predictions, bands 1 to 5 = v2 to v6), the same classifications behind
-the current spatial-structure diagnostics. The neighbor-change value annotated on each panel is
-computed over all 180 current cells, not the snapshot.
+One panel per classification of the same ground location (cell 31320): the spectral baseline (Sentinel-2
+Random Forest) followed by each embedding configuration (v2 to v6), to show how map coherence differs
+across feature sets. The embedding panels use the current temporally-matched per-bracket predictions
+(data/raw/transfer_predictions, bands 1 to 5 = v2 to v6); the spectral panel uses the matching Sentinel-2
+RF classification under data/raw/rf_class_maps (its CKIT class ids are remapped to the model's 10 codes).
 
-Crop location: cell 31320 (bracket 2018_2020), whose footprint equals the earlier crop bounds
-(464760, 2593250, 468130, 2596620 in EPSG:5070), so the location is reused for continuity. It contains
-a water body where the v6 salt-and-pepper speckle is visually obvious.
+Crop location: cell 31320 (bracket 2018_2020), footprint (464760, 2593250, 468130, 2596620) in
+EPSG:5070. The spectral and prediction rasters share this exact footprint (both 337 x 337 at 10 m), so
+all six panels are pixel-aligned. The cell contains a water body where the v6 salt-and-pepper speckle is
+visually obvious.
 
 Run: python scripts/build_speckle_crops_figure.py
 Requires: rasterio, numpy, matplotlib
@@ -29,11 +29,15 @@ from matplotlib.patches import Patch, Rectangle
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 PRED_DIR = f"{ROOT}/data/raw/transfer_predictions"
+RF_MAP_DIR = f"{ROOT}/data/raw/rf_class_maps"
 OUT = f"{ROOT}/manuscript_formatting/figures"
 CROP_CELL = "31320"                                        # footprint matches the earlier crop bounds
 VBAND = {"v2": 1, "v3": 2, "v4": 3, "v5": 4, "v6": 5}      # transfer_predictions band order
 NAME10 = {1: "Harvest", 2: "Development", 3: "Forest", 4: "Urban", 5: "Water",
           6: "Agriculture", 7: "Grass/Shrub", 8: "Wetland", 9: "Beaver", 10: "Insect/Disease"}
+# model code -> CKIT label id (the spectral RF rasters are stored as CKIT ids)
+CKIT = {1: 20, 2: 30, 3: 3, 4: 0, 5: 4, 6: 1, 7: 2, 8: 5, 9: 62, 10: 50}
+CKIT2CODE = {v: k for k, v in CKIT.items()}
 
 
 def _load(name, path):
@@ -52,29 +56,21 @@ for code, col in C10.items():
 CMAP = ListedColormap([CLUT[i] for i in range(11)])
 
 
-def neighbor_change_all():
-    """Current neighbor-change per variant: fraction of horizontally-adjacent, both-valid pixel pairs
-    whose class differs, pooled over all 180 current cells."""
-    cells = sorted(glob.glob(f"{PRED_DIR}/*/pred_*.tif"))
-    diff = {v: 0 for v in VBAND}
-    tot = {v: 0 for v in VBAND}
-    for f in cells:
-        with rasterio.open(f) as s:
-            for v, b in VBAND.items():
-                a = s.read(b)
-                left, right = a[:, :-1], a[:, 1:]           # horizontally-adjacent pairs
-                valid = (left > 0) & (right > 0)
-                tot[v] += int(valid.sum())
-                diff[v] += int((valid & (left != right)).sum())
-    return {v: diff[v] / tot[v] for v in VBAND}, len(cells)
+def _spectral_crop():
+    """Sentinel-2 RF classification of the crop cell, remapped from CKIT ids to the model's 10 codes."""
+    files = glob.glob(f"{RF_MAP_DIR}/*_s2_{CROP_CELL}/*.tif")
+    if not files:
+        raise SystemExit(f"STOP: spectral RF map for cell {CROP_CELL} not found under {RF_MAP_DIR}.")
+    with rasterio.open(files[0]) as s:
+        raw = s.read(1)
+    out = np.zeros_like(raw)
+    for ckit_val, code in CKIT2CODE.items():
+        out[raw == ckit_val] = code                        # CKIT id -> model code (unmapped stays 0)
+    return out
 
 
 def main():
     os.makedirs(OUT, exist_ok=True)
-    nc, n_cells = neighbor_change_all()
-    print(f"current neighbor-change over {n_cells} cells:")
-    for v in VBAND:
-        print(f"  {v}: {nc[v]:.4f}")
 
     crop_f = glob.glob(f"{PRED_DIR}/*/pred_*_cell{CROP_CELL}.tif")
     if not crop_f:
@@ -83,42 +79,40 @@ def main():
         bands = {v: s.read(b) for v, b in VBAND.items()}
         res = s.res[0]                                       # metres per pixel (10 m)
 
-    fig, axes = plt.subplots(1, 5, figsize=(13.5, 5.4))
-    for ax, v in zip(axes, VBAND):
-        ax.imshow(bands[v], cmap=CMAP, vmin=0, vmax=10, interpolation="nearest")
-        ax.set_title(v, fontsize=14, fontweight="bold")
-        # neighbor-change value below the panel, clear of the legend
-        ax.text(0.5, -0.05, f"neighbor-change {nc[v]:.3f}", transform=ax.transAxes,
-                ha="center", va="top", fontsize=12)
+    panels = [("spectral", _spectral_crop())] + [(v, bands[v]) for v in VBAND]
+
+    fig, axes = plt.subplots(1, len(panels), figsize=(16.2, 5.4))
+    for ax, (name, arr) in zip(axes, panels):
+        ax.imshow(arr, cmap=CMAP, vmin=0, vmax=10, interpolation="nearest")
+        ax.set_title(name, fontsize=14, fontweight="bold")
         ax.set_xticks([]); ax.set_yticks([])
     # scale bar on the first panel: 1 km = 100 px at 10 m
-    h, w = bands["v2"].shape
+    h, w = panels[0][1].shape
     km_px = 1000 / res
     y0 = h - 22
     axes[0].add_patch(Rectangle((12, y0), km_px, 6, facecolor="black", edgecolor="white", lw=0.6))
     axes[0].text(12 + km_px / 2, y0 - 6, "1 km", ha="center", va="bottom", fontsize=8, color="black")
 
-    # class legend for classes present in the crop, using the standard palette
-    present = sorted({int(c) for v in VBAND for c in np.unique(bands[v]) if c > 0})
+    # class legend for classes present in any panel, using the standard palette
+    present = sorted({int(c) for _, arr in panels for c in np.unique(arr) if c > 0})
     handles = [Patch(facecolor=CLUT[c], edgecolor="0.4", label=NAME10[c]) for c in present]
     # panels occupy the top band; legend and caption sit below without overlap
-    fig.subplots_adjust(left=0.02, right=0.98, top=0.88, bottom=0.34, wspace=0.05)
+    fig.subplots_adjust(left=0.02, right=0.98, top=0.88, bottom=0.32, wspace=0.05)
     fig.legend(handles=handles, loc="lower center", ncol=5, fontsize=12,
-               frameon=False, bbox_to_anchor=(0.5, 0.18))
+               frameon=False, bbox_to_anchor=(0.5, 0.16))
 
-    fig.suptitle(f"Same Location Classified by Each Embedding Configuration (Cell {CROP_CELL})",
-                 fontsize=15, fontweight="bold", y=0.97)
+    fig.suptitle(f"Same Location Classified by the Spectral Baseline and Embedding Configurations "
+                 f"(Cell {CROP_CELL})", fontsize=15, fontweight="bold", y=0.97)
 
     # descriptive caption band below the class legend
     caption = (
-        f"The same NAIP grid cell (cell {CROP_CELL}) classified by each embedding configuration, v2 "
-        "through v6, with the standard land-cover class colors. Each panel is annotated with its "
-        "neighbor-change fraction, the share of horizontally adjacent pixel pairs assigned differing "
-        "classes pooled over all 180 cells, a per-pixel speckle measure. The scale bar is 1 km. The "
-        "dot-product configuration v6 fragments into salt-and-pepper speckle, while the "
-        "baseline-preserving configurations stay spatially coherent."
+        f"The same NAIP grid cell (cell {CROP_CELL}) classified by the spectral baseline (Sentinel-2 "
+        "Random Forest) and by each embedding configuration, v2 through v6, with the standard land-cover "
+        "class colors. The scale bar is 1 km. The dot-product configuration v6 fragments into "
+        "salt-and-pepper speckle, while the spectral baseline and the baseline-preserving embedding "
+        "configurations stay spatially coherent."
     )
-    wrapped = "\n".join(textwrap.wrap(caption, 115))
+    wrapped = "\n".join(textwrap.wrap(caption, 130))
     fig.text(0.5, 0.015, wrapped, ha="center", va="bottom", fontsize=9, color="0.3")
 
     png = f"{OUT}/figure_2_9_speckle_crops.png"
