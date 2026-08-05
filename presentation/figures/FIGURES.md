@@ -145,6 +145,14 @@ not sit inside the support period). No month offset, no dimensionality, no user-
 ![Spatial context](spatial_context.png)
 ![Temporal context](temporal_context.png)
 
+### 10-class legend
+
+Standalone color-swatch legend for the 10 model classes (no title), grouped into the six no-change
+classes and the four change classes. Colors are the canonical project legend (load_mappings), transparent
+background for placing beside a classified map:
+
+![10-class legend](pres_10class_legend.png)
+
 ## Supplemental figures
 
 ### Supplemental — Tasseled Cap class-centroid trajectory
