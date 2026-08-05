@@ -131,7 +131,7 @@ def main():
                          "font.sans-serif": ["Helvetica", "Arial", "DejaVu Sans"], "font.size": 16})
     slide_font.use_spectral()
     fig, (axL, axR) = plt.subplots(1, 2, figsize=(12, 7))
-    fig.subplots_adjust(left=0.02, right=0.98, top=0.98, bottom=0.18, wspace=0.06)
+    fig.subplots_adjust(left=0.02, right=0.98, top=0.98, bottom=0.22, wspace=0.06)
 
     # left: full census, every pixel colored by class
     rgb = np.ones((H, W, 3))
@@ -140,7 +140,7 @@ def main():
     axL.imshow(rgb, interpolation="nearest")
     axL.set_axis_off()
     axL.text(0.5, -0.04, f"every pixel labeled\n({n_valid:,} px)", transform=axL.transAxes,
-             ha="center", va="top", fontsize=17)
+             ha="center", va="top", fontsize=15)
 
     # right: same cell in light grey, 50 sampled points colored by reference class
     grey = np.ones((H, W, 3))
@@ -151,13 +151,13 @@ def main():
         axR.plot(cc, r, marker="o", markersize=9, markerfacecolor=pal[c][1],
                  markeredgecolor="black", markeredgewidth=0.8, linestyle="none")
     axR.text(0.5, -0.04, f"{N_POINTS} sampled points", transform=axR.transAxes,
-             ha="center", va="top", fontsize=17)
+             ha="center", va="top", fontsize=15)
 
     # shared legend, classes present in the cell
     handles = [Patch(facecolor=pal[c][1], edgecolor="black", linewidth=0.6, label=NAMES[c])
                for c in present]
     fig.legend(handles=handles, loc="lower center", ncol=len(present), frameon=False,
-               fontsize=14, handletextpad=0.5, columnspacing=1.4, bbox_to_anchor=(0.5, 0.02))
+               fontsize=13, handletextpad=0.5, columnspacing=1.4, bbox_to_anchor=(0.5, 0.015))
 
     os.makedirs(OUT, exist_ok=True)
     fig.savefig(os.path.join(OUT, "pres_05_census_vs_points.png"), dpi=300, bbox_inches="tight")
