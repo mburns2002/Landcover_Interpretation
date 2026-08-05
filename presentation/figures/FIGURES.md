@@ -63,6 +63,19 @@ Option B, design-based 5-class OA:
 
 ![Figure 06b](pres_06b_speckle_vs_oa_5class.png)
 
+### Figure 11 — Four-stage workflow (colored)
+
+Reference, Features (the single fork: two-date AlphaEarth embeddings and the Spectral composite),
+Classification, Evaluation. Colored-box variant:
+
+![Figure 11 colored](pres_11_workflow_simple_colored.png)
+
+Version 2 — same flow with a classified land-cover map under the Classification box (illustrative
+pixels, like pres_16), Reference trimmed to two lines, and the Features labels updated (two-date
+AlphaEarth; "Spectral composite" over "Sentinel-2, Landsat 8, Sentinel-1 bands + indices"):
+
+![Figure 11 colored v2](pres_11_workflow_simple_colored_v2.png)
+
 ### Figure 14 — Five-class change F1 across sources (primary results)
 
 Per-class F1 for the four change classes, all six sources on the common 168-cell set. No per-class
