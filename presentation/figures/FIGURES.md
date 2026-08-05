@@ -134,6 +134,19 @@ Forest (300 trees) into a land-cover map. The growing-season window is user-supp
 
 ![Figure 16](pres_16_spectral_baseline.png)
 
+### Figure 17 — Accuracy metrics by model
+
+Grouped bar chart of the 10-class headline metrics (OA, F1, IoU, Kappa; Table 2.3), grouped by statistic
+and colored by model.
+
+Version A, the five embedding models (v2 to v6):
+
+![Figure 17](pres_17_model_metrics.png)
+
+Version B, the same plus the spectral baseline (spec_all, grey; on the common 168-cell set):
+
+![Figure 17 with spec](pres_17_model_metrics_with_spec.png)
+
 ### AlphaEarth Foundations context panels
 
 Two transparent 5.5 x 4.5 in slide panels (flat style matching the GFM band-stack reference), for the
