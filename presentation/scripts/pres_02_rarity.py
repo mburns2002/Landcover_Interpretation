@@ -106,7 +106,7 @@ def main():
         centers[c] = cumb + change[c] / 2
         cumb += change[c]
     axB.set_xlim(0, change_total * 1.34)
-    axB.set_ylim(-2.4, 0.9)
+    axB.set_ylim(-2.75, 0.9)
     axB.set_yticks([])
     axB.set_xticks([0, 1e5, 2e5, 3e5])
     axB.set_xticklabels(["0", "100k", "200k", "300k"], fontsize=13)
@@ -126,7 +126,7 @@ def main():
         lx, ly, ha, yanchor = lab[c]
         axB.annotate(f"{c}\n{change[c]:,} px  ({_pct(100*change[c]/total)})",
                      xy=(centers[c], yanchor), xytext=(lx, ly), ha=ha, va="top",
-                     fontsize=13.5, color="0.1", arrowprops=dict(arrowstyle="-", color="0.5", lw=0.9))
+                     fontsize=12.5, color="0.1", arrowprops=dict(arrowstyle="-", color="0.5", lw=0.9))
 
     # zoom funnel connecting the change sliver in A to the full width of B
     for xa, xb in [(stable_total, 0), (total, change_total)]:
