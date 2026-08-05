@@ -63,7 +63,7 @@ def main():
     r = tmp.canvas.get_renderer()
     wa = max(_measure(tmp, r, NAME10[c], LABEL_FS) for c in STABLE)
     wb = max(_measure(tmp, r, NAME10[c], LABEL_FS) for c in CHANGE)
-    wa = max(wa, _measure(tmp, r, "No-change", HDR_FS))
+    wa = max(wa, _measure(tmp, r, "Stable", HDR_FS))
     wb = max(wb, _measure(tmp, r, "Change", HDR_FS))
     plt.close(tmp)
 
@@ -84,15 +84,15 @@ def main():
     row0 = hdr_y - HDR_GAP - RP / 2                              # center y of the first row in each column
 
     def column(sw_x, lbl_x, header, codes):
-        ax.text(sw_x, hdr_y, header, ha="left", va="top", fontsize=HDR_FS, style="italic",
-                color="0.35")
+        ax.text(sw_x, hdr_y, header, ha="left", va="top", fontsize=HDR_FS, fontweight="bold",
+                color="#1a1a1a")
         for i, code in enumerate(codes):
             cy = row0 - i * RP
             ax.add_patch(Rectangle((sw_x, cy - SH / 2), SW, SH, facecolor=c10[code],
                                    edgecolor=SWATCH_EDGE, linewidth=0.8))
             ax.text(lbl_x, cy, NAME10[code], ha="left", va="center", fontsize=LABEL_FS, color="#1a1a1a")
 
-    column(colA_sw, colA_lbl, "No-change", STABLE)
+    column(colA_sw, colA_lbl, "Stable", STABLE)
     column(colB_sw, colB_lbl, "Change", CHANGE)
 
     os.makedirs(OUT, exist_ok=True)
