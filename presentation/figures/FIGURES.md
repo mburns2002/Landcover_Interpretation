@@ -101,6 +101,10 @@ Version 4 — equations with abstract embedding textures: emb − emb = delta ou
 
 ![Figure 15 v4](pres_15_embedding_ops_version_4.png)
 
+Version 5 — same as v4 but with smoother, more continuous embedding textures (like a true embedding):
+
+![Figure 15 v5](pres_15_embedding_ops_version_5.png)
+
 ### Figure 16 — How the spectral composite baseline is built
 
 Linear pipeline: three sensors, each a distinct color and showing its bands by type (Sentinel-2
