@@ -201,9 +201,9 @@ def draw_bracket_facets(per_bracket, per_bracket_n):
     axes[5].axis("off")
     handles, labels = axes[0].get_legend_handles_labels()
     axes[5].legend(handles, labels, fontsize=BODY_FS - 3, frameon=False, loc="upper center",
-                   bbox_to_anchor=(0.5, 1.04), title="Change class", title_fontsize=BODY_FS - 1,
-                   labelspacing=0.55, handlelength=1.3)
-    axes[5].text(0.5, 0.44,
+                   bbox_to_anchor=(0.5, 1.08), title="Change class", title_fontsize=BODY_FS - 1,
+                   labelspacing=0.42, handlelength=1.3)
+    axes[5].text(0.5, 0.4,
                  "Backup slide. Failure is uniform\n"
                  "in every bracket: no source clears\n"
                  "F1 ≈ 0.23 on any change class, and\n"
@@ -211,9 +211,9 @@ def draw_bracket_facets(per_bracket, per_bracket_n):
                  "across brackets. Disjoint cell sets\n"
                  "mean sources are not comparable.",
                  transform=axes[5].transAxes, ha="center", va="top",
-                 fontsize=BODY_FS - 5, color="0.25", linespacing=1.4)
+                 fontsize=BODY_FS - 6, color="0.25", linespacing=1.3)
     fig.suptitle("Five-Class Change F1 by Bracket", fontsize=AXIS_FS + 1, y=0.98)
-    fig.subplots_adjust(left=0.06, right=0.99, top=0.9, bottom=0.06, hspace=0.32, wspace=0.2)
+    fig.subplots_adjust(left=0.06, right=0.99, top=0.9, bottom=0.09, hspace=0.32, wspace=0.2)
     return fig
 
 

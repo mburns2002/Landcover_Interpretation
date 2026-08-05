@@ -109,7 +109,7 @@ def _draw_target_subcolumn(ax, renderer, x, top_y, w, groups):
     # draw type-grouped outlined boxes flowing downward, return the y of the lowest box bottom.
     # taller boxes with tighter gaps keep the column the same height while giving the two text
     # lines clear margins from the box borders
-    tbh, gap, lab, ggap = 0.072, 0.010, 0.032, 0.020
+    tbh, gap, lab, ggap = 0.068, 0.008, 0.042, 0.016
     y = top_y
     low = top_y
     for gname, boxes in groups:
@@ -146,8 +146,8 @@ def main():
     fig.canvas.draw()
     renderer = fig.canvas.get_renderer()
 
-    ax.text(0.5, 0.975, "AlphaEarth: Inference Inputs Versus Training Targets",
-            ha="center", va="top", fontsize=22, fontweight="bold")
+    ax.text(0.5, 0.982, "AlphaEarth: Inference Inputs Versus Training Targets",
+            ha="center", va="top", fontsize=19, fontweight="bold")
 
     # ---- register 1: inputs (solid) ----
     c1x, c1w = 0.015, 0.185
