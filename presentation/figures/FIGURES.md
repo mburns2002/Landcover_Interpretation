@@ -134,6 +134,20 @@ Forest (300 trees) into a land-cover map. The growing-season window is user-supp
 
 ![Figure 16](pres_16_spectral_baseline.png)
 
+### Figure 18 — Change-agent F1 by model (five-class)
+
+Transpose of Figure 14: grouped by change agent (Harvest, Development, Beaver, Insect/Disease), one bar
+per model (v2 to v6 and the spectral baseline spec_all), colored by model. Same five-class per-class F1
+on the common 168-cell set as Figure 14.
+
+Version A, y auto-zoomed just above the tallest bar:
+
+![Figure 18](pres_18_changeagent_f1_5class.png)
+
+Version B, full 0–1 scale (drives the "all change F1 is at the floor" message):
+
+![Figure 18 full](pres_18_changeagent_f1_5class_full.png)
+
 ### Figure 17 — Accuracy metrics by model
 
 Grouped bar chart of the 10-class headline metrics (OA, F1, IoU, Kappa; Table 2.3), grouped by statistic
