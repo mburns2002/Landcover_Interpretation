@@ -119,14 +119,21 @@ def main():
     lab = {
         "Harvest": (centers["Harvest"], -1.05, "center", -0.28),
         "Insect/Disease": (centers["Insect/Disease"], -1.05, "center", -0.28),
-        "Development": (xr, -0.35, "left", -0.12),
-        "Beaver": (xr, -1.6, "left", -0.12),
+        "Beaver": (xr, -0.35, "left", -0.12),
+        "Development": (xr, -1.5, "left", -0.12),
     }
     for c in order:
         lx, ly, ha, yanchor = lab[c]
-        axB.annotate(f"{c}\n{change[c]:,} px  ({_pct(100*change[c]/total)})",
-                     xy=(centers[c], yanchor), xytext=(lx, ly), ha=ha, va="top",
-                     fontsize=12.5, color="0.1", arrowprops=dict(arrowstyle="-", color="0.5", lw=0.9))
+        txt = f"{c}\n{change[c]:,} px  ({_pct(100*change[c]/total)})"
+        if c in ("Beaver", "Development"):
+            # elbow leader: straight down from the segment, then across to the label (never crosses text)
+            axB.text(lx, ly, txt, ha=ha, va="top", fontsize=12.5, color="0.1")
+            sx = centers[c]
+            axB.plot([sx, sx, lx - change_total * 0.015], [yanchor, ly + 0.06, ly + 0.06],
+                     color="0.5", lw=0.9, zorder=1, solid_capstyle="round", solid_joinstyle="round")
+        else:
+            axB.annotate(txt, xy=(centers[c], yanchor), xytext=(lx, ly), ha=ha, va="top",
+                         fontsize=12.5, color="0.1", arrowprops=dict(arrowstyle="-", color="0.5", lw=0.9))
 
     # zoom funnel connecting the change sliver in A to the full width of B
     for xa, xb in [(stable_total, 0), (total, change_total)]:
