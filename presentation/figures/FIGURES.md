@@ -26,6 +26,12 @@ Option B, 2018-2020 (aligned with the classification window):
 
 ![Figure 02b, 2018-2020](pres_02b_polygon_area_2018_2020.png)
 
+Companion — rarity on an area basis, with the seven GLKN park watersheds (21,645 km²) as the universe.
+Attributed change polygons (2010-2020) cover 619 km² = 2.9% of the watersheds; Panel B zooms the change
+sliver by type (Harvest 2.48%, Development 0.30%, Beaver 0.059%, Insect/Disease 0.013% of watershed area):
+
+![Figure 02c, watershed rarity](pres_02c_watershed_rarity.png)
+
 ### Figure 03 — AlphaEarth schematic (two options)
 
 Option A, inputs vs training targets:
