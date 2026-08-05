@@ -31,6 +31,8 @@ import os
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
+
+import slide_font
 import matplotlib.transforms as mtransforms
 from matplotlib.lines import Line2D
 from matplotlib.patches import FancyArrowPatch
@@ -95,6 +97,7 @@ def _style():
         "font.size": 9,
         "axes.linewidth": 0.8,
     })
+    slide_font.use_spectral()
 
 
 def _marker(ax, xi, y, marker, mfc, mec="black", mew=0.6, ms=7):

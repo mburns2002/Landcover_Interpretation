@@ -14,6 +14,8 @@ import os
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
+
+import slide_font
 from matplotlib.patches import FancyBboxPatch, FancyArrowPatch
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -44,6 +46,7 @@ def main():
     plt.rcParams.update({"font.family": "sans-serif",
                          "font.sans-serif": ["Helvetica", "Arial", "DejaVu Sans"],
                          "font.size": 18, "pdf.fonttype": 42, "ps.fonttype": 42})
+    slide_font.use_spectral()
     fig, ax = plt.subplots(figsize=(13.33, 7.5))
     ax.set_xlim(0, 1)
     ax.set_ylim(0, 1)

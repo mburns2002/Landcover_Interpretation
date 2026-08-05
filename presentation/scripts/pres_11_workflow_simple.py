@@ -22,7 +22,10 @@ import os
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
+
+import slide_font
 from matplotlib.patches import FancyBboxPatch, FancyArrowPatch
+slide_font.use_spectral()
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(os.path.dirname(HERE))
@@ -40,8 +43,8 @@ STAGE_COLORS = {"Reference": ("#dcefe1", "#4e9e72"),        # green
 
 FIG_W, FIG_H = 12.0, 5.8
 WB, PAD_X, GAP, MARGIN = 2.5, 0.24, 0.47, 0.28     # box width, side pad, inter-stage gap, margin (in)
-LH, VPAD = 0.30, 0.22                               # line height, box vertical pad (in)
-LABEL_FS, DETAIL_FS, CTRL_FS = 20, 14, 12
+LH, VPAD = 0.34, 0.22                               # line height, box vertical pad (in)
+LABEL_FS, DETAIL_FS, CTRL_FS = 20, 13, 12
 DIM = {"Classification", "Evaluation"}
 INNER = WB - 2 * PAD_X
 CTRL_LINES = []

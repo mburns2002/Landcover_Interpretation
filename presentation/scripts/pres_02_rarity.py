@@ -24,6 +24,8 @@ import os
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
+
+import slide_font
 from matplotlib.patches import ConnectionPatch
 import pandas as pd
 
@@ -71,6 +73,7 @@ def main():
     plt.rcParams.update({"font.family": "sans-serif",
                          "font.sans-serif": ["Helvetica", "Arial", "DejaVu Sans"],
                          "font.size": 16, "axes.linewidth": 1.0})
+    slide_font.use_spectral()
     fig, (axA, axB) = plt.subplots(2, 1, figsize=(11, 6), gridspec_kw=dict(height_ratios=[1, 1.5]))
     fig.subplots_adjust(left=0.06, right=0.97, top=0.86, bottom=0.13, hspace=0.9)
     axA.set_title("Change Classes Are 1.6% of Reference Pixels", fontsize=19, fontweight="bold", pad=12)

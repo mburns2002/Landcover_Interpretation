@@ -27,6 +27,8 @@ import re
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
+
+import slide_font
 import numpy as np
 import pandas as pd
 import rasterio
@@ -175,6 +177,7 @@ def main():
 
     plt.rcParams.update({"font.family": "sans-serif",
                          "font.sans-serif": ["Helvetica", "Arial", "DejaVu Sans"], "font.size": 14})
+    slide_font.use_spectral()
     fig, axes = plt.subplots(1, len(panels), figsize=(2.55 * len(panels), 5.6))
     for ax, (title, img, nc) in zip(axes, panels):
         ax.imshow(img, cmap=CMAP, vmin=0, vmax=10, interpolation="nearest")

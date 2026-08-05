@@ -26,6 +26,8 @@ import os
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
+
+import slide_font
 from matplotlib.lines import Line2D
 import pandas as pd
 from scipy.stats import spearmanr
@@ -65,6 +67,7 @@ def _style():
         "font.size": 16,
         "axes.linewidth": 1.0,
     })
+    slide_font.use_spectral()
 
 
 def main():

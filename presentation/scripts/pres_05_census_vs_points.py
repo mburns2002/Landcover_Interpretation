@@ -28,6 +28,8 @@ import re
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
+
+import slide_font
 from matplotlib.colors import to_rgb
 from matplotlib.patches import Patch
 import numpy as np
@@ -127,6 +129,7 @@ def main():
 
     plt.rcParams.update({"font.family": "sans-serif",
                          "font.sans-serif": ["Helvetica", "Arial", "DejaVu Sans"], "font.size": 16})
+    slide_font.use_spectral()
     fig, (axL, axR) = plt.subplots(1, 2, figsize=(12, 7))
     fig.subplots_adjust(left=0.02, right=0.98, top=0.98, bottom=0.18, wspace=0.06)
 

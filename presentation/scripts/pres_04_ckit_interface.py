@@ -17,6 +17,8 @@ import re
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
+
+import slide_font
 from matplotlib.colors import to_rgb
 from matplotlib.patches import Patch
 import numpy as np
@@ -114,6 +116,7 @@ def main():
 
     plt.rcParams.update({"font.family": "sans-serif",
                          "font.sans-serif": ["Helvetica", "Arial", "DejaVu Sans"], "font.size": 15})
+    slide_font.use_spectral()
     fig = plt.figure(figsize=(16, 8))
     fig.text(0.5, 0.99, "CKIT-RF Interpretation: Interface and Resulting Reference",
              ha="center", va="top", fontsize=21, fontweight="bold")

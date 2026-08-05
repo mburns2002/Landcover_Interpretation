@@ -16,6 +16,8 @@ import os
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
+
+import slide_font
 import numpy as np
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -57,6 +59,7 @@ def main():
 
     plt.rcParams.update({"font.family": "sans-serif",
                          "font.sans-serif": ["Helvetica", "Arial", "DejaVu Sans"], "font.size": 16})
+    slide_font.use_spectral()
     fig = plt.figure(figsize=(FIG_W, FIG_H))
     fig.suptitle("NAIP Examples by Change Agent (Before and After)", fontsize=21, fontweight="bold",
                  y=0.96)

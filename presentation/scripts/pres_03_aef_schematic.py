@@ -34,6 +34,8 @@ import os
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
+
+import slide_font
 from matplotlib.patches import FancyBboxPatch, FancyArrowPatch, Rectangle
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -135,6 +137,7 @@ def main():
         "pdf.fonttype": 42,   # keep text as text (embedded TrueType), not paths
         "ps.fonttype": 42,
     })
+    slide_font.use_spectral()
 
     fig, ax = plt.subplots(figsize=(13.33, 7.5))
     ax.set_xlim(0, 1)

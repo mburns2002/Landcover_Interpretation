@@ -12,6 +12,8 @@ import os
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
+
+import slide_font
 from matplotlib.patches import FancyArrowPatch, FancyBboxPatch, Rectangle
 
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -21,6 +23,7 @@ TEXT, MUTED, BORDER, PANEL, COPPER = "#22282B", "#6B7378", "#C9CED2", "#F2F3F4",
 ARROW = "#AEB4B9"
 plt.rcParams.update({"font.family": "sans-serif",
                      "font.sans-serif": ["Helvetica", "Arial", "DejaVu Sans"]})
+slide_font.use_spectral()
 FS_HEADER, FS_BODY, FS_MUTED, FS_SMALL = 17, 13.5, 12.5, 11.5
 
 FIG_W, FIG_H = 5.5, 4.5

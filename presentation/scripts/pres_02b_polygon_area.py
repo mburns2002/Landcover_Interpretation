@@ -27,6 +27,8 @@ import os
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
+
+import slide_font
 import pandas as pd
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -64,6 +66,7 @@ def _plot(data, title, stem):
     plt.rcParams.update({"font.family": "sans-serif",
                          "font.sans-serif": ["Helvetica", "Arial", "DejaVu Sans"],
                          "font.size": 16, "axes.linewidth": 1.0})
+    slide_font.use_spectral()
     fig, ax = plt.subplots(figsize=(10, 5.6))
     fig.subplots_adjust(left=0.16, right=0.97, top=0.88, bottom=0.15)
     ax.set_title(title, fontsize=19, fontweight="bold", pad=12)
