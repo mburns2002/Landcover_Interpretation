@@ -36,13 +36,13 @@ COLOR = {"v2": "#1f77b4", "v3": "#2ca02c", "v4": "#9467bd", "v5": "#ff7f0e", "v6
 STATS = [("OA", "OA"), ("F1", "Macro-F1"), ("IoU", "Mean IoU"), ("Kappa", "Kappa")]
 
 
-def _draw(df, models, stem, title, caption):
+def _draw(df, models, stem, title, caption, note):
     x = np.arange(len(STATS))
     n = len(models)
     bar_w = 0.8 / n
 
-    fig, ax = plt.subplots(figsize=(10, 5.8))
-    fig.subplots_adjust(left=0.08, right=0.98, top=0.90, bottom=0.20)
+    fig, ax = plt.subplots(figsize=(10, 7.2))
+    fig.subplots_adjust(left=0.08, right=0.98, top=0.92, bottom=0.33)
 
     for i, m in enumerate(models):
         offs = (i - (n - 1) / 2) * bar_w
@@ -64,7 +64,8 @@ def _draw(df, models, stem, title, caption):
               handletextpad=0.5)
     ax.set_title(title, fontsize=17, fontweight="bold", pad=12)
 
-    fig.text(0.5, 0.035, caption, ha="center", va="bottom", fontsize=11, color="0.35")
+    fig.text(0.5, 0.25, caption, ha="center", va="top", fontsize=11, color="0.35", linespacing=1.4)
+    fig.text(0.5, 0.15, note, ha="center", va="top", fontsize=9.5, color="0.45", linespacing=1.35)
 
     os.makedirs(OUT, exist_ok=True)
     fig.savefig(os.path.join(OUT, f"{stem}.png"), dpi=300)
@@ -72,17 +73,23 @@ def _draw(df, models, stem, title, caption):
     print(f"wrote {stem}.png")
 
 
+NOTE = ("Metrics: OA = fraction of pixels correct; F1 = macro-average of per-class F1; IoU = mean per-class IoU;\n"
+        "Kappa = chance-corrected agreement. OA is much higher because it is dominated by the abundant common\n"
+        "classes (Forest, Water, Agriculture) that every model gets right, whereas F1 and IoU weight all classes\n"
+        "equally (the rare change classes pull them down) and Kappa discounts chance agreement under the class skew.")
+
+
 def main():
     df = pd.read_csv(T23).set_index("Source")
 
     _draw(df, ["v2", "v3", "v4", "v5", "v6"], "pres_17_model_metrics",
           "Accuracy Metrics by Embedding Model",
-          "10-class metrics on the 180-cell reference (Table 2.3). F1 is macro-averaged, IoU is the mean over classes.")
+          "10-class metrics on the 180-cell reference (Table 2.3).", NOTE)
 
     _draw(df, ["v2", "v3", "v4", "v5", "v6", "spec_all"], "pres_17_model_metrics_with_spec",
           "Accuracy Metrics by Model, with Spectral Baseline",
-          "10-class metrics (Table 2.3). F1 macro-averaged, IoU mean over classes. "
-          "Embedding models on 180 cells; spec_all on the common 168-cell set.")
+          "10-class metrics (Table 2.3). Embedding models on 180 cells; spec_all on the common 168-cell set.",
+          NOTE)
 
 
 if __name__ == "__main__":
