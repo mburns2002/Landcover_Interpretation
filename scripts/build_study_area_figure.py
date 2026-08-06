@@ -49,6 +49,8 @@ LABEL_OFFSET = {"Michigan": (-45000, 30000)}
 # interpreted-cell brackets, temporal order; sequential viridis so the color reads as a time axis
 BRACKETS = ["2017_2019", "2018_2020", "2019_2021", "2020_2022", "2021_2023"]
 BRACKET_COLOR = {b: plt.get_cmap("viridis")(i / (len(BRACKETS) - 1)) for i, b in enumerate(BRACKETS)}
+# by-bracket variant draws all parks in one neutral color with a single legend entry
+PARK_ONE_FILL, PARK_ONE_EDGE = "#9c9c9c", "#5a5a5a"
 
 
 def draw_scalebar(ax, length_m=150000, n_seg=3):
@@ -118,7 +120,7 @@ def main(show_cells=True, color_by_bracket=False):
     ylim = (miny - 0.13 * ry, maxy + 0.06 * ry)
 
     # map on top, external legend strip below (keeps double-column width, frees the data area)
-    fig_h, leg_ratio = (7.4, 1.7) if color_by_bracket else (6.7, 1.15)   # taller strip for the bracket legend
+    fig_h, leg_ratio = (7.0, 1.35) if color_by_bracket else (6.7, 1.15)   # room for the bracket legend
     fig = plt.figure(figsize=(7.5, fig_h))
     gs = fig.add_gridspec(2, 1, height_ratios=[6.0, leg_ratio], hspace=0.02)
     ax = fig.add_subplot(gs[0])
@@ -129,10 +131,15 @@ def main(show_cells=True, color_by_bracket=False):
     lakes.plot(ax=ax, facecolor="#cfe3ef", edgecolor="#9dc4d8", linewidth=0.3, zorder=2)
     gpd.GeoSeries([footprint], crs=CRS).plot(ax=ax, facecolor="none",
                                              edgecolor="black", linewidth=0.8, zorder=3)
-    for code, sub in parks.groupby("park"):
-        sub.plot(ax=ax, facecolor=PARK_COLOR[code], edgecolor=PARK_COLOR[code],
-                 alpha=0.45, linewidth=1.1, zorder=4)
-        sub.boundary.plot(ax=ax, color=PARK_COLOR[code], linewidth=1.1, zorder=5)
+    if color_by_bracket:                                       # all parks one neutral color
+        parks.plot(ax=ax, facecolor=PARK_ONE_FILL, edgecolor=PARK_ONE_EDGE,
+                   alpha=0.5, linewidth=1.0, zorder=4)
+        parks.boundary.plot(ax=ax, color=PARK_ONE_EDGE, linewidth=1.0, zorder=5)
+    else:
+        for code, sub in parks.groupby("park"):
+            sub.plot(ax=ax, facecolor=PARK_COLOR[code], edgecolor=PARK_COLOR[code],
+                     alpha=0.45, linewidth=1.1, zorder=4)
+            sub.boundary.plot(ax=ax, color=PARK_COLOR[code], linewidth=1.1, zorder=5)
     if show_cells and color_by_bracket:
         for bk in BRACKETS:                                    # interpreted cells colored by bracket
             sub = interp[interp.bracket == bk]
@@ -167,9 +174,13 @@ def main(show_cells=True, color_by_bracket=False):
                 ha="center", va="center", fontsize=11, fontweight="bold",
                 arrowprops=dict(arrowstyle="-|>", color="black", linewidth=1.4))
 
-    # external legend strip below the map: parks (full names) plus the grid and cell layers
-    handles = [Patch(facecolor=PARK_COLOR[c], edgecolor=PARK_COLOR[c], alpha=0.6,
-                     label=PARK_NAME[c]) for c in sorted(PARK_NAME)]
+    # external legend strip below the map: parks plus the grid and cell layers
+    if color_by_bracket:                                       # single park entry (all one color)
+        handles = [Patch(facecolor=PARK_ONE_FILL, edgecolor=PARK_ONE_EDGE, alpha=0.6,
+                         label="GLKN park units")]
+    else:                                                      # per-park entries with full names
+        handles = [Patch(facecolor=PARK_COLOR[c], edgecolor=PARK_COLOR[c], alpha=0.6,
+                         label=PARK_NAME[c]) for c in sorted(PARK_NAME)]
     handles += [Patch(facecolor="none", edgecolor="black", linewidth=0.8,
                       label="Study grid extent")]
     if show_cells and color_by_bracket:
