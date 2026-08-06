@@ -46,11 +46,18 @@ PARK_COLOR = {
 STATE_LABELS = ["Minnesota", "Wisconsin", "Michigan"]
 # small nudge in meters (dx, dy) so a label clears a nearby cell; Michigan up and left a little
 LABEL_OFFSET = {"Michigan": (-45000, 30000)}
-# interpreted-cell brackets, temporal order; sequential viridis so the color reads as a time axis
+# interpreted-cell brackets; distinct hues (not a single ramp) so adjacent years, esp. the first two,
+# are easy to tell apart; avoids the light-brown park and the blue lakes
 BRACKETS = ["2017_2019", "2018_2020", "2019_2021", "2020_2022", "2021_2023"]
-BRACKET_COLOR = {b: plt.get_cmap("viridis")(i / (len(BRACKETS) - 1)) for i, b in enumerate(BRACKETS)}
-# by-bracket variant draws all parks in one neutral color with a single legend entry
-PARK_ONE_FILL, PARK_ONE_EDGE = "#9c9c9c", "#5a5a5a"
+BRACKET_COLOR = {
+    "2017_2019": "#6a3d9a",   # purple
+    "2018_2020": "#33a02c",   # green
+    "2019_2021": "#1f78b4",   # blue
+    "2020_2022": "#e7298a",   # magenta
+    "2021_2023": "#e6ab02",   # gold
+}
+# by-bracket variant draws all parks in one light-brown color with a single legend entry
+PARK_ONE_FILL, PARK_ONE_EDGE = "#c19a6b", "#6b4f2a"
 
 
 def draw_scalebar(ax, length_m=150000, n_seg=3):
