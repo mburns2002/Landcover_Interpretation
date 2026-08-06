@@ -23,6 +23,7 @@ import matplotlib.pyplot as plt
 import slide_font
 import numpy as np
 import pandas as pd
+from matplotlib.lines import Line2D
 slide_font.use_spectral()
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -64,11 +65,15 @@ def predicted_pixels(df):
     for ax in axes[1, :]:
         ax.set_xlabel("Change-class training cap (points)", fontsize=13)
     fig.suptitle("Predicted Change Pixels vs Training Cap (Five-Class)", fontsize=18,
-                 fontweight="bold", y=0.965)
-    fig.text(0.5, 0.035, "Solid: change pixels predicted at each cap. Dashed: interpreted-reference "
-             "count. Higher caps flood the map with false change.",
+                 fontweight="bold", y=0.985)
+    proxies = [Line2D([0], [0], color="0.35", lw=2.4, label="predicted (per change class)"),
+               Line2D([0], [0], color="0.35", lw=1.8, ls=(0, (5, 2)), label="interpreted-reference count")]
+    fig.legend(handles=proxies, loc="upper center", bbox_to_anchor=(0.5, 0.925), ncol=2, fontsize=11,
+               frameon=False, columnspacing=2.0, handlelength=2.2)
+    fig.text(0.5, 0.035, "Higher caps flood the map with false change: predictions climb far above the "
+             "interpreted-reference count, especially Beaver and Development.",
              ha="center", va="bottom", fontsize=11, color="0.35")
-    fig.subplots_adjust(left=0.08, right=0.98, top=0.88, bottom=0.16, hspace=0.36, wspace=0.24)
+    fig.subplots_adjust(left=0.08, right=0.98, top=0.845, bottom=0.16, hspace=0.36, wspace=0.24)
     fig.savefig(os.path.join(OUT_DIR, "changecap_predicted_pixels_vs_cap.png"), dpi=300)
     plt.close(fig)
 
