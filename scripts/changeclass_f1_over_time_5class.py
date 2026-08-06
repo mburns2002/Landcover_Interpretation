@@ -45,7 +45,7 @@ LINE_COLOR = {"Harvest": "#C9A227", "Development": "red", "Beaver": "orange", "I
 
 def _blab(b):
     a, c = b.split("_")
-    return f"{a}–{c[2:]}"                # 2017_2019 -> 2017-19
+    return str((int(a) + int(c)) // 2)   # 2017_2019 -> center year 2018
 
 
 def main():
@@ -75,7 +75,7 @@ def main():
         ax.set_title(s, fontsize=14, fontweight="bold")
         ax.set_ylim(0, ymax)
         ax.set_xticks(xs)
-        ax.set_xticklabels([_blab(b) for b in BRACKETS], fontsize=10, rotation=30, ha="right")
+        ax.set_xticklabels([_blab(b) for b in BRACKETS], fontsize=11)
         ax.tick_params(axis="y", labelsize=11)
         ax.grid(False)
         for sp in ("top", "right"):
