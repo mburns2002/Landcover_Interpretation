@@ -87,15 +87,15 @@ def main():
         ax.set_ylabel("Per-class F1 (5-class)", fontsize=12)
 
     handles, labels = axes.ravel()[0].get_legend_handles_labels()
-    fig.legend(handles, labels, ncol=4, fontsize=12, frameon=False, loc="lower center",
-               bbox_to_anchor=(0.5, 0.0))
+    fig.legend(handles, labels, ncol=4, fontsize=12, frameon=False, loc="upper center",
+               bbox_to_anchor=(0.5, 0.105))
     fig.suptitle("Change-Class F1 Over Time by Model (Five-Class Collapse)", fontsize=17,
                  fontweight="bold", y=0.98)
-    fig.text(0.5, 0.055, f"Per-class F1 for the four change classes across temporal brackets, "
+    fig.text(0.5, 0.03, f"Per-class F1 for the four change classes across temporal brackets, "
              f"common cell set (N = {n_cells} cell-brackets). Bracket cell counts: "
              + ", ".join(f"{_blab(b)}: {per_bracket_n[b]}" for b in BRACKETS) + ".",
              ha="center", va="bottom", fontsize=9, color="0.35")
-    fig.subplots_adjust(left=0.06, right=0.98, top=0.9, bottom=0.16, hspace=0.35, wspace=0.12)
+    fig.subplots_adjust(left=0.06, right=0.98, top=0.9, bottom=0.18, hspace=0.35, wspace=0.12)
 
     fig.savefig(os.path.join(OUT, "changeclass_f1_over_time_5class.png"), dpi=200)
     plt.close(fig)
@@ -119,15 +119,15 @@ def main():
         ax.set_ylabel("Per-class F1 (5-class)", fontsize=12)
 
     handles, labels = axes2.ravel()[0].get_legend_handles_labels()
-    fig2.legend(handles, labels, ncol=6, fontsize=12, frameon=False, loc="lower center",
-                bbox_to_anchor=(0.5, 0.0))
+    fig2.legend(handles, labels, ncol=6, fontsize=12, frameon=False, loc="upper center",
+                bbox_to_anchor=(0.5, 0.105))
     fig2.suptitle("Change-Class F1 Over Time by Change Type (Five-Class Collapse)", fontsize=17,
                   fontweight="bold", y=0.98)
-    fig2.text(0.5, 0.05, f"Per-class F1 over time, one panel per change class, lines colored by model. "
+    fig2.text(0.5, 0.03, f"Per-class F1 over time, one panel per change class, lines colored by model. "
               f"y-axes are scaled per panel (change classes differ by ~10x). "
               f"Common cell set (N = {n_cells} cell-brackets).", ha="center", va="bottom",
               fontsize=9, color="0.35")
-    fig2.subplots_adjust(left=0.08, right=0.98, top=0.9, bottom=0.14, hspace=0.35, wspace=0.18)
+    fig2.subplots_adjust(left=0.08, right=0.98, top=0.9, bottom=0.18, hspace=0.35, wspace=0.18)
     fig2.savefig(os.path.join(OUT, "changeclass_f1_over_time_5class_by_class.png"), dpi=200)
     plt.close(fig2)
 
