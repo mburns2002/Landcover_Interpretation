@@ -41,6 +41,8 @@ _Alternate marker treatments for the variant-composition figure live in `marker_
 
 ## Analysis subfolders
 
+- [watershed_accuracy/](watershed_accuracy/) — per-class accuracy for interpreted cells inside vs outside
+  a GLKN watershed (13 vs 167 cells); essentially no difference.
 - [change_disagreement/](change_disagreement/) — where interpreters disagreed about change: summary bar
   chart of the top contested change-vs-stable class pairs, plus side-by-side reviewer maps with the
   disagreed area outlined.
