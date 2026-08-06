@@ -196,6 +196,107 @@ def forest_overlay(model_df, interp_df, source, color, n_cells, path):
     plt.close(fig)
 
 
+def forest_overlay_all(source_dfs, interp_df, label_n, n_by_source, path):
+    """All prediction sources on one forest, each offset within its class band, over the interpreter
+    ceiling. The interpreter diamond + interval is drawn last/biggest so it stays the dominant element."""
+    import textwrap
+
+    import matplotlib
+    matplotlib.use("Agg")
+    import matplotlib.pyplot as plt
+    from matplotlib.lines import Line2D
+
+    idf = interp_df.set_index("code")
+    y = np.arange(len(ORDER))
+    offs = np.array([-0.38, -0.26, -0.14, 0.14, 0.26, 0.38])     # v2, v3, v4, v5, v6, spec_all
+    fig, ax = plt.subplots(figsize=(9.5, 10.5))
+    fig.subplots_adjust(left=0.17, right=0.97, top=0.93, bottom=0.26)
+
+    for i, c in enumerate(ORDER):
+        # each source: colored circle + thin interval, offset above/below the class line
+        for s, off in zip(SOURCES, offs):
+            md = source_dfs[s].set_index("code")
+            if c not in md.index:
+                continue
+            r = md.loc[c]
+            ax.plot([r.f1_lo, r.f1_hi], [i + off, i + off], color=SRC_COLOR[s], lw=1.5, zorder=3)
+            ax.scatter(r.f1, i + off, color=SRC_COLOR[s], marker="o", s=40, zorder=4,
+                       edgecolor="white", linewidths=0.5)
+        # interpreter agreement (human ceiling): dominant grey diamond + thick interval, centered
+        if c in idf.index:
+            r = idf.loc[c]
+            ax.plot([r.f1_lo, r.f1_hi], [i, i], color="0.45", lw=3.5, zorder=5,
+                    solid_capstyle="round")
+            ax.scatter(r.f1, i, color="0.2", marker="D", s=120, zorder=6, edgecolor="white",
+                       linewidths=1.0)
+
+    ax.set_yticks(y)
+    ax.set_yticklabels([f"{NAMES5[c]}\n(n={label_n.get(c, 0)} cells)" for c in ORDER])
+    ax.tick_params(labelsize=11)
+    ax.invert_yaxis()
+    ax.axvline(HIGH, ls="--", lw=0.8, color="gray"); ax.axvline(MOD, ls="--", lw=0.8, color="gray")
+    ax.set_xlim(0, 1)
+    ax.set_ylim(len(ORDER) - 0.5, -0.5)
+    ax.set_xlabel("Per-Class F1 (95% CI)", fontsize=12)
+    ax.grid(False)
+    for sp in ("top", "right"):
+        ax.spines[sp].set_visible(False)
+    ax.set_title("Per-Class F1 vs the Inter-Interpreter Agreement Ceiling (Five-Class)",
+                 fontsize=15, fontweight="bold")
+
+    handles = [Line2D([], [], color="0.2", marker="D", ls="", ms=11,
+                      label="interpreter agreement (ceiling)")]
+    handles += [Line2D([], [], color=SRC_COLOR[s], marker="o", ls="", ms=8, label=s) for s in SOURCES]
+    ax.legend(handles=handles, loc="upper center", bbox_to_anchor=(0.5, -0.05), ncol=4, fontsize=10.5,
+              frameon=False, columnspacing=1.6, handletextpad=0.4)
+
+    nemb = n_by_source.get("v2", "?")
+    cap = ("Per-class F1 (5-class collapse) for every source (colored circles) against the adjudicated "
+           "reference, next to the inter-interpreter agreement for the same class (grey diamond, the "
+           "reliability ceiling), each with a 95% CI. Models use a cluster (cell) bootstrap; the interpreter "
+           "a cluster (pair) bootstrap. Source markers are offset within each class to avoid overplot. "
+           "Dashed lines mark the Moderate (0.50) and High (0.70) thresholds. Sources are scored on their "
+           f"own usable cells (embeddings ~{nemb}, spec_all {n_by_source.get('spec_all', '?')}); the "
+           "interpreter series is a property of the reference, identical across sources.")
+    fig.text(0.5, 0.015, "\n".join(textwrap.wrap(cap, 128)), ha="center", va="bottom", fontsize=9.5,
+             color="0.3")
+    fig.savefig(path, dpi=300, bbox_inches="tight")
+    plt.close(fig)
+
+
+def print_table(source_dfs, interp_df):
+    """Print per-class 5-class F1 for every source, the interpreter agreement, and the difference."""
+    idf = interp_df.set_index("code")
+    print("\n===== per-class 5-class F1: each source vs the interpreter-agreement ceiling =====")
+    print(f"{'class':<16}{'source':<10}{'model_F1':>10}{'interp':>9}{'diff':>9}")
+    for c in ORDER:
+        interp = float(idf.loc[c].f1)
+        for s in SOURCES:
+            md = source_dfs[s].set_index("code")
+            f1 = float(md.loc[c].f1) if c in md.index else float("nan")
+            print(f"{NAMES5[c]:<16}{s:<10}{f1:>10.3f}{interp:>9.3f}{f1 - interp:>9.3f}")
+
+    # sanity checks
+    print("\n----- sanity checks -----")
+    expect = {1: 0.99, 2: 0.75, 3: 0.29, 4: 0.23, 5: 0.08}
+    ok_all = True
+    for c, e in expect.items():
+        got = float(idf.loc[c].f1)
+        ok = abs(got - e) < 0.02
+        ok_all &= ok
+        print(f"  interpreter {NAMES5[c]:<15} {got:.3f} (expect ~{e:.2f})  {'OK' if ok else 'MISMATCH'}")
+    change = [2, 3, 4, 5]
+    mx, mx_where = -1.0, None
+    for s in SOURCES:
+        md = source_dfs[s].set_index("code")
+        for c in change:
+            if c in md.index and float(md.loc[c].f1) > mx:
+                mx, mx_where = float(md.loc[c].f1), f"{s} {NAMES5[c]}"
+    print(f"  max change-class F1 across sources: {mx:.3f} ({mx_where})  "
+          f"{'OK (<=0.15)' if mx <= 0.155 else 'CHECK: exceeds 0.15'}")
+    print(f"  interpreter series matches expected: {'OK' if ok_all else 'MISMATCH'}")
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
@@ -211,20 +312,34 @@ def main():
 
     all_rows = []
     n_by_source = {}
+    source_dfs = {}
     for s in SOURCES:
         stack = np.stack([M for _, M in per_source[s]])
         df, n = source_table(stack, args.boot, args.seed)
         n_by_source[s] = n
+        source_dfs[s] = df
         forest_overlay(df, interp_df, s, SRC_COLOR[s], n, os.path.join(OUT, f"forest_5class_{s}.png"))
         df.insert(0, "source", s)
         all_rows.append(df)
         print(f"  {s:9} cells={n:3d}  " +
               "  ".join(f"{NAMES5[r.code]}={r.f1:.2f}" for r in df.itertuples()))
 
+    # all-sources overlay (new): every source on one forest over the same interpreter ceiling.
+    # y-axis N per class keeps v4's counts so the labels match the existing single-source figure.
+    label_n = {int(r.code): int(r.n_cells) for r in source_dfs["v4"].itertuples()}
+    all_path = os.path.join(OUT, "forest_5class_all_sources.png")
+    forest_overlay_all(source_dfs, interp_df, label_n, n_by_source, all_path)
+    fig_copy = "manuscript_formatting/figures/figure_2_11_all_sources_overlay.png"
+    os.makedirs(os.path.dirname(fig_copy), exist_ok=True)
+    import shutil
+    shutil.copyfile(all_path, fig_copy)
+
+    print_table(source_dfs, interp_df)
+
     out_df = pd.concat(all_rows, ignore_index=True)
     out_df.to_csv(os.path.join(OUT, "model_per_class_ci_5class.csv"), index=False)
     write_note(out_df, interp_df, n_by_source, ref_valid_cells, drops, args.boot)
-    print(f"\noutputs -> {OUT}/")
+    print(f"\noutputs -> {OUT}/  and {fig_copy}")
 
 
 def write_note(out_df, interp_df, n_by_source, ref_valid_cells, drops, boot):
