@@ -38,3 +38,10 @@ Generators live in `presentation/scripts/` (same stem as the figure).
 | [S_variant_composition_clipped](S_variant_composition_clipped.png) · [full](S_variant_composition_full_navy_diamond.png) | Variant-composition ablation (clipped y-axis; full continuous y-axis). |
 
 _Alternate marker treatments for the variant-composition figure live in `marker_style_options/`._
+
+## Analysis subfolders
+
+- [changecap/](changecap/) — change-class training-cap sensitivity: same-location maps under each cap
+  (the commission flood) plus curve figures (predicted pixels, precision/recall, kappa vs cap).
+- [pres_07_speckle_with_ref_locations/](pres_07_speckle_with_ref_locations/) — pres_07 (reference +
+  every classification) at three more locations.
