@@ -41,6 +41,9 @@ SOURCES = P14.SOURCES                        # v2..v6, spec_all
 CHANGE = P14.CHANGE                          # [(2,Harvest),(3,Development),(5,Beaver),(4,Insect/Disease)]
 # change palette, with a darker gold for Harvest so the line reads on white
 LINE_COLOR = {"Harvest": "#C9A227", "Development": "red", "Beaver": "orange", "Insect/Disease": "#70A2DB"}
+# per-model palette (matches pres_17/pres_18): embeddings + brown spec_all
+MODEL_COLOR = {"v2": "#1f77b4", "v3": "#2ca02c", "v4": "#9467bd", "v5": "#ff7f0e", "v6": "#d62728",
+               "spec_all": "#8c564b"}
 
 
 def _blab(b):
@@ -96,7 +99,39 @@ def main():
 
     fig.savefig(os.path.join(OUT, "changeclass_f1_over_time_5class.png"), dpi=200)
     plt.close(fig)
-    print("wrote changeclass_f1_over_time_5class.png and .csv")
+
+    # ---- version faceted by change type: one panel per change class, lines colored by model ----
+    fig2, axes2 = plt.subplots(2, 2, figsize=(11, 7.5))
+    for ax, (j, (_c, name)) in zip(axes2.ravel(), enumerate(CHANGE)):
+        for s in SOURCES:
+            vals = [per_bracket[b][s][j] for b in BRACKETS]
+            ax.plot(xs, vals, "-o", color=MODEL_COLOR[s], lw=2, ms=6, label=s, zorder=3)
+        cmax = np.nanmax([per_bracket[b][s][j] for b in BRACKETS for s in SOURCES])
+        ax.set_ylim(0, cmax * 1.18 + 1e-3)                  # per-panel scale (classes differ ~10x)
+        ax.set_title(name, fontsize=14, fontweight="bold")
+        ax.set_xticks(xs)
+        ax.set_xticklabels([_blab(b) for b in BRACKETS], fontsize=11)
+        ax.tick_params(axis="y", labelsize=11)
+        ax.grid(False)
+        for sp in ("top", "right"):
+            ax.spines[sp].set_visible(False)
+    for ax in axes2[:, 0]:
+        ax.set_ylabel("Per-class F1 (5-class)", fontsize=12)
+
+    handles, labels = axes2.ravel()[0].get_legend_handles_labels()
+    fig2.legend(handles, labels, ncol=6, fontsize=12, frameon=False, loc="lower center",
+                bbox_to_anchor=(0.5, 0.0))
+    fig2.suptitle("Change-Class F1 Over Time by Change Type (Five-Class Collapse)", fontsize=17,
+                  fontweight="bold", y=0.98)
+    fig2.text(0.5, 0.05, f"Per-class F1 over time, one panel per change class, lines colored by model. "
+              f"y-axes are scaled per panel (change classes differ by ~10x). "
+              f"Common cell set (N = {n_cells} cell-brackets).", ha="center", va="bottom",
+              fontsize=9, color="0.35")
+    fig2.subplots_adjust(left=0.08, right=0.98, top=0.9, bottom=0.14, hspace=0.35, wspace=0.18)
+    fig2.savefig(os.path.join(OUT, "changeclass_f1_over_time_5class_by_class.png"), dpi=200)
+    plt.close(fig2)
+
+    print("wrote changeclass_f1_over_time_5class.png, _by_class.png, and .csv")
 
 
 if __name__ == "__main__":
