@@ -685,7 +685,7 @@ const supp = [
     "Reference 0.75, coherent configurations 0.82, v6 0.08. The coherent configurations are smoother than the reference."],
   ["Embeddings against spectral, by class", "fig_S2_3_spectral_vs_embedding_a.png",
     "Class-level comparison of the two feature families."],
-  ["Combined embeddings and spectral", "variant_composition_full_navy_diamond.png",
+  ["Combined embeddings and spectral", "S_variant_composition_full_navy_diamond.png",
     "Combining families gives at most a three-point gain over the better single family, not significant, with wider out-of-bag to validation gaps suggesting feature dilution."],
   ["Tasseled Cap class trajectories", "tc_trajectory.png",
     "Training points in Tasseled Cap change space. Use if asked whether the change classes are separable in a conventional spectral change space."],

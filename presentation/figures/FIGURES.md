@@ -3,6 +3,8 @@
 Compiled PNGs from `presentation/figures/`. Alternate versions of a figure are shown together as
 options. Supplemental figures are grouped at the end. (Excludes `marker_style_options/`.)
 
+For a compact, linked index with one-line descriptions (no inline images), see [README.md](README.md).
+
 ## Main figures
 
 ### Figure 01 — Change agents on NAIP
@@ -181,17 +183,6 @@ OA is dominated by Stable, all-Stable baseline OA = 0.985). Embedding models onl
 
 ![Figure 17 5-class with spec](pres_17_model_metrics_5class_with_spec.png)
 
-### AlphaEarth Foundations context panels
-
-Two transparent 5.5 x 4.5 in slide panels (flat style matching the GFM band-stack reference), for the
-AEF model slide. Spatial: each embedding reads its whole 1.28 km neighborhood, with one 10 m pixel
-called out. Temporal: a simplified Figure 1B — irregular sensor observations in a "support period"
-converge into one embedding, and a copper "valid period" bar is offset from it (the valid period need
-not sit inside the support period). No month offset, no dimensionality, no user-chosen window.
-
-![Spatial context](spatial_context.png)
-![Temporal context](temporal_context.png)
-
 ### 10-class legend
 
 Standalone color-swatch legend for the 10 model classes (no title), grouped into the six no-change
@@ -209,8 +200,8 @@ background for placing beside a classified map:
 
 Option A, compressed y-axis (clipped):
 
-![Supplemental, variant composition clipped](variant_composition_clipped.png)
+![Supplemental, variant composition clipped](S_variant_composition_clipped.png)
 
 Option B, full continuous y-axis:
 
-![Supplemental, variant composition full](variant_composition_full_navy_diamond.png)
+![Supplemental, variant composition full](S_variant_composition_full_navy_diamond.png)

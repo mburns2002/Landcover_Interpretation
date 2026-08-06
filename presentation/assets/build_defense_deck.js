@@ -782,7 +782,7 @@ const supp = [
     "Training points in Tasseled Cap change space. Use if asked whether the change classes are separable in a conventional spectral change space at all."],
   ["Tasseled Cap diagnostics", "fig_S2_5_tc_diagnostics_a.png",
     "Delta scatter, mean-delta class signature, and linear discriminant projection of class separability."],
-  ["Combined embeddings and spectral features", "variant_composition_full_navy_diamond.png",
+  ["Combined embeddings and spectral features", "S_variant_composition_full_navy_diamond.png",
     "Combining the two families gives at most a three-point gain over the better single family, not significant, with wider out-of-bag to validation gaps suggesting feature dilution."],
   ["Overall accuracy by NAIP bracket", "fig_2_4_oa_by_bracket.png",
     "Each bracket uses a disjoint cell set, so these are independent per-bracket assessments rather than a transfer curve. Do not pool across brackets for source comparisons."],

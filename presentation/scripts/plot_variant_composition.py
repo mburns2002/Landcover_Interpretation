@@ -19,8 +19,8 @@ single-source models, which is not the same span as the emb_alone to combo arrow
 Panel A, so it carries information the dumbbell does not.
 
 outputs (png only, per the presentation figures convention):
-  presentation/figures/variant_composition_clipped.png
-  presentation/figures/variant_composition_full_navy_diamond.png (chosen style)
+  presentation/figures/S_variant_composition_clipped.png (supplement)
+  presentation/figures/S_variant_composition_full_navy_diamond.png (chosen style, supplement)
   presentation/figures/marker_style_options/variant_composition_broken.png
   presentation/figures/marker_style_options/variant_composition_full_<style>.png
   presentation/tables/variant_composition.tex
@@ -241,7 +241,7 @@ def make_clipped():
     _panel_b(axB, x)
     _xaxis_labels(axB, x)
 
-    _save(fig, "variant_composition_clipped")
+    _save(fig, "S_variant_composition_clipped")     # supplement (S_ prefix)
 
 
 def make_full(style):
@@ -266,9 +266,11 @@ def make_full(style):
     _panel_b(axB, x)
     _xaxis_labels(axB, x)
 
-    # the chosen treatment lands in the figures root, the alternatives in a subfolder
-    outdir = FIG_DIR if style["key"] == CHOSEN_STYLE else ALT_DIR
-    _save(fig, f"variant_composition_full_{style['key']}", outdir=outdir)
+    # the chosen treatment lands in the figures root (S_ prefix, a supplement); alternatives in a subfolder
+    if style["key"] == CHOSEN_STYLE:
+        _save(fig, f"S_variant_composition_full_{style['key']}", outdir=FIG_DIR)
+    else:
+        _save(fig, f"variant_composition_full_{style['key']}", outdir=ALT_DIR)
 
 
 def make_broken():
