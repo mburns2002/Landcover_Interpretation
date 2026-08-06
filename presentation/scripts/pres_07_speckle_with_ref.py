@@ -127,49 +127,36 @@ def neighbor_change_files(files, remap=None):
     return (diff / tot if tot else float("nan")), len(files)
 
 
-def main():
+def prepare():
+    """Reference-path index plus the pooled neighbor-change values (identical for every location)."""
     ref_paths = _adjudicated_reference_paths()
-    if CROP_CELL not in ref_paths:
-        # cell has no interpreted reference: offer alternatives with comparable variety
-        alts = []
-        for cid, p in ref_paths.items():
-            with rasterio.open(p) as s:
-                out = LUT[np.clip(s.read(1), 0, 62)]
-            if (out > 0).mean() < 0.999:
-                continue
-            present = {c for c in range(1, 11) if (out == c).any()}
-            has_change = bool(present & {1, 2, 9, 10})
-            has_water = 5 in present
-            if has_change and has_water and len(present) >= 4:
-                alts.append((cid, sorted(present)))
-        print(f"cell {CROP_CELL} has no complete interpreted reference. alternatives (complete, "
-              f"with a change class, water, and >=4 classes):")
-        for cid, present in alts[:3]:
-            print(f"  cell {cid}: {', '.join(NAME10[c] for c in present)}")
-        raise SystemExit("choose one of the alternative cells above.")
-
-    # neighbor-change for every source, each pooled over its own cell set
     nc_v, n_pred = neighbor_change_variants()
     nc_ref, n_ref = neighbor_change_files(list(ref_paths.values()), remap=LUT)
     spec_files = sorted(glob.glob(f"{SPEC_DIR}/*/pred_specall_*.tif"))
     nc_spec, n_spec = neighbor_change_files(spec_files)
     print(f"neighbor-change (pooled): reference {nc_ref:.4f} ({n_ref} cells), "
           + ", ".join(f"{v} {nc_v[v]:.4f}" for v in VBAND) + f", spec_all {nc_spec:.4f} ({n_spec} cells)")
+    return ref_paths, (nc_v, nc_ref, nc_spec)
 
-    # load the crop rasters for cell 31320
-    with rasterio.open(glob.glob(f"{RF_DIR}/**/rf_class_reviewer_*grid_{CROP_CELL}_*.tif",
+
+def build_for_cell(cell, bracket, ref_paths, ncs, out_path):
+    """Render the interpreted reference + every classification for one cell (Spectral, 300 dpi)."""
+    nc_v, nc_ref, nc_spec = ncs
+    if cell not in ref_paths:
+        raise SystemExit(f"STOP: cell {cell} has no interpreted reference.")
+    with rasterio.open(glob.glob(f"{RF_DIR}/**/rf_class_reviewer_*grid_{cell}_*.tif",
                                  recursive=True)[0]) as s:
         ref_img = LUT[np.clip(s.read(1), 0, 62)]
         res = s.res[0]
-    with rasterio.open(glob.glob(f"{PRED_DIR}/*/pred_*_cell{CROP_CELL}.tif")[0]) as s:
+    with rasterio.open(glob.glob(f"{PRED_DIR}/{bracket}/pred_{bracket}_cell{cell}.tif")[0]) as s:
         var_img = {v: s.read(b) for v, b in VBAND.items()}
-    spec_crop = glob.glob(f"{SPEC_DIR}/{BRACKET}/pred_specall_{BRACKET}_cell{CROP_CELL}.tif")
+    spec_crop = glob.glob(f"{SPEC_DIR}/{bracket}/pred_specall_{bracket}_cell{cell}.tif")
     spec_img = None
     if spec_crop:
         with rasterio.open(spec_crop[0]) as s:
             spec_img = s.read(1)
 
-    # panel list: (title, image, neighbor-change or None)
+    # panel list: (title, image, neighbor-change)
     panels = [("Reference", ref_img, nc_ref)]
     panels += [(v, var_img[v], nc_v[v]) for v in VBAND]
     if spec_img is not None:
@@ -179,9 +166,9 @@ def main():
                          "font.sans-serif": ["Helvetica", "Arial", "DejaVu Sans"], "font.size": 14})
     slide_font.use_spectral()
     fig, axes = plt.subplots(1, len(panels), figsize=(2.55 * len(panels), 5.6))
-    for ax, (title, img, nc) in zip(axes, panels):
+    for ax, (pname, img, nc) in zip(axes, panels):
         ax.imshow(img, cmap=CMAP, vmin=0, vmax=10, interpolation="nearest")
-        ax.set_title(title, fontsize=15, fontweight="bold")
+        ax.set_title(pname, fontsize=15, fontweight="bold")
         ax.text(0.5, -0.05, f"neighbor-change {nc:.3f}", transform=ax.transAxes,
                 ha="center", va="top", fontsize=12)
         ax.set_xticks([])
@@ -199,13 +186,20 @@ def main():
     fig.subplots_adjust(left=0.015, right=0.985, top=0.86, bottom=0.20, wspace=0.05)
     fig.legend(handles=handles, loc="lower center", ncol=min(len(present), 8), fontsize=12,
                frameon=False, bbox_to_anchor=(0.5, 0.02))
-    fig.suptitle(f"Interpreted Reference and Each Classification, Same Location (Cell {CROP_CELL})",
+    fig.suptitle(f"Interpreted Reference and Each Classification, Same Location (Cell {cell})",
                  fontsize=17, fontweight="bold", y=0.96)
 
-    os.makedirs(OUT, exist_ok=True)
-    fig.savefig(f"{OUT}/pres_07_speckle_with_ref.png", dpi=300, bbox_inches="tight")
+    os.makedirs(os.path.dirname(out_path), exist_ok=True)
+    fig.savefig(out_path, dpi=300, bbox_inches="tight")
     plt.close(fig)
-    print("wrote pres_07_speckle_with_ref.png")
+    print(f"wrote {out_path}")
+
+
+def main():
+    ref_paths, ncs = prepare()
+    if CROP_CELL not in ref_paths:
+        raise SystemExit(f"STOP: default cell {CROP_CELL} has no interpreted reference.")
+    build_for_cell(CROP_CELL, BRACKET, ref_paths, ncs, f"{OUT}/pres_07_speckle_with_ref.png")
 
 
 if __name__ == "__main__":

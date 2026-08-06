@@ -18,7 +18,7 @@ Generators live in `presentation/scripts/` (same stem as the figure).
 | [pres_04_ckit_interface](pres_04_ckit_interface.png) | Annotated CKIT-RF interface and the resulting interpreted cell. |
 | [pres_05_census_vs_points](pres_05_census_vs_points.png) | Census versus 50 sample points. |
 | [pres_06_speckle_vs_oa](pres_06_speckle_vs_oa.png) · [5-class](pres_06b_speckle_vs_oa_5class.png) | Map speckle (neighbor-change) versus overall accuracy (10-class pooled; 5-class design-based). |
-| [pres_07_speckle_with_ref](pres_07_speckle_with_ref.png) | Speckle crop (cell 31320) with the interpreted reference added as the first panel. |
+| [pres_07_speckle_with_ref](pres_07_speckle_with_ref.png) | Speckle crop (cell 31320) with the interpreted reference added as the first panel. Three more locations in [pres_07_speckle_with_ref_locations/](pres_07_speckle_with_ref_locations/). |
 | [pres_08_synthesis_loop](pres_08_synthesis_loop.png) | Two-box loop for the closing argument. |
 | [pres_10class_legend](pres_10class_legend.png) | Standalone 10-class color legend (Stable / Change groups). |
 | [pres_11_workflow_simple](pres_11_workflow_simple.png) · [colored](pres_11_workflow_simple_colored.png) · [colored v2](pres_11_workflow_simple_colored_v2.png) · [stage3](pres_11_workflow_simple_stage3.png) | Reference → Features → Classification → Evaluation workflow; v2 adds a classified land-cover map box. |
