@@ -210,7 +210,12 @@ def forest_overlay_all(source_dfs, interp_df, label_n, n_by_source, path):
     y = np.arange(len(ORDER))
     offs = np.array([-0.38, -0.26, -0.14, 0.14, 0.26, 0.38])     # v2, v3, v4, v5, v6, spec_all
     fig, ax = plt.subplots(figsize=(9.5, 10.5))
-    fig.subplots_adjust(left=0.17, right=0.97, top=0.93, bottom=0.26)
+    fig.subplots_adjust(left=0.17, right=0.94, top=0.93, bottom=0.26)
+
+    # alternating light background bands so the class groups are easy to tell apart
+    for i in range(len(ORDER)):
+        if i % 2 == 0:
+            ax.axhspan(i - 0.5, i + 0.5, facecolor="#eeeef3", edgecolor="none", zorder=0)
 
     for i, c in enumerate(ORDER):
         # each source: colored circle + thin interval, offset above/below the class line
@@ -219,16 +224,17 @@ def forest_overlay_all(source_dfs, interp_df, label_n, n_by_source, path):
             if c not in md.index:
                 continue
             r = md.loc[c]
-            ax.plot([r.f1_lo, r.f1_hi], [i + off, i + off], color=SRC_COLOR[s], lw=1.5, zorder=3)
+            ax.plot([r.f1_lo, r.f1_hi], [i + off, i + off], color=SRC_COLOR[s], lw=1.5, zorder=3,
+                    clip_on=False)
             ax.scatter(r.f1, i + off, color=SRC_COLOR[s], marker="o", s=40, zorder=4,
-                       edgecolor="white", linewidths=0.5)
+                       edgecolor="white", linewidths=0.5, clip_on=False)
         # interpreter agreement (human ceiling): dominant grey diamond + thick interval, centered
         if c in idf.index:
             r = idf.loc[c]
             ax.plot([r.f1_lo, r.f1_hi], [i, i], color="0.45", lw=3.5, zorder=5,
-                    solid_capstyle="round")
+                    solid_capstyle="round", clip_on=False)
             ax.scatter(r.f1, i, color="0.2", marker="D", s=120, zorder=6, edgecolor="white",
-                       linewidths=1.0)
+                       linewidths=1.0, clip_on=False)
 
     ax.set_yticks(y)
     ax.set_yticklabels([f"{NAMES5[c]}\n(n={label_n.get(c, 0)} cells)" for c in ORDER])
