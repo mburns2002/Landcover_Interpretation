@@ -40,6 +40,12 @@ def main():
     df = pd.read_csv(CSE.LONG_CSV, dtype={"grid": str, "sample": str, "target": str})
     top = df.sort_values("area_ha", ascending=False).head(N_TOP).reset_index(drop=True)
 
+    # anonymize reviewers to stable letters (sorted by name), no names on the figures; keep a key file
+    shown = sorted({r for row in top.itertuples() for r in (row.revA, row.revB)})
+    letter = {rev: chr(ord("A") + i) for i, rev in enumerate(shown)}
+    pd.DataFrame([{"letter": lt, "reviewer": rev} for rev, lt in letter.items()]).to_csv(
+        os.path.join(OUT_DIR, "reviewer_letter_key.csv"), index=False)
+
     for rank, row in top.iterrows():
         paths = idx.get((row.grid, row["sample"], row.target), {})
         if row.revA not in paths or row.revB not in paths:
@@ -59,7 +65,7 @@ def main():
         for ax, arr, rev in [(axes[0], a, row.revA), (axes[1], b, row.revB)]:
             ax.imshow(CSE.colorize(arr, code2rgb), interpolation="nearest")
             ax.contour(conflict.astype(float), levels=[0.5], colors="black", linewidths=1.8)
-            ax.set_title(f"Reviewer {rev}", fontsize=15, fontweight="bold")
+            ax.set_title(f"Reviewer {letter[rev]}", fontsize=15, fontweight="bold")   # anonymized
             ax.set_xticks([]); ax.set_yticks([])
 
         present = sorted(set(np.unique(a)).union(np.unique(b)) & set(code2name))

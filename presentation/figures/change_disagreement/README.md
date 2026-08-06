@@ -10,7 +10,8 @@ comparison (~1.3%, 26 ha). Data: `reports/interpreter_agreement/change_stable_co
   dominate.
 - `change_disagreement_map_rank01..04_*.png` — the largest contested cells: the two reviewers'
   interpreted maps side by side, with the disagreed area (one called the stable class, the other the
-  paired change class) outlined in black. Deck (Spectral) versions of the report examples.
+  paired change class) outlined in black. Deck (Spectral) versions of the report examples. Reviewers are
+  anonymized to letters; the letter-to-reviewer key is `reviewer_letter_key.csv`.
 
 Regenerate:
   `python presentation/scripts/pres_change_disagreement.py`       (summary)
