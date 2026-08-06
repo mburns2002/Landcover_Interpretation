@@ -28,7 +28,7 @@ Generators live in `presentation/scripts/` (same stem as the figure).
 | [pres_17_model_metrics](pres_17_model_metrics.png) · [+spec](pres_17_model_metrics_with_spec.png) · [5-class](pres_17_model_metrics_5class.png) · [5-class +spec](pres_17_model_metrics_5class_with_spec.png) | Accuracy metrics (OA, F1, IoU, Kappa) by model, grouped by statistic. 10-class and 5-class, with/without spec_all. |
 | [pres_18_changeagent_f1_5class](pres_18_changeagent_f1_5class.png) · [full](pres_18_changeagent_f1_5class_full.png) · [vs ceiling](pres_18_changeagent_f1_vs_ceiling.png) | Five-class change F1 grouped by change agent, colored by model; the ceiling version overlays the interpreter agreement. |
 | [pres_19_interpreter_ceiling_5class](pres_19_interpreter_ceiling_5class.png) | Per-class inter-interpreter agreement F1 (95% CI): the human ceiling on classifier F1. |
-| [pres_20_training_conflict_overlay](pres_20_training_conflict_overlay.png) | Conflicting training labels on shared ground: the top grass/shrub-vs-wetland contested patches where interpreters placed training points but assigned different classes (copy of manuscript Fig 3.5). |
+| [pres_20_training_conflict_overlay](pres_20_training_conflict_overlay.png) | Conflicting training labels on shared ground: the top grass/shrub-vs-wetland contested patches where interpreters placed training points but assigned different classes (deck/Spectral version of manuscript Fig 3.5). |
 
 ## Supplemental figures
 

@@ -74,7 +74,8 @@ def dominant(classes):
     return max(classes, key=classes.get) if classes else None
 
 
-def main():
+def compute():
+    """Build the per-patch table and the render payload (shared by the reports figure and the deck copy)."""
     codes, names, colors = CI.load_legend()
     pairs = CI.find_pairs()
     top = pd.read_csv(os.path.join(OUT, "gs_wetland_top10.csv"))
@@ -121,23 +122,33 @@ def main():
         render.append((rank, r, a, b, patch, transform, ra, ptsA, rb, ptsB, colors, names))
 
     df = pd.DataFrame(rows)
+    return render, df
+
+
+def anonymize_top3(render):
+    """Top three patches with reviewers anonymized to stable letters (sorted by name)."""
+    render_top = render[:3]
+    shown = sorted({t[6] for t in render_top} | {t[8] for t in render_top})
+    letter = {rev: chr(ord("A") + i) for i, rev in enumerate(shown)}
+    return render_top, letter
+
+
+def main():
+    render, df = compute()
     df.to_csv(os.path.join(OUT, "gs_wetland_training_overlay.csv"), index=False)
     with pd.option_context("display.max_colwidth", 40, "display.width", 200):
         print(df[["rank", "cell_id", "area_ha", "a_pts_in_zone", "a_dist_m",
                   "b_pts_in_zone", "b_dist_m", "category"]].to_string(index=False))
 
-    # the figure shows only the top three patches; anonymize reviewers to stable letters (sorted by
-    # name) and keep a letter-to-reviewer key file for reference, so no names appear on the figure
-    render_top = render[:3]
-    shown = sorted({t[6] for t in render_top} | {t[8] for t in render_top})
-    letter = {rev: chr(ord("A") + i) for i, rev in enumerate(shown)}
+    # the figure shows only the top three patches; keep a letter-to-reviewer key so no names appear
+    render_top, letter = anonymize_top3(render)
     pd.DataFrame([{"letter": lt, "reviewer": rev} for rev, lt in letter.items()]).to_csv(
         os.path.join(OUT, "reviewer_letter_key.csv"), index=False)
     make_render(render_top, letter, os.path.join(OUT, "gs_wetland_training_overlay.png"))
     print(f"\noutputs -> {OUT}/gs_wetland_training_overlay.csv/png, reviewer_letter_key.csv")
 
 
-def make_render(render, letter, path):
+def make_render(render, letter, path, dpi=200):
     import matplotlib
     matplotlib.use("Agg")
     import matplotlib.pyplot as plt
@@ -183,7 +194,7 @@ def make_render(render, letter, path):
                frameon=False)                                 # stacked legend on the right
     fig.suptitle("Grass/Shrub versus Wetland Training-Label Conflicts", fontsize=15, fontweight="bold")
     fig.tight_layout(rect=[0, 0, 1, 0.97])
-    fig.savefig(path, dpi=200, bbox_inches="tight")
+    fig.savefig(path, dpi=dpi, bbox_inches="tight")
     plt.close(fig)
 
 
