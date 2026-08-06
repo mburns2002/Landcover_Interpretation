@@ -8,6 +8,8 @@ comparison (~1.3%, 26 ha). Data: `reports/interpreter_agreement/change_stable_co
 - `change_disagreement_summary.png` — the top contested change-vs-stable class pairs (symmetrized,
   hectares), colored by the change class in each pair. Forest-vs-Insect/Disease and Forest-vs-Harvest
   dominate.
+- `change_disagreement_summary_pct.png` — same chart, but bars labeled with each pair's share of all
+  change-labeled pixels (Forest-vs-Insect/Disease alone is ~20%).
 - `change_disagreement_map_rank01..04_*.png` — the largest contested cells: the two reviewers'
   interpreted maps side by side, with the disagreed area (one called the stable class, the other the
   paired change class) outlined in black. Deck (Spectral) versions of the report examples. Reviewers are
