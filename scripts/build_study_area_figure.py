@@ -46,6 +46,9 @@ PARK_COLOR = {
 STATE_LABELS = ["Minnesota", "Wisconsin", "Michigan"]
 # small nudge in meters (dx, dy) so a label clears a nearby cell; Michigan up and left a little
 LABEL_OFFSET = {"Michigan": (-45000, 30000)}
+# interpreted-cell brackets, temporal order; sequential viridis so the color reads as a time axis
+BRACKETS = ["2017_2019", "2018_2020", "2019_2021", "2020_2022", "2021_2023"]
+BRACKET_COLOR = {b: plt.get_cmap("viridis")(i / (len(BRACKETS) - 1)) for i, b in enumerate(BRACKETS)}
 
 
 def draw_scalebar(ax, length_m=150000, n_seg=3):
@@ -76,13 +79,14 @@ def build_grid():
     return gpd.GeoDataFrame(df, geometry=geom, crs=CRS)
 
 
-def main(show_cells=True):
+def main(show_cells=True, color_by_bracket=False):
     os.makedirs(OUT, exist_ok=True)
 
     grid = build_grid()
     cells = pd.read_csv(CELLS, dtype=str)
     keep = set(cells.cell_id)
     interp = grid[grid.key.isin(keep)].copy()                  # interpreted cells, verified below
+    interp["bracket"] = interp["key"].map(cells.set_index("cell_id")["bracket"])
     n_join = len(interp)
     print(f"interpreted-cell join: {n_join} of {len(keep)} expected")
     if n_join != len(keep):
@@ -114,8 +118,9 @@ def main(show_cells=True):
     ylim = (miny - 0.13 * ry, maxy + 0.06 * ry)
 
     # map on top, external legend strip below (keeps double-column width, frees the data area)
-    fig = plt.figure(figsize=(7.5, 6.7))
-    gs = fig.add_gridspec(2, 1, height_ratios=[6.0, 1.15], hspace=0.02)
+    fig_h, leg_ratio = (7.4, 1.7) if color_by_bracket else (6.7, 1.15)   # taller strip for the bracket legend
+    fig = plt.figure(figsize=(7.5, fig_h))
+    gs = fig.add_gridspec(2, 1, height_ratios=[6.0, leg_ratio], hspace=0.02)
     ax = fig.add_subplot(gs[0])
     axleg = fig.add_subplot(gs[1]); axleg.axis("off")
 
@@ -128,7 +133,12 @@ def main(show_cells=True):
         sub.plot(ax=ax, facecolor=PARK_COLOR[code], edgecolor=PARK_COLOR[code],
                  alpha=0.45, linewidth=1.1, zorder=4)
         sub.boundary.plot(ax=ax, color=PARK_COLOR[code], linewidth=1.1, zorder=5)
-    if show_cells:
+    if show_cells and color_by_bracket:
+        for bk in BRACKETS:                                    # interpreted cells colored by bracket
+            sub = interp[interp.bracket == bk]
+            if len(sub):
+                sub.plot(ax=ax, facecolor=BRACKET_COLOR[bk], edgecolor="#222222", linewidth=0.25, zorder=6)
+    elif show_cells:
         interp.plot(ax=ax, facecolor="#111111", edgecolor="#111111", linewidth=0.2, zorder=6)
 
     # state name labels, placed at the representative point of the in-frame part of each state
@@ -162,14 +172,20 @@ def main(show_cells=True):
                      label=PARK_NAME[c]) for c in sorted(PARK_NAME)]
     handles += [Patch(facecolor="none", edgecolor="black", linewidth=0.8,
                       label="Study grid extent")]
-    if show_cells:
+    if show_cells and color_by_bracket:
+        counts = interp.bracket.value_counts()
+        handles += [Patch(facecolor=BRACKET_COLOR[bk], edgecolor="#222222",
+                          label=f"Interpreted cells {bk.replace('_', '–')} (n = {int(counts.get(bk, 0))})")
+                    for bk in BRACKETS]
+    elif show_cells:
         handles += [Line2D([], [], marker="s", ls="", markerfacecolor="#111111",
                            markeredgecolor="#111111", markersize=6,
                            label=f"Interpreted cells (n = {n_join})")]
     handles += [Patch(facecolor="#cfe3ef", edgecolor="#9dc4d8", label="Great Lakes")]
+    leg_title = ("GLKN park units, interpreted cells by bracket, and map layers"
+                 if color_by_bracket else "GLKN park units and map layers")
     axleg.legend(handles=handles, loc="center", ncol=2, fontsize=7.2, frameon=False,
-                 handlelength=1.4, columnspacing=1.6, title="GLKN park units and map layers",
-                 title_fontsize=8)
+                 handlelength=1.4, columnspacing=1.6, title=leg_title, title_fontsize=8)
 
     # locator inset over Lake Superior (top-right), data-free, with the main-map extent marked
     axin = ax.inset_axes([0.775, 0.62, 0.225, 0.36])
@@ -183,7 +199,10 @@ def main(show_cells=True):
     axin.set_facecolor("white")
     for sp in axin.spines.values():
         sp.set_edgecolor("#888888")
-    stem = "figure1_study_area" if show_cells else "figure1_study_area_no_cells"
+    if color_by_bracket:
+        stem = "figure1_study_area_by_bracket"
+    else:
+        stem = "figure1_study_area" if show_cells else "figure1_study_area_no_cells"
     png = f"{OUT}/{stem}.png"
     pdf = f"{OUT}/{stem}.pdf"
     fig.savefig(png, dpi=300, bbox_inches="tight")
@@ -198,4 +217,5 @@ def main(show_cells=True):
 
 if __name__ == "__main__":
     main(show_cells=True)
-    main(show_cells=False)   # companion version without the interpreted cells
+    main(show_cells=False)                      # companion version without the interpreted cells
+    main(show_cells=True, color_by_bracket=True)   # cells colored by interpretation bracket
