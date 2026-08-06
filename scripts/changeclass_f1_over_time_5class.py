@@ -77,8 +77,7 @@ def main():
         ax.set_xticks(xs)
         ax.set_xticklabels([_blab(b) for b in BRACKETS], fontsize=10, rotation=30, ha="right")
         ax.tick_params(axis="y", labelsize=11)
-        ax.grid(axis="y", color="0.9", lw=0.8)
-        ax.set_axisbelow(True)
+        ax.grid(False)
         for sp in ("top", "right"):
             ax.spines[sp].set_visible(False)
     for ax in axes[:, 0]:
