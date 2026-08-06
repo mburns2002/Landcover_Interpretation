@@ -183,6 +183,14 @@ OA is dominated by Stable, all-Stable baseline OA = 0.985). Embedding models onl
 
 ![Figure 17 5-class with spec](pres_17_model_metrics_5class_with_spec.png)
 
+### Figure 20 — Training-label conflict on shared ground
+
+Copy of manuscript Figure 3.5. The largest grass/shrub-versus-wetland contested zones where both
+interpreters placed training points but assigned them to different classes (top three contested patches);
+the disagreement is conceptual (class identity), not boundary placement:
+
+![Figure 20 training conflict](pres_20_training_conflict_overlay.png)
+
 ### 10-class legend
 
 Standalone color-swatch legend for the 10 model classes (no title), grouped into the six no-change
