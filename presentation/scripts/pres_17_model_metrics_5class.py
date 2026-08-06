@@ -1,0 +1,89 @@
+#!/usr/bin/env python3
+"""pres_17_model_metrics_5class: grouped bar chart of five-class accuracy metrics by model.
+
+Five-class (collapsed) counterpart of pres_17. Four metric groups on the x-axis (OA, F1, IoU, Kappa),
+one bar per model inside each group, colored by model. Two versions:
+  pres_17_model_metrics_5class.png            the five embedding models (v2 to v6)
+  pres_17_model_metrics_5class_with_spec.png  the same, plus the spectral baseline (spec_all)
+
+Values are the five-class metrics from manuscript_formatting/tables/T4.csv: OA, Macro-F1, Mean IoU, and
+Kappa, all on the common 168-cell set. Note the all-Stable baseline OA is 0.985, so every model's OA
+sits below the trivial baseline even though it looks high (Stable dominates the 5-class scheme).
+
+Output (PNG only for the Google Slides deck).
+"""
+
+import os
+
+import matplotlib
+matplotlib.use("Agg")
+import matplotlib.pyplot as plt
+
+import slide_font
+import numpy as np
+import pandas as pd
+slide_font.use_spectral()
+
+HERE = os.path.dirname(os.path.abspath(__file__))
+ROOT = os.path.dirname(os.path.dirname(HERE))
+T4 = os.path.join(ROOT, "manuscript_formatting", "tables", "T4.csv")
+OUT = os.path.join(ROOT, "presentation", "figures")
+
+# per-model colors: embeddings from the transfer-OA palette, spec_all brown (the tab10 next color)
+COLOR = {"v2": "#1f77b4", "v3": "#2ca02c", "v4": "#9467bd", "v5": "#ff7f0e", "v6": "#d62728",
+         "spec_all": "#8c564b"}
+# (x-axis group label, table column)
+STATS = [("OA", "OA"), ("F1", "Macro-F1"), ("IoU", "Mean IoU"), ("Kappa", "Kappa")]
+
+
+def _draw(df, models, stem, title, caption):
+    x = np.arange(len(STATS))
+    n = len(models)
+    bar_w = 0.8 / n
+
+    fig, ax = plt.subplots(figsize=(10, 5.8))
+    fig.subplots_adjust(left=0.08, right=0.98, top=0.90, bottom=0.20)
+
+    for i, m in enumerate(models):
+        offs = (i - (n - 1) / 2) * bar_w
+        vals = [df.loc[m, col] for _, col in STATS]
+        ax.bar(x + offs, vals, bar_w, color=COLOR[m], edgecolor="black", linewidth=0.5, label=m,
+               zorder=3)
+        for xi, v in zip(x + offs, vals):
+            ax.text(xi, v + 0.012, f"{v:.2f}", ha="center", va="bottom", fontsize=8, color="0.2")
+
+    ax.set_xticks(x)
+    ax.set_xticklabels([lab for lab, _ in STATS], fontsize=15)
+    ax.set_ylim(0, 1.0)
+    ax.set_ylabel("Score", fontsize=14)
+    ax.tick_params(axis="y", labelsize=12)
+    ax.grid(False)
+    for s in ("top", "right"):
+        ax.spines[s].set_visible(False)
+    ax.legend(ncol=n, fontsize=12, loc="upper right", frameon=False, columnspacing=1.1,
+              handletextpad=0.5)
+    ax.set_title(title, fontsize=17, fontweight="bold", pad=12)
+
+    fig.text(0.5, 0.02, caption, ha="center", va="bottom", fontsize=11, color="0.35",
+             linespacing=1.4)
+
+    os.makedirs(OUT, exist_ok=True)
+    fig.savefig(os.path.join(OUT, f"{stem}.png"), dpi=300)
+    plt.close(fig)
+    print(f"wrote {stem}.png")
+
+
+def main():
+    df = pd.read_csv(T4).set_index("Source")
+
+    cap = ("Five-class metrics on the common 168-cell set (Table T4). F1 macro-averaged, IoU mean over classes.\n"
+           "OA is dominated by Stable, so every model sits below the all-Stable baseline OA of 0.985.")
+    _draw(df, ["v2", "v3", "v4", "v5", "v6"], "pres_17_model_metrics_5class",
+          "Accuracy Metrics by Embedding Model (Five-Class)", cap)
+
+    _draw(df, ["v2", "v3", "v4", "v5", "v6", "spec_all"], "pres_17_model_metrics_5class_with_spec",
+          "Accuracy Metrics by Model, with Spectral Baseline (Five-Class)", cap)
+
+
+if __name__ == "__main__":
+    main()

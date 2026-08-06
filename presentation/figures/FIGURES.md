@@ -174,6 +174,13 @@ Version B, the same plus the spectral baseline (spec_all, grey; on the common 16
 
 ![Figure 17 with spec](pres_17_model_metrics_with_spec.png)
 
+Five-class (collapsed) counterpart, same style, from Table T4 (all sources on the common 168-cell set;
+OA is dominated by Stable, all-Stable baseline OA = 0.985). Embedding models only, then with spec_all:
+
+![Figure 17 5-class](pres_17_model_metrics_5class.png)
+
+![Figure 17 5-class with spec](pres_17_model_metrics_5class_with_spec.png)
+
 ### AlphaEarth Foundations context panels
 
 Two transparent 5.5 x 4.5 in slide panels (flat style matching the GFM band-stack reference), for the
