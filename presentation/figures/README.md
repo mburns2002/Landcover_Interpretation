@@ -41,6 +41,9 @@ _Alternate marker treatments for the variant-composition figure live in `marker_
 
 ## Analysis subfolders
 
+- [change_disagreement/](change_disagreement/) — where interpreters disagreed about change: summary bar
+  chart of the top contested change-vs-stable class pairs, plus side-by-side reviewer maps with the
+  disagreed area outlined.
 - [changecap/](changecap/) — change-class training-cap sensitivity: same-location maps under each cap
   (the commission flood) plus curve figures (predicted pixels, precision/recall, kappa vs cap).
 - [pres_07_speckle_with_ref_locations/](pres_07_speckle_with_ref_locations/) — pres_07 (reference +
