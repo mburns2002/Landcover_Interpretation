@@ -29,6 +29,7 @@ Generators live in `presentation/scripts/` (same stem as the figure).
 | [pres_18_changeagent_f1_5class](pres_18_changeagent_f1_5class.png) · [full](pres_18_changeagent_f1_5class_full.png) · [vs ceiling](pres_18_changeagent_f1_vs_ceiling.png) | Five-class change F1 grouped by change agent, colored by model; the ceiling version overlays the interpreter agreement. |
 | [pres_19_interpreter_ceiling_5class](pres_19_interpreter_ceiling_5class.png) | Per-class inter-interpreter agreement F1 (95% CI): the human ceiling on classifier F1. |
 | [pres_20_training_conflict_overlay](pres_20_training_conflict_overlay.png) | Conflicting training labels on shared ground: the top grass/shrub-vs-wetland contested patches where interpreters placed training points but assigned different classes (deck/Spectral version of manuscript Fig 3.5). |
+| [pres_21_patch_size_distribution](pres_21_patch_size_distribution.png) | Per-model patch-size distribution vs the interpreted reference, 2×3 panels (v2–v6 + spec_all); v6 is the most fragmented. Deck version of the spatial-structure small-multiples. |
 
 ## Supplemental figures
 
