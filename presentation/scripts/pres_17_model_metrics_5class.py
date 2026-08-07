@@ -22,6 +22,7 @@ import matplotlib.pyplot as plt
 import slide_font
 import numpy as np
 import pandas as pd
+from matplotlib.lines import Line2D
 slide_font.use_spectral()
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -60,8 +61,15 @@ def _draw(df, models, stem, title, caption, note):
     ax.grid(False)
     for s in ("top", "right"):
         ax.spines[s].set_visible(False)
-    ax.legend(ncol=n, fontsize=12, loc="upper right", frameon=False, columnspacing=1.1,
-              handletextpad=0.5)
+
+    # all-Stable baseline OA: OA you would get by predicting Stable everywhere (dashed reference line)
+    baseline = float(df["All-Stable baseline OA"].iloc[0])
+    ax.axhline(baseline, ls=(0, (6, 3)), color="#333333", lw=1.7, zorder=4)
+    handles, labels = ax.get_legend_handles_labels()
+    handles.append(Line2D([0], [0], color="#333333", ls=(0, (6, 3)), lw=1.7))
+    labels.append(f"all-Stable baseline (OA = {baseline:.3f})")
+    ax.legend(handles, labels, ncol=4, fontsize=11, loc="upper right", bbox_to_anchor=(0.995, 0.94),
+              frameon=False, columnspacing=1.2, handletextpad=0.5)
     ax.set_title(title, fontsize=17, fontweight="bold", pad=12)
 
     fig.text(0.5, 0.25, caption, ha="center", va="top", fontsize=11, color="0.35", linespacing=1.4)
