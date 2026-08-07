@@ -115,12 +115,12 @@ def main():
         ax.set_ylabel("Density", fontsize=13)
 
     fig.suptitle("Per-Model Patch-Size Distribution vs. the Interpreted Reference", fontsize=18,
-                 fontweight="bold", y=0.98)
+                 fontweight="bold", y=0.975)
     fig.text(0.5, 0.015, "Patch-size histograms (density, hectares on a log axis; 8-connected patches) for "
              "each classified map (filled) over the interpreted reference (black outline).\nMass shifted "
              "toward smaller patches means a more fragmented map: the dot-product v6 is the most speckled.",
              ha="center", va="bottom", fontsize=10, color="0.35", linespacing=1.4)
-    fig.subplots_adjust(left=0.07, right=0.98, top=0.91, bottom=0.19, hspace=0.30, wspace=0.12)
+    fig.subplots_adjust(left=0.07, right=0.98, top=0.86, bottom=0.19, hspace=0.30, wspace=0.12)
 
     os.makedirs(os.path.dirname(OUT), exist_ok=True)
     fig.savefig(OUT, dpi=300)
